@@ -1,0 +1,73 @@
+@article{Firsov,
+	title = {Certified {CYK} parsing of context-free languages},
+	journal = "Journal of Logical and Algebraic Methods in Programming",
+	volume = "83",
+	number = "5",
+	pages = "459 - 468",
+	year = "2014",
+	note = "The 24th Nordic Workshop on Programming Theory (NWPT 2012)",
+	issn = "2352-2208",
+	doi = "https://doi.org/10.1016/j.jlamp.2014.09.002",
+	url = "http://www.sciencedirect.com/science/article/pii/S2352220814000601",
+	author = "Denis Firsov and Tarmo Uustalu",
+	keywords = 
+		"Certified programs, Parsing, Cocke–Younger–Kasami algorithm,
+		Dependently typed programming, Agda",
+	abstract = 
+		"We report a work on certified parsing for context-free grammars. In
+		our development we implement the Cocke–Younger–Kasami parsing algorithm
+		and prove it correct using the Agda dependently typed programming
+		language."
+}
+
+@article{Earley,
+	author = {Earley, Jay},
+	title = {An Efficient Context-free Parsing Algorithm},
+	journal = {Commun. ACM},
+	issue_date = {Feb 1970},
+	volume = {13},
+	number = {2},
+	month = feb,
+	year = {1970},
+	issn = {0001-0782},
+	pages = {94--102},
+	numpages = {9},
+	url = {http://doi.acm.org/10.1145/362007.362035},
+	doi = {10.1145/362007.362035},
+	acmid = {362035},
+	publisher = {ACM},
+	address = {New York, NY, USA},
+	keywords = 
+		{compilers, computational complexity, context-free grammar, parsing,
+		syntax analysis},
+}
+
+@InProceedings{Jourdan,
+	author=
+		"Jourdan, Jacques-Henri
+		and Pottier, Fran{\c{c}}ois
+		and Leroy, Xavier",
+	editor="Seidl, Helmut",
+	title="Validating LR(1) Parsers",
+	booktitle="Programming Languages and Systems",
+	year="2012",
+	publisher="Springer Berlin Heidelberg",
+	address="Berlin, Heidelberg",
+	pages="397--416",
+	isbn="978-3-642-28869-2"
+	abstract=
+		"An LR(1) parser is a finite-state automaton, equipped with a stack,
+		which uses a combination of its current state and one lookahead symbol
+		in order to determine which action to perform next. We present a
+		validator which, when applied to a context-free grammar
+		{\$}{\backslash}mathcal G{\$}and an automaton {\$}{\backslash}mathcal
+		A{\$}, checks that {\$}{\backslash}mathcal A{\$}and
+		{\$}{\backslash}mathcal G{\$}agree. Validating the parser provides the
+		correctness guarantees required by verified compilers and other
+		high-assurance software that involves parsing. The validation process
+		is independent of which technique was used to construct
+		{\$}{\backslash}mathcal A{\$}. The validator is implemented and proved
+		correct using the Coq proof assistant. As an application, we build a
+		formally-verified parser for the C99 language.",
+}
+
