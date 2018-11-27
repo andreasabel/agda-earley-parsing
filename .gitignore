@@ -9,6 +9,8 @@
 *.com
 *.class
 *.dll
+*.dyn_hi
+*.dyn_o
 *.exe
 *.o
 *.so
@@ -69,3 +71,8 @@ Thumbs.db
 
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
+
+# Specific generated files
+
+/Misc/cfg-haskell/CYK
+/Misc/cfg-haskell/LBNF/
