@@ -1,4 +1,4 @@
-@article{Firsov,
+@article{Firsov14,
 	title = {Certified {CYK} parsing of context-free languages},
 	journal = "Journal of Logical and Algebraic Methods in Programming",
 	volume = "83",
@@ -19,6 +19,24 @@
 		and prove it correct using the Agda dependently typed programming
 		language."
 }
+
+@inproceedings{Firsov15,
+ author = {Firsov, Denis and Uustalu, Tarmo},
+ title = {Certified Normalization of Context-Free Grammars},
+ booktitle = {Proceedings of the 2015 Conference on Certified Programs and Proofs},
+ series = {CPP '15},
+ year = {2015},
+ isbn = {978-1-4503-3296-5},
+ location = {Mumbai, India},
+ pages = {167--174},
+ numpages = {8},
+ url = {http://doi.acm.org/10.1145/2676724.2693177},
+ doi = {10.1145/2676724.2693177},
+ acmid = {2693177},
+ publisher = {ACM},
+ address = {New York, NY, USA},
+ keywords = {agda, certified programs, chomsky normal form, context-free grammars, dependently typed programming, normalization},
+} 
 
 @article{Earley,
 	author = {Earley, Jay},
@@ -42,6 +60,13 @@
 		syntax analysis},
 }
 
+@article{Leroy,
+  title={The CompCert verified compiler},
+  author={Leroy, Xavier and others},
+  journal={Documentation and user’s manual. INRIA Paris-Rocquencourt},
+  year={2012}
+}
+
 @InProceedings{Jourdan,
 	author=
 		"Jourdan, Jacques-Henri
@@ -54,7 +79,7 @@
 	publisher="Springer Berlin Heidelberg",
 	address="Berlin, Heidelberg",
 	pages="397--416",
-	isbn="978-3-642-28869-2"
+	isbn="978-3-642-28869-2",
 	abstract=
 		"An LR(1) parser is a finite-state automaton, equipped with a stack,
 		which uses a combination of its current state and one lookahead symbol
@@ -71,3 +96,52 @@
 		formally-verified parser for the C99 language.",
 }
 
+@misc{Happy,
+	author = {Simon Marlow},
+	title = {The Parser Generator for {Haskell}},
+	year = {2010},
+	howpublished = {\url{https://www.haskell.org/happy/}},
+	note = {Accessed: 2018-12-11}
+}
+
+@misc{Bison,
+	author = {{Free Software Foundation, Inc.}},
+	title = {{GNU Bison}},
+	year = {2014},
+	howpublished = {\url{https://www.gnu.org/software/bison/}},
+	note = {Accessed: 2018-12-11}
+}
+
+@misc{Menhir,
+	author = {François Pottier},
+	title = {What is Menhir?},
+	year = {2018},
+	howpublished = {\url{http://gallium.inria.fr/~fpottier/menhir/}},
+	note = {Accessed: 2018-12-11}
+}
+
+@misc{BNFC,
+	author = {
+		Almström, Duregård Jonas and 
+		Angelov, Krasimir and        
+		Philippe, Bernardy Jean-and  
+		Bringert, Björn and          
+		Broberg, Johan and           
+		Callaghan, Paul and          
+		Détrez, Grégoire and         
+		Forsberg, Markus and         
+		Frid, Ola and                
+		Gammie, Peter and            
+		Hallgren, Thomas and         
+		Jansson, Patrik and          
+		Johannisson, Kristofer and   
+		Kaijanaho, Antti-Juhaniand   
+		Norell, Ulf and              
+		Pellauer, Michael and        
+		Ranta, Aarne
+	},
+	title = {The {BNF} Converter},
+	year = {2013},
+	howpublished = {\url{http://bnfc.digitalgrammars.com}},
+	note = {Accessed: 2018-12-11}
+}
