@@ -1,7 +1,7 @@
 ### Makefile for compiling .tex files ###
 
 #All targets
-DOCS = Proposal.pdf
+DOCS = Proposal.pdf Plan.pdf
 SRCS = $(wildcard *.tex) lit.bib
 DOTS = $(patsubst %.dot,%.svg,$(wildcard figure/dots/*.dot))
 IMGS = $(patsubst %.svg,%.pdf,$(wildcard figure/*.svg) $(DOTS))

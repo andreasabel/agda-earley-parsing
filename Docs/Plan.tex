@@ -1,0 +1,292 @@
+\documentclass{article}
+
+\usepackage[utf8]{inputenc}
+
+\usepackage{natbib}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\hypersetup{
+	hidelinks = true,
+}
+
+\usepackage{graphicx}
+
+\usepackage[colorinlistoftodos]{todonotes}
+
+\usepackage{parskip}
+\setlength{\parskip}{10pt} 
+
+\usepackage{tikz}
+\usetikzlibrary{arrows, decorations.markings}
+
+\usepackage{chngcntr}
+\counterwithout{figure}{section}
+
+\begin{document}
+
+\begin{titlepage}
+  
+
+\centering
+  
+  
+{\scshape\LARGE Master thesis project planning report\\}
+  
+\vspace{0.5cm}
+  
+{\huge\bfseries Formally Verified Parser Generator\\}
+  
+\vspace{2cm}
+  
+{\Large Elias Forsberg (eliasfo@student.chalmers.se)\\}
+  
+\vspace{1.0cm}
+  
+{\large Supervisor: Andreas Abel\\}
+  
+\vfill
+  
+{\large \today\\} 
+
+\end{titlepage}
+
+\section{Introduction}
+
+	Agda is a functional programming language with a strong type system that
+	supports dependent types. These allow expressing strong invariants and
+	properties of data structures and programs, and even constructive proofs
+	using the type system. These proofs enable programmers to formally verify
+	the correctness of programs and libraries. While the language itself has
+	been shown to be sound, neither its parser, nor later stages of its
+	compiler have been formally verified. Errors in the implementations of
+	these might change the semantics of compiled programs and proofs,
+	undermining their usefulness.
+
+	Parser generators are commonly used for parsers of programming languages,
+	and several different generators exist today, such as Happy~\cite{Happy},
+	Bison~\cite{Bison}, and Menhir~\cite{Menhir}. Parser generators are used
+	for several reasons: BNF descriptions of grammars are usually more concise
+	compared to other representations, such as hand written parsers. Generated
+	parsers that are specialized for a language can also be faster compared to
+	algorithms that parse any grammar and have to read and analyze the grammar
+	of the target language during each parse. Parsers are often required to be
+	fast, as they are the first step in what is usually many different passes
+	of the entire compilation process. To this end, many parser generators
+	generate parsers based on the LR(1) or LALR(1) parsing algorithms. These
+	algorithms are designed mainly to be fast, but are unfortunately not able
+	to parse all context free grammars.  Other algorithms, such as the Earley
+	parsing algorithm~\cite{Earley}, are able to parse all CFG's, while
+	maintaining an O(n) time complexity for most unambiguous grammars.
+
+	The BNF Converter~\cite{BNFC} is a parser and lexer generator written in
+	Haskell, which uses a labeled BNF description of the target language to
+	generate an abstract syntax tree representation, a parser and a pretty
+	printer for the target language. BNFC Supports multiple different back-end
+	languages (that is, target languages for the generated parser itself), but
+	none of these, nor other parts of BNFC have been formally verified. As with
+	compilers, errors in parser generators can change the semantics of
+	programs, yielding incorrect results. 
+	
+	% A formally A fverified parser genrator could be used to generate parsers
+	% for several A fdifferent formally verified compilers
+	
+	% Nice if BNFC was guarantied to generate correct parsers.
+
+	Verified compilers have received significant attention in the research
+	community. CompCert~\cite{Leroy} is a formally verified compiler for a
+	subset of the C programming language. It is written, and proved to preserve
+	the semantics of compiled programs, in Coq, a proof assistant similar to
+	Agda. This compiler does not, however, do any form of verification of the
+	parsing step, but starts from the AST level. If verified parsers could be
+	easily generated for use in different programming languages, it would be
+	possible to have compilers that are fully verified from source code in its
+	original text format to the output of the compiler.
+	
+	The aim of this thesis is to create a parser generator that can create a
+	parser for any context-free grammar, using (possibly among others) the
+	Earley parsing algorithm, and to formally verify, using Agda, that all
+	generated parsers are correct\footnote{Sound and complete}. 
+	
+	% This parser generator could then potentially be used to generate a parser
+	% for Agda.
+
+\section{Context}
+
+	Jourdan and Pottier~\cite{Jourdan} demonstrated a method for verifying the
+	correctness of generated LR parsers. They used the fact that LR parsers are
+	stack automata guided by a finite-state automaton, and designed a verifier
+	that can check whether a given automaton conforms to a specified grammar.
+	As such, they did not prove the correctness of the parser generator itself,
+	and their method can not verify parsers capable of parsing any context-free
+	grammar.
+	
+	Firsov and Uustalu~\cite{Firsov14}, verified a CYK parsing algorithm using
+	Agda. The CYK parsing algorithm only works for grammars in Chomsky normal
+	form, which the grammars for most target languages will not be in. This
+	means that the grammar will first have to be normalized, a process which
+	also should be verified in order to have a fully verified parsing process.
+	Fortunately, Firsov and Uustalu later verified a normalization algorithm
+	for context free grammars.~\cite{Firsov15} The normalization process can,
+	however, increase the size of the grammar, up to a quadratic increase. This
+	might be undesirable for some situations where very large grammars are
+	used.
+
+	While these works are closely related, this thesis will aim to verify a
+	parser generator for context-free grammars. This means that a parser will
+	be created for each target grammar, and ideally that this parser could be
+	emitted in several different target languages. The thesis will also use the
+	Earley parsing algorithm, which has not previously been formally verified.
+
+\section{Goals and Challenges}
+	
+	% This section currently includes
+	% - Aim for the work. What should be accomplished?
+	% - The formulation of the problem at hand and, the assignment. This should 
+	%   include an extended version of the scientific problem definition and 
+	%   references to knowledge within the area given in the thesis proposal.
+	% - Limitations. What should be left out and why?
+	% - Method of accomplishment. How should the work be carried out?
+
+	The goals for this thesis are to use Agda as a programming language to:
+	
+	\begin{enumerate}
+
+%		\item \label{lbnf}
+%
+%			Parse LBNF grammar files. In the first iteration, this can be done
+%			by binding a BNFC-generated Haskell parser for LBNF to Agda.
+%			Finally, this can be done by boot-strapping.
+
+		\item \label{lex}
+			
+			Implement a lexer, and prove its correctness.
+
+		\item \label{par}
+			
+			Implement the Earley parser, and prove its correctness.
+		
+		\item \label{dsl}
+			
+			Design a simple intermediate representation for generated lexers
+			and parsers. 
+
+		\item \label{lexgen}
+			
+			Implement a lexer generator, and prove correctness of its output
+			for all grammars.
+
+		\item \label{pargen}
+			
+			Implement a parser generator, and prove correctness of its output
+			for all grammars.
+		
+		\item \label{backend}
+
+			Implement a compiler from the intermediate representation to some
+			back-end language, such as Agda or C, and prove correctness of the
+			output of that compiler, for all inputs.
+
+	\end{enumerate}
+	
+	It is hard to estimate how long steps \ref{lexgen}-\ref{backend} will take.
+	Concluding at step \ref{par} would be sufficient for completing the
+	project, if correctness proofs of the implemented parser are complete.
+	Step \ref{pargen} has room for many optimizations and user experience
+	improvements, but any of these would be optional. While step \ref{backend}
+	would be necessary for a end-to-end verified compiler, it might be a very
+	large task, depending on the target language (or indeed languages, since it
+	would be desirable for a parser generator to be able to generate parsers in
+	many different languages). This project will therefore most likely conclude
+	before step \ref{backend}.
+
+	One additional goal of this project is to parse and use BNFC-compatible
+	Labeled BNF syntax files to use as definitions of grammars. The parser
+	generator should also use these to generate an AST representation for the
+	grammar in the target language.
+
+\section{Approach}
+
+	% Various scientific approaches are appropriate for different challenges
+	% and project goals. Outline and justify the ones that you have selected.
+	% For example, when your project considers systematic data collection, you
+	% need to explain how you will analyze the data, in order to address your
+	% challenges and project goals.
+
+	% One scientific approach is to use formal models and rigorous mathematical
+	% argumentation to address aspects like correctness and efficiency. If this
+	% is relevant, describe the related algorithmic subjects, and how you plan
+	% to address the studied problem. For example, if your plan is to study the
+	% problem from a computability aspect, address the relevant issues, such as
+	% algorithm and data structure design, complexity analysis, etc.  If you
+	% plan to develop and evaluate a prototype, briefly describe your plans to
+	% design, implement, and evaluate your prototype by reviewing at most two
+	% relevant issues, such as key functionalities and their evaluation
+	% criteria.
+
+	% The design and implementation should specify prototype properties, such
+	% as functionalities and performance goals, e.g., scalability, memory,
+	% energy.  Motivate key design selection, with respect to state of the art
+	% and existing platforms, libraries, etc.  
+
+	% When discussing evaluation criteria, describe the testing environment,
+	% e.g., test-bed experiments, simulation, and user studies, which you plan
+	% to use when assessing your prototype. Specify key tools, and preliminary
+	% test-case scenarios. Explain how and why you plan to use the evaluation
+	% criteria in order to demonstrate the functionalities and design goals.
+	% Explain how you plan to compare your prototype to the state of the art
+	% using the proposed test-case evaluation scenarios and benchmarks. 
+
+	Creating the initial parser and lexer (steps \ref{lex} and \ref{par} above)
+	will be useful for parsing LBNF syntax files in order to read the
+	definitions of the parsers that should be generated. These initial proofs
+	of a parser and lexer are also expected to be simpler than the full
+	generator proofs, and might severe as guiding steps for the full proofs.
+
+	The intermediate representation for parsers and lexers (step \ref{dsl}
+	above) will ideally be designed with simple semantics. The semantics of
+	this language could be defined using an interpreter written in Agda. This
+	will help disconnect the correctness proof of the parser generator from the
+	semantics of any potential target languages, as these may be quite complex.
+	We hope that this will lighten the proof burden for the parser and lexer
+	generators.
+
+	% Lexer generator and parser generator proofs the real meat of this
+	% project.
+
+	The final step of the parser generator, compiling the intermediate
+	representation to the target parser language (step \ref{backend} above),
+	while necessary for a complete end-to-end verified parser, is potentially a
+	lot of work to verify. The semantics of each target language would first
+	have to be formalized, if they are not already, and it would then be
+	necessary to prove that the compiler preserves the semantics of the
+	intermediate representation under this formalization. An \emph{un}verified
+	compiler for the intermediate representation might be constructed for this
+	project, so that the parser generator can be used even if all steps have
+	not been verified.
+
+	% Proofs themselves can't be tested/evaluated?  Compare speed to LR and
+	% LALR parsers?
+
+% \section{References}
+
+	% Reference all sources that are cited in your proposal using, e.g. the
+	% APA, Harvard2, or IEEE3 style.
+
+\section{Ethical Considerations}
+	
+	As with any tool, a parser genrator could be used for many different
+	purposes.  There is, however, no reason to believe that the existance of a
+	formally verified parser generator ???. There are also no significant
+	risks, except loss of time spent, of conducting the work.
+
+\section{Time Plan}
+
+	\includegraphics[angle=-90,width=2cm]{gant.pdf}
+
+\newpage
+
+\bibliographystyle{plain}
+
+\bibliography{lit}
+
+\end{document}
