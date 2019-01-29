@@ -56,18 +56,24 @@
 \section{Introduction}
 
 	Agda is a functional programming language with a strong type system that
-	supports dependent types. These allow expressing strong invariants and
+	supports dependent types. Dependent types allow expressing strong invariants and
 	properties of data structures and programs, and even constructive proofs
 	using the type system. These proofs enable programmers to formally verify
 	the correctness of programs and libraries. While the language itself has
 	been shown to be sound, neither its parser, nor later stages of its
 	compiler have been formally verified. Errors in the implementations of
 	these might change the semantics of compiled programs and proofs,
-	undermining their usefulness.
+	with severe consequences. % undermining their usefulness.
 
 	Parser generators are commonly used for parsers of programming languages,
 	and several different generators exist today, such as Happy~\cite{Happy},
 	Bison~\cite{Bison}, and Menhir~\cite{Menhir}. Parser generators are used
+\todo{Before using an abbreviation, you have to introduce it.  E.g.:
+Backus Naur Form (BNF) descriptions ...
+
+For things like LR(1) or LALR(1) a footnote is more appropriate, as
+the unfolding of the abbreviation is long or might need more explanation.
+}
 	for several reasons: BNF descriptions of grammars are usually more concise
 	compared to other representations, such as hand written parsers. Generated
 	parsers that are specialized for a language can also be faster compared to
@@ -83,8 +89,8 @@
 
 	The BNF Converter~\cite{BNFC} is a parser and lexer generator written in
 	Haskell, which uses a labeled BNF description of the target language to
-	generate an abstract syntax tree representation, a parser and a pretty
-	printer for the target language. BNFC Supports multiple different back-end
+	generate an abstract syntax tree (AST) representation, a parser and a pretty
+	printer for the target language. BNFC supports multiple different back-end
 	languages (that is, target languages for the generated parser itself), but
 	none of these, nor other parts of BNFC have been formally verified. As with
 	compilers, errors in parser generators can change the semantics of
@@ -97,9 +103,10 @@
 
 	Verified compilers have received significant attention in the research
 	community. CompCert~\cite{Leroy} is a formally verified compiler for a
-	subset of the C programming language. It is written, and proved to preserve
-	the semantics of compiled programs, in Coq, a proof assistant similar to
-	Agda. This compiler does not, however, do any form of verification of the
+	subset of the C programming language. It is written in Coq, a proof assistant similar to
+	Agda, and is accompanied by Coq-proofs that it preserves
+	the semantics of compiled programs.
+	This compiler does not, however, do any form of verification of the
 	parsing step, but starts from the AST level. If verified parsers could be
 	easily generated for use in different programming languages, it would be
 	possible to have compilers that are fully verified from source code in its
@@ -108,7 +115,7 @@
 	The aim of this thesis is to create a parser generator that can create a
 	parser for any context-free grammar, using (possibly among others) the
 	Earley parsing algorithm, and to formally verify, using Agda, that all
-	generated parsers are correct\footnote{Sound and complete}.
+	generated parsers are correct\footnote{\emph{Correct} meaning sound and complete.}.
 
 	% This parser generator could then potentially be used to generate a parser
 	% for Agda.
@@ -118,17 +125,22 @@
 	Research in formal verification and parsing has been done previously by
 	several groups. Below we discuss some research related to this project.
 
-	Jourdan and Pottier~\cite{Jourdan} demonstrated a method for verifying the
+	Jourdan and Pottier~\cite{Jourdan} demonstrated
+\todo{Scientific results should be cited in present tense in
+  general, as these are eternal truths (or at least intended
+  to be such):  J and P demonstrate...}
+	a method for verifying the
 	correctness of generated LR parsers. They used the fact that LR parsers are
 	stack automata guided by a finite-state automaton, and designed a verifier
 	that can check whether a given automaton conforms to a specified grammar.
-	As such, they did not prove the correctness of the parser generator itself,
-	and their method can not verify parsers capable of parsing any context-free
+	As such, they did not prove the correctness of the parser generator itself.
+	Further, their method does not verify parsers capable of parsing any context-free
 	grammar.
 
-	Firsov and Uustalu~\cite{Firsov14}, verified a CYK parsing algorithm using
+	Firsov and Uustalu~\cite{Firsov14} verified a CYK parsing algorithm using
 	Agda. The CYK parsing algorithm only works for grammars in Chomsky normal
-	form, which the grammars for most target languages will not be in. This
+	form, which is not the natural representation of the grammars
+	for most target languages. This
 	means that the grammar will first have to be normalized, a process which
 	also should be verified in order to have a fully verified parsing process.
 	Fortunately, Firsov and Uustalu later verified a normalization algorithm
@@ -141,8 +153,8 @@
 	that is both sound and (mostly) complete. However, while it is able to
 	parse all CFG's, it is not able to produce all syntax tree derivations for
 	some ambiguous grammars. Further, generated parsers have a time complexity
-	of O($n^5$), which is significantly slower than the O($n^3$) time
-	complexity of e.g.. CYK. This can be undesirable for some applications.
+	of O($n^5$), which is significantly worse than the O($n^3$) time
+	complexity of, e.g., CYK. This can be undesirable for some applications.
 
 	While these works are closely related, this thesis will aim to verify a
 	parser generator for all context-free grammars. This means that a parser
@@ -244,8 +256,8 @@
 	expected to be simpler than the full generator proof, and might severe as
 	guiding steps for the full proof.
 
-	The grammar syntax files (step \ref{lbnf} above) are could use BNFC's
-	Labeled BNF format, and these could also be used to generate the AST
+	The grammar syntax files (step \ref{lbnf} above) will use BNFC's
+	Labeled BNF format, and these will also be used to generate the AST
 	representation. If possible, we hope to maintain compatibility with BNFC,
 	as several existing projects would then be able to have their parsing
 	formally verified without modifications.
