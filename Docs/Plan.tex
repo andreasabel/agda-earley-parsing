@@ -14,7 +14,7 @@
 \usepackage[colorinlistoftodos]{todonotes}
 
 \usepackage{parskip}
-\setlength{\parskip}{10pt} 
+\setlength{\parskip}{10pt}
 
 \usepackage{tikz}
 \usetikzlibrary{arrows, decorations.markings}
@@ -25,28 +25,28 @@
 \begin{document}
 
 \begin{titlepage}
-  
+
 
 \centering
-  
-  
+
+
 {\scshape\LARGE Master thesis project \\ planning report\\}
-  
+
 \vspace{0.5cm}
-  
+
 {\huge\bfseries Formally Verified Parser Generator\\}
-  
+
 \vspace{2cm}
-  
+
 {\Large Elias Forsberg (eliasfo@student.chalmers.se)\\}
-  
+
 \vspace{1.0cm}
-  
+
 {\large Supervisor: Andreas Abel\\}
-  
+
 \vfill
-  
-{\large \today\\} 
+
+{\large \today\\}
 
 \end{titlepage}
 
@@ -85,11 +85,11 @@
 	languages (that is, target languages for the generated parser itself), but
 	none of these, nor other parts of BNFC have been formally verified. As with
 	compilers, errors in parser generators can change the semantics of
-	programs, yielding incorrect results. 
-	
+	programs, yielding incorrect results.
+
 	% A formally A fverified parser genrator could be used to generate parsers
 	% for several A fdifferent formally verified compilers
-	
+
 	% Nice if BNFC was guarantied to generate correct parsers.
 
 	Verified compilers have received significant attention in the research
@@ -101,12 +101,12 @@
 	easily generated for use in different programming languages, it would be
 	possible to have compilers that are fully verified from source code in its
 	original text format to the output of the compiler.
-	
+
 	The aim of this thesis is to create a parser generator that can create a
 	parser for any context-free grammar, using (possibly among others) the
 	Earley parsing algorithm, and to formally verify, using Agda, that all
-	generated parsers are correct\footnote{Sound and complete}. 
-	
+	generated parsers are correct\footnote{Sound and complete}.
+
 	% This parser generator could then potentially be used to generate a parser
 	% for Agda.
 
@@ -122,7 +122,7 @@
 	As such, they did not prove the correctness of the parser generator itself,
 	and their method can not verify parsers capable of parsing any context-free
 	grammar.
-	
+
 	Firsov and Uustalu~\cite{Firsov14}, verified a CYK parsing algorithm using
 	Agda. The CYK parsing algorithm only works for grammars in Chomsky normal
 	form, which the grammars for most target languages will not be in. This
@@ -149,11 +149,11 @@
 	verified.
 
 \section{Goals and Challenges}
-	
+
 	% This section currently includes
 	% - Aim for the work. What should be accomplished?
-	% - The formulation of the problem at hand and, the assignment. This should 
-	%   include an extended version of the scientific problem definition and 
+	% - The formulation of the problem at hand and, the assignment. This should
+	%   include an extended version of the scientific problem definition and
 	%   references to knowledge within the area given in the thesis proposal.
 
 	This thesis will aim to verify a parser generator for context-free
@@ -171,31 +171,31 @@
 	\begin{enumerate}
 
 		\item \label{lex}
-			
+
 			Implement a lexer, and prove its correctness.
 
 		\item \label{par}
-			
+
 			Implement a parser, and prove its correctness.
 
 		\item \label{lbnf}
 
 			Design a syntax for grammar definitions and use the parser from
 			step \ref{par} to parse it.
-		
+
 		\item \label{dsl}
-			
+
 			Design an intermediate representation for generated lexers and
-			parsers. 
+			parsers.
 
 		\item \label{lexgen}
-			
+
 			Implement a lexer generator, prove its correctness.
 
 		\item \label{pargen}
-			
+
 			Implement a parser generator, and prove  its correctness.
-		
+
 		\item \label{backend}
 
 			Implement a compiler from the intermediate representation to some
@@ -204,7 +204,7 @@
 	\end{enumerate}
 
 	\subsection{Limitations}
-		
+
 %		Everything else: grammar definition files, lexer, lexer generator,
 %		backend, no user interface. But reserving the right to extend project,
 %		should the time be sufficient.
@@ -219,8 +219,8 @@
 		optimizations and user experience improvements, but any of these would
 		be optional. While step \ref{backend} would be necessary for a
 		end-to-end verified compiler, it might be a very large task, depending
-		on the target language. 
-		
+		on the target language.
+
 		Because of reasons mentioned above, this project will most likely
 		conclude without steps \ref{lex}, \ref{lexgen}, and \ref{backend}.
 
@@ -228,9 +228,9 @@
 
 		The main goals of this project are: firstly, to create and formally
 		verify the correctness of an Earley parser, and secondly, to create and
-		formally verify the correctness of a parser generator for context-free 
+		formally verify the correctness of a parser generator for context-free
 		grammars.
-	
+
 
 \section{Approach}
 	% - Method of accomplishment. How should the work be carried out?
@@ -272,7 +272,7 @@
 	% LALR parsers?
 
 \section{Ethical Considerations}
-	
+
 	As with any tool, a parser generator could be used for many different
 	purposes, but a parser generator itself is unlikely to cause harm. There
 	are also no significant risks, except for loss of time spent, of conducting
@@ -280,9 +280,9 @@
 	Chalmers University of Technology.
 
 \section{Time Plan}
-	
+
 	Below is a preliminary time plan for this project:
-	
+
 	\begin{figure}
 		\centering
 		\includegraphics[angle=-90,width=0.75\textwidth]{gantt.png}
