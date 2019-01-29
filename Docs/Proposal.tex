@@ -19,7 +19,9 @@
 \usepackage{tikz}
 \usetikzlibrary{arrows, decorations.markings}
 
-\usepackage{chngcntr}
+\ifdefined\counterwithout\relax\else
+  \usepackage{chngcntr}
+\fi
 \counterwithout{figure}{section}
 
 \begin{document}

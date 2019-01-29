@@ -19,7 +19,10 @@
 \usepackage{tikz}
 \usetikzlibrary{arrows, decorations.markings}
 
-\usepackage{chngcntr}
+% See https://tex.stackexchange.com/questions/425600/latex-error-command-counterwithout-already-defined
+\ifdefined\counterwithout\relax\else
+  \usepackage{chngcntr}
+\fi
 \counterwithout{figure}{section}
 
 \begin{document}
