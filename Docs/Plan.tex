@@ -30,7 +30,7 @@
 \centering
   
   
-{\scshape\LARGE Master thesis project planning report\\}
+{\scshape\LARGE Master thesis project \\ planning report\\}
   
 \vspace{0.5cm}
   
@@ -112,6 +112,9 @@
 
 \section{Context}
 
+	Research in formal verification and parsing has been done previously by
+	several groups. Below we discuss some research related to this project.
+
 	Jourdan and Pottier~\cite{Jourdan} demonstrated a method for verifying the
 	correctness of generated LR parsers. They used the fact that LR parsers are
 	stack automata guided by a finite-state automaton, and designed a verifier
@@ -131,11 +134,19 @@
 	might be undesirable for some situations where very large grammars are
 	used.
 
+	Ridge~\cite{ridge11} verified a parser generator for context-free grammars
+	that is both sound and (mostly) complete. However, while it is able to
+	parse all CFG's, it is not able to produce all syntax tree derivations for
+	some ambiguous grammars. Further, generated parsers have a time complexity
+	of O($n^5$), which is significantly slower than the O($n^3$) time
+	complexity of e.g.. CYK. This can be undesirable for some applications.
+
 	While these works are closely related, this thesis will aim to verify a
-	parser generator for context-free grammars. This means that a parser will
-	be created for each target grammar, and ideally that this parser could be
-	emitted in several different target languages. The thesis will also use the
-	Earley parsing algorithm, which has not previously been formally verified.
+	parser generator for all context-free grammars. This means that a parser
+	will be created for each target grammar, and ideally that this parser could
+	be emitted in several different target languages. The thesis will also use
+	the Earley parsing algorithm, which has not previously been formally
+	verified.
 
 \section{Goals and Challenges}
 	
@@ -144,18 +155,20 @@
 	% - The formulation of the problem at hand and, the assignment. This should 
 	%   include an extended version of the scientific problem definition and 
 	%   references to knowledge within the area given in the thesis proposal.
-	% - Limitations. What should be left out and why?
-	% - Method of accomplishment. How should the work be carried out?
 
-	The goals for this thesis are to use Agda as a programming language to:
-	
+	This thesis will aim to verify a parser generator for context-free
+	grammars. A useful parser generator should most likely include an easy to
+	use method for defining and reading the definitions of grammars, as well as
+	generation of both parsers and lexers\footnote{While a lexer might not be
+	strictly necessary to parse context-free grammars given a complete parser,
+	defining a tokenization step before parsing can be useful for implementers.
+	Lexers can also be faster in some circumstances}. A parser generator will
+	also be significantly more useful if it is able to generate parsers in
+	several different back-end languages, as this will make it easier to use
+	the generator for many different projects.  Steps toward a formally
+	verified parser generator might look something like:
+
 	\begin{enumerate}
-
-%		\item \label{lbnf}
-%
-%			Parse LBNF grammar files. In the first iteration, this can be done
-%			by binding a BNFC-generated Haskell parser for LBNF to Agda.
-%			Finally, this can be done by boot-strapping.
 
 		\item \label{lex}
 			
@@ -163,92 +176,83 @@
 
 		\item \label{par}
 			
-			Implement the Earley parser, and prove its correctness.
+			Implement a parser, and prove its correctness.
+
+		\item \label{lbnf}
+
+			Design a syntax for grammar definitions and use the parser from
+			step \ref{par} to parse it.
 		
 		\item \label{dsl}
 			
-			Design a simple intermediate representation for generated lexers
-			and parsers. 
+			Design an intermediate representation for generated lexers and
+			parsers. 
 
 		\item \label{lexgen}
 			
-			Implement a lexer generator, and prove correctness of its output
-			for all grammars.
+			Implement a lexer generator, prove its correctness.
 
 		\item \label{pargen}
 			
-			Implement a parser generator, and prove correctness of its output
-			for all grammars.
+			Implement a parser generator, and prove  its correctness.
 		
 		\item \label{backend}
 
 			Implement a compiler from the intermediate representation to some
-			back-end language, such as Agda or C, and prove correctness of the
-			output of that compiler, for all inputs.
+			back-end language, such as Agda or C, and prove its correctness.
 
 	\end{enumerate}
-	
-	It is hard to estimate how long steps \ref{lexgen}-\ref{backend} will take.
-	Concluding at step \ref{par} would be sufficient for completing the
-	project, if correctness proofs of the implemented parser are complete.
-	Step \ref{pargen} has room for many optimizations and user experience
-	improvements, but any of these would be optional. While step \ref{backend}
-	would be necessary for a end-to-end verified compiler, it might be a very
-	large task, depending on the target language (or indeed languages, since it
-	would be desirable for a parser generator to be able to generate parsers in
-	many different languages). This project will therefore most likely conclude
-	before step \ref{backend}.
 
-	One additional goal of this project is to parse and use BNFC-compatible
-	Labeled BNF syntax files to use as definitions of grammars. The parser
-	generator should also use these to generate an AST representation for the
-	grammar in the target language.
+	\subsection{Limitations}
+		
+%		Everything else: grammar definition files, lexer, lexer generator,
+%		backend, no user interface. But reserving the right to extend project,
+%		should the time be sufficient.
+
+		This project will mainly focus on parsing of context free grammars, and
+		as such neither the lexer (step \ref{lex}) nor the lexer generator
+		(step \ref{lexgen}) will be a priority. It is also hard to estimate how
+		long steps \ref{dsl}-\ref{backend} will take. Concluding after only
+		completing steps \ref{par} and \ref{lbnf} will be sufficient for
+		completing the project, if correctness proofs of the implemented parser
+		are complete.  Steps \ref{lbnf} and \ref{pargen} have room for many
+		optimizations and user experience improvements, but any of these would
+		be optional. While step \ref{backend} would be necessary for a
+		end-to-end verified compiler, it might be a very large task, depending
+		on the target language. 
+		
+		Because of reasons mentioned above, this project will most likely
+		conclude without steps \ref{lex}, \ref{lexgen}, and \ref{backend}.
+
+	\subsection{Problem Formulation}
+
+		The main goals of this project are: firstly, to create and formally
+		verify the correctness of an Earley parser, and secondly, to create and
+		formally verify the correctness of a parser generator for context-free 
+		grammars.
+	
 
 \section{Approach}
+	% - Method of accomplishment. How should the work be carried out?
 
-	% Various scientific approaches are appropriate for different challenges
-	% and project goals. Outline and justify the ones that you have selected.
-	% For example, when your project considers systematic data collection, you
-	% need to explain how you will analyze the data, in order to address your
-	% challenges and project goals.
+	Creating the initial parser (step \ref{par} above) will be useful for
+	parsing the grammar syntax files in order to read the definitions of the
+	parsers that should be generated. This initial proof of a parser is also
+	expected to be simpler than the full generator proof, and might severe as
+	guiding steps for the full proof.
 
-	% One scientific approach is to use formal models and rigorous mathematical
-	% argumentation to address aspects like correctness and efficiency. If this
-	% is relevant, describe the related algorithmic subjects, and how you plan
-	% to address the studied problem. For example, if your plan is to study the
-	% problem from a computability aspect, address the relevant issues, such as
-	% algorithm and data structure design, complexity analysis, etc.  If you
-	% plan to develop and evaluate a prototype, briefly describe your plans to
-	% design, implement, and evaluate your prototype by reviewing at most two
-	% relevant issues, such as key functionalities and their evaluation
-	% criteria.
-
-	% The design and implementation should specify prototype properties, such
-	% as functionalities and performance goals, e.g., scalability, memory,
-	% energy.  Motivate key design selection, with respect to state of the art
-	% and existing platforms, libraries, etc.  
-
-	% When discussing evaluation criteria, describe the testing environment,
-	% e.g., test-bed experiments, simulation, and user studies, which you plan
-	% to use when assessing your prototype. Specify key tools, and preliminary
-	% test-case scenarios. Explain how and why you plan to use the evaluation
-	% criteria in order to demonstrate the functionalities and design goals.
-	% Explain how you plan to compare your prototype to the state of the art
-	% using the proposed test-case evaluation scenarios and benchmarks. 
-
-	Creating the initial parser and lexer (steps \ref{lex} and \ref{par} above)
-	will be useful for parsing LBNF syntax files in order to read the
-	definitions of the parsers that should be generated. These initial proofs
-	of a parser and lexer are also expected to be simpler than the full
-	generator proofs, and might severe as guiding steps for the full proofs.
+	The grammar syntax files (step \ref{lbnf} above) are could use BNFC's
+	Labeled BNF format, and these could also be used to generate the AST
+	representation. If possible, we hope to maintain compatibility with BNFC,
+	as several existing projects would then be able to have their parsing
+	formally verified without modifications.
 
 	The intermediate representation for parsers and lexers (step \ref{dsl}
 	above) will ideally be designed with simple semantics. The semantics of
 	this language could be defined using an interpreter written in Agda. This
 	will help disconnect the correctness proof of the parser generator from the
 	semantics of any potential target languages, as these may be quite complex.
-	We hope that this will lighten the proof burden for the parser and lexer
-	generators.
+	We hope that this will lighten the proof burden for the parser generator.
 
 	% Lexer generator and parser generator proofs the real meat of this
 	% project.
@@ -267,21 +271,22 @@
 	% Proofs themselves can't be tested/evaluated?  Compare speed to LR and
 	% LALR parsers?
 
-% \section{References}
-
-	% Reference all sources that are cited in your proposal using, e.g. the
-	% APA, Harvard2, or IEEE3 style.
-
 \section{Ethical Considerations}
 	
-	As with any tool, a parser genrator could be used for many different
-	purposes.  There is, however, no reason to believe that the existance of a
-	formally verified parser generator ???. There are also no significant
-	risks, except loss of time spent, of conducting the work.
+	As with any tool, a parser generator could be used for many different
+	purposes, but a parser generator itself is unlikely to cause harm. There
+	are also no significant risks, except for loss of time spent, of conducting
+	the work, and the project does not have any stakeholders external to
+	Chalmers University of Technology.
 
 \section{Time Plan}
-
-	\includegraphics[angle=-90,width=2cm]{gant.pdf}
+	
+	Below is a preliminary time plan for this project:
+	
+	\begin{figure}
+		\centering
+		\includegraphics[angle=-90,width=0.75\textwidth]{gantt.png}
+	\end{figure}
 
 \newpage
 
