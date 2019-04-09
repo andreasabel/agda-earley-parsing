@@ -1,0 +1,54 @@
+% CREATED BY DAVID FRISK, 2016
+\chapter{Agda}
+
+	Agda is a functional programming language based on Martin-Lööf type theory
+	\cite{?}. Its dependent types allow expressing constructive proofs in the
+	language and ? allow creating proofs about functions in the language
+	itself. Here, we will give a quick introduction to programs and proofs in
+	Agda. It is not necessary to be experienced with dependent types, but some
+	knowledge of functional programming is useful.
+	
+	\begin{code}
+	
+		data Nat : Set where
+			zero : Nat
+			suc : Nat -> Nat
+	
+	\end{code}
+
+	The keyword \codett{data} here marks the start of the definition of a new
+	data type \codett{Nat}. It is perfectly valid to use most of unicode for
+	identifiers in Agda. \codett{Nat} has the type \codett{Set}, which is the
+	type of small types. This data type has two constructors, \codett{zero}
+	representing zero from the natural numbers, and \codett{suc} the sucsessor
+	furction. Let's take a look at a function definition using this data type:
+	
+	\begin{code}
+	
+		_+_ : Nat -> Nat -> Nat
+		zero  + b = b
+		suc a + b = suc (a + b)
+
+	\end{code}
+	
+	In Agda arbitrary mixfix operators can be introduced using \codett{\_} to
+	denote the arguments of the mixfix operator. Here, our operator
+	\codett{\_+\_} takes two natural numbers and returns a natural number
+	(spoiler: we're defining addition over the natural numbers). Next, we
+	pattern-match on the first argument: if it is zero, the result of the
+	addition should be equal to the second number. If it is thee sucsessor of
+	another number \codett{a}, the sum is th e sucsessor of the sum of a and
+	the second argument.
+	
+
+	Propositions as types.
+	
+	\begin{code}
+		
+		data _<=_ : Nat -> Nat -> Set where
+		    <=0 : forall n -> zero <= n
+		    <=s : forall a b -> a <= b -> suc a <= suc b
+
+	\end{code}
+
+	\section{The Curry-Howard Sauce}

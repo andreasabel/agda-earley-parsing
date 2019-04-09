@@ -68,33 +68,28 @@
 	Parser generators are commonly used for parsers of programming languages,
 	and several different generators exist today, such as Happy~\cite{Happy},
 	Bison~\cite{Bison}, and Menhir~\cite{Menhir}. Parser generators are used
-\todo{Before using an abbreviation, you have to introduce it.  E.g.:
-Backus Naur Form (BNF) descriptions ...
+	for several reasons: Backus Naur Form (BNF) descriptions of grammars are
+	usually more concise compared to other representations, such as hand
+	written parsers. Generated parsers that are specialized for a language can
+	also be faster compared to algorithms that parse any grammar and have to
+	read and analyze the grammar of the target language during each parse.
+	Parsers are often required to be fast, as they are the first step in what
+	is usually many different passes of the entire compilation process. To this
+	end, many parser generators generate parsers based on the LR(1) or LALR(1)
+	parsing algorithms. These algorithms are designed mainly to be fast, but
+	are unfortunately not able to parse all context-free grammars. Other
+	algorithms, such as the Earley parsing algorithm~\cite{Earley}, are able to
+	parse all context-free grammars, while maintaining an O(n) time complexity
+	for most unambiguous grammars.
 
-For things like LR(1) or LALR(1) a footnote is more appropriate, as
-the unfolding of the abbreviation is long or might need more explanation.
-}
-	for several reasons: BNF descriptions of grammars are usually more concise
-	compared to other representations, such as hand written parsers. Generated
-	parsers that are specialized for a language can also be faster compared to
-	algorithms that parse any grammar and have to read and analyze the grammar
-	of the target language during each parse. Parsers are often required to be
-	fast, as they are the first step in what is usually many different passes
-	of the entire compilation process. To this end, many parser generators
-	generate parsers based on the LR(1) or LALR(1) parsing algorithms. These
-	algorithms are designed mainly to be fast, but are unfortunately not able
-	to parse all context free grammars.  Other algorithms, such as the Earley
-	parsing algorithm~\cite{Earley}, are able to parse all CFG's, while
-	maintaining an O(n) time complexity for most unambiguous grammars.
-
-	The BNF Converter~\cite{BNFC} is a parser and lexer generator written in
-	Haskell, which uses a labeled BNF description of the target language to
-	generate an abstract syntax tree (AST) representation, a parser and a pretty
-	printer for the target language. BNFC supports multiple different back-end
-	languages (that is, target languages for the generated parser itself), but
-	none of these, nor other parts of BNFC have been formally verified. As with
-	compilers, errors in parser generators can change the semantics of
-	programs, yielding incorrect results.
+	The BNF Converter (BNFC)~\cite{BNFC} is a parser and lexer generator
+	written in Haskell, which uses a labeled BNF description of the target
+	language to generate an abstract syntax tree (AST) representation, a
+	parser, and a pretty-printer for the target language. BNFC supports
+	multiple different back-end languages (that is, target languages for the
+	generated parser itself), but none of these, nor other parts of BNFC have
+	been formally verified. As with compilers, errors in parser generators can
+	change the semantics of programs, yielding incorrect results.
 
 	% A formally A fverified parser genrator could be used to generate parsers
 	% for several A fdifferent formally verified compilers
@@ -103,19 +98,20 @@ the unfolding of the abbreviation is long or might need more explanation.
 
 	Verified compilers have received significant attention in the research
 	community. CompCert~\cite{Leroy} is a formally verified compiler for a
-	subset of the C programming language. It is written in Coq, a proof assistant similar to
-	Agda, and is accompanied by Coq-proofs that it preserves
-	the semantics of compiled programs.
-	This compiler does not, however, do any form of verification of the
-	parsing step, but starts from the AST level. If verified parsers could be
-	easily generated for use in different programming languages, it would be
-	possible to have compilers that are fully verified from source code in its
-	original text format to the output of the compiler.
+	subset of the C programming language. It is written in Coq, a proof
+	assistant similar to Agda, and is accompanied by Coq-proofs that it
+	preserves the semantics of compiled programs.  This compiler does not,
+	however, do any form of verification of the parsing step, but starts from
+	the AST level. If verified parsers could be easily generated for use in
+	different programming languages, it would be possible to have compilers
+	that are fully verified from source code in its original text format to the
+	output of the compiler.
 
 	The aim of this thesis is to create a parser generator that can create a
 	parser for any context-free grammar, using (possibly among others) the
 	Earley parsing algorithm, and to formally verify, using Agda, that all
-	generated parsers are correct\footnote{\emph{Correct} meaning sound and complete.}.
+	generated parsers are correct\footnote{\emph{Correct} meaning sound and
+	complete.}.
 
 	% This parser generator could then potentially be used to generate a parser
 	% for Agda.
@@ -125,36 +121,32 @@ the unfolding of the abbreviation is long or might need more explanation.
 	Research in formal verification and parsing has been done previously by
 	several groups. Below we discuss some research related to this project.
 
-	Jourdan and Pottier~\cite{Jourdan} demonstrated
-\todo{Scientific results should be cited in present tense in
-  general, as these are eternal truths (or at least intended
-  to be such):  J and P demonstrate...}
-	a method for verifying the
+	Jourdan and Pottier~\cite{Jourdan} demonstrate a method for verifying the
 	correctness of generated LR parsers. They used the fact that LR parsers are
 	stack automata guided by a finite-state automaton, and designed a verifier
 	that can check whether a given automaton conforms to a specified grammar.
 	As such, they did not prove the correctness of the parser generator itself.
-	Further, their method does not verify parsers capable of parsing any context-free
-	grammar.
+	Further, their method does not verify parsers capable of parsing any
+	context-free grammar.
 
-	Firsov and Uustalu~\cite{Firsov14} verified a CYK parsing algorithm using
+	Firsov and Uustalu~\cite{Firsov14} verify a CYK parsing algorithm using
 	Agda. The CYK parsing algorithm only works for grammars in Chomsky normal
-	form, which is not the natural representation of the grammars
-	for most target languages. This
-	means that the grammar will first have to be normalized, a process which
-	also should be verified in order to have a fully verified parsing process.
-	Fortunately, Firsov and Uustalu later verified a normalization algorithm
-	for context free grammars.~\cite{Firsov15} The normalization process can,
-	however, increase the size of the grammar, up to a quadratic increase. This
-	might be undesirable for some situations where very large grammars are
-	used.
+	form, which is not the natural representation of the grammars for most
+	target languages. This means that the grammar will first have to be
+	normalized, a process which also should be verified in order to have a
+	fully verified parsing process. Fortunately, Firsov and Uustalu also verify
+	a normalization algorithm for context-free grammars.~\cite{Firsov15} The
+	normalization process can, however, increase the size of the grammar, up to
+	a quadratic increase. This might be undesirable for some situations where
+	very large grammars are used.
 
-	Ridge~\cite{ridge11} verified a parser generator for context-free grammars
+	Ridge~\cite{ridge11} verifies a parser generator for context-free grammars
 	that is both sound and (mostly) complete. However, while it is able to
-	parse all CFG's, it is not able to produce all syntax tree derivations for
-	some ambiguous grammars. Further, generated parsers have a time complexity
-	of O($n^5$), which is significantly worse than the O($n^3$) time
-	complexity of, e.g., CYK. This can be undesirable for some applications.
+	parse all context-free grammars, it is not able to produce all syntax tree
+	derivations for some ambiguous grammars. Further, generated parsers have a
+	time complexity of O($n^5$), which is significantly worse than the O($n^3$)
+	time complexity of, e.g., CYK. This can be undesirable for some
+	applications.
 
 	While these works are closely related, this thesis will aim to verify a
 	parser generator for all context-free grammars. This means that a parser
@@ -172,16 +164,16 @@ the unfolding of the abbreviation is long or might need more explanation.
 	%   references to knowledge within the area given in the thesis proposal.
 
 	This thesis will aim to verify a parser generator for context-free
-	grammars. A useful parser generator should most likely include an easy to
-	use method for defining and reading the definitions of grammars, as well as
-	generation of both parsers and lexers\footnote{While a lexer might not be
-	strictly necessary to parse context-free grammars given a complete parser,
-	defining a tokenization step before parsing can be useful for implementers.
-	Lexers can also be faster in some circumstances}. A parser generator will
-	also be significantly more useful if it is able to generate parsers in
-	several different back-end languages, as this will make it easier to use
-	the generator for many different projects.  Steps toward a formally
-	verified parser generator might look something like:
+	grammars. A useful parser generator should most likely include an
+	easy-to-use method for defining and reading the definitions of grammars, as
+	well as generation of both parsers and lexers\footnote{While a lexer might
+	not be strictly necessary to parse context-free grammars given a complete
+	parser, defining a tokenization step before parsing can be useful for
+	implementers.  Lexers can also be faster in some circumstances.}. A parser
+	generator will also be significantly more useful if it is able to generate
+	parsers in several different back-end languages, as this will make it
+	easier to use the generator for many different projects.  Steps toward a
+	formally verified parser generator might look something like:
 
 	\begin{enumerate}
 
@@ -205,7 +197,7 @@ the unfolding of the abbreviation is long or might need more explanation.
 
 		\item \label{lexgen}
 
-			Implement a lexer generator, prove its correctness.
+			Implement a lexer generator, and prove its correctness.
 
 		\item \label{pargen}
 
@@ -224,7 +216,7 @@ the unfolding of the abbreviation is long or might need more explanation.
 %		backend, no user interface. But reserving the right to extend project,
 %		should the time be sufficient.
 
-		This project will mainly focus on parsing of context free grammars, and
+		This project will mainly focus on parsing of context-free grammars, and
 		as such neither the lexer (step \ref{lex}) nor the lexer generator
 		(step \ref{lexgen}) will be a priority. It is also hard to estimate how
 		long steps \ref{dsl}-\ref{backend} will take. Concluding after only

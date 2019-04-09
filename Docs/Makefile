@@ -1,7 +1,7 @@
 ### Makefile for compiling .tex files ###
 
 #All targets
-DOCS = Proposal.pdf Plan.pdf
+DOCS = Proposal.pdf Plan.pdf Report.pdf
 SRCS = $(wildcard *.tex) lit.bib
 DOTS = $(patsubst %.dot,%.svg,$(wildcard figure/dots/*.dot))
 IMGS = $(patsubst %.svg,%.pdf,$(wildcard figure/*.svg) $(DOTS))
@@ -22,10 +22,10 @@ figure/dots/%.svg: figure/dots/%.dot
 	dot -Tsvg $^ > figure/dots/$*.svg
 
 %.pdf: $(SRCS)
-	- pdflatex $*.tex
+	- xelatex $*.tex
 	- bibtex $*  
-	- pdflatex $*.tex
-	- pdflatex $*.tex
+	- xelatex $*.tex
+	- xelatex $*.tex
 
 #Remove all temporary files created by pdfLaTeX
 clean: 

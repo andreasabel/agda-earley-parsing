@@ -1,0 +1,45 @@
+% CREATED BY DAVID FRISK, 2016
+\chapter{Earley's Algorithm}
+	
+	\begin{code}
+
+		record Item (n : ℕ) : Set where
+		  constructor _∘_↦_∘_
+		  field
+		    Y : N
+		    j : ℕ
+		    α β : (N ∣ T) *
+		    .{χ} : CFG.rules G ∋ (Y , α ++ β)
+		    .{ω} : j ≤ n
+
+	\end{code}
+
+	\begin{code}
+
+		data WSet : ℕ -> T * -> Set where
+		  start :
+		    (v : T *) ->
+		    (rs : Item zero * ) ->
+		    WSet zero v
+		
+		  step : {a : T} {v : T *} {n : ℕ} ->
+		    (w : WSet n (a ∷ v)) ->
+		    (rs : Item (suc n) * ) ->
+		    WSet (suc n) v
+
+	\end{code}
+	
+	\begin{code}
+
+		in-all : ∀ {j} -> (i : Item j) -> all-rules j ∋ i
+
+	\end{code}
+
+	\begin{code}
+
+		step-w : ∀ {n a v} ->
+		  WSet n (a ∷ v) ->
+		  WSet (suc n) v
+		step-w {a = a} {v = v} w = scanner-w a v (pred-comp-w w)
+	
+	\end{code}

@@ -1,0 +1,39 @@
+
+\chapter{Related Work}
+
+	Research in formal verification and parsing has been done previously by
+	several groups. Below we discuss some research related to this project.
+
+	Jourdan and Pottier~\cite{Jourdan} demonstrate a method for verifying the
+	correctness of generated LR parsers. They used the fact that LR parsers are
+	stack automata guided by a finite-state automaton, and designed a verifier
+	that can check whether a given automaton conforms to a specified grammar.
+	As such, they did not prove the correctness of the parser generator itself.
+	Further, their method does not verify parsers capable of parsing any
+	context-free grammar.
+
+	Firsov and Uustalu~\cite{Firsov14} verify a CYK parsing algorithm using
+	Agda. The CYK parsing algorithm only works for grammars in Chomsky normal
+	form, which is not the natural representation of the grammars for most
+	target languages. This means that the grammar will first have to be
+	normalized, a process which also should be verified in order to have a
+	fully verified parsing process. Fortunately, Firsov and Uustalu also verify
+	a normalization algorithm for context-free grammars.~\cite{Firsov15} The
+	normalization process can, however, increase the size of the grammar, up to
+	a quadratic increase. This might be undesirable for some situations where
+	very large grammars are used.
+
+	Ridge~\cite{ridge11} verifies a parser generator for context-free grammars
+	that is both sound and (mostly) complete. However, while it is able to
+	parse all context-free grammars, it is not able to produce all syntax tree
+	derivations for some ambiguous grammars. Further, generated parsers have a
+	time complexity of O($n^5$), which is significantly worse than the O($n^3$)
+	time complexity of, e.g., CYK. This can be undesirable for some
+	applications.
+
+	While these works are closely related, this thesis will aim to verify a
+	parser generator for all context-free grammars. This means that a parser
+	will be created for each target grammar, and ideally that this parser could
+	be emitted in several different target languages. The thesis will also use
+	the Earley parsing algorithm, which has not previously been formally
+	verified.
