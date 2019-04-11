@@ -37,7 +37,7 @@ data _⊢_/_∈_ (G : CFG) : T * -> T * -> (N ∣ T)* -> Set where
       G ⊢ a ∷ u / v ∈ r a ∷ α
 
   nont : {u v : T *} {X : N} {α : (N ∣ T) *} ->
-    CFG.rules G ∋ (X , α) ->
+    (X , α) ∈ CFG.rules G ->
     G ⊢ u / v ∈ α ->
     G ⊢ u / v ∈ l X ∷ ε
 

@@ -28,6 +28,11 @@ module parser (G : CFG) where
 
   promote : ∀ {n} -> Item n -> Item (suc n)
   promote ((Y ∘ j ↦ α ∘ β) {χ} {ω}) = (Y ∘ j ↦ α ∘ β) {χ} {≤-suc ω}
+
+  in-map-promote : ∀ {n} -> ∀ i -> {xs : Item n *} -> map promote xs ∋ promote i -> xs ∋ i
+  in-map-promote i {xs = ε} ()
+  in-map-promote i {xs = i ∷ xs} in-head = in-head
+  in-map-promote i {xs = x ∷ xs} (in-tail q) = in-tail (in-map-promote i q)
   
   eq-α :
     (a b : (N ∣ T)*) ->
@@ -158,11 +163,11 @@ module parser (G : CFG) where
   Sₙ (start v rs) = rs
   Sₙ (step w rs) = rs
   
-  --Sₛ : {v : T *} {n : ℕ} ->
-  --  WSet n v ->
-  --  Item n * *
-  --Sₛ (start v rs) = rs ∷ ε
-  --Sₛ (step w rs) = rs ∷ Sₛ w
+  Sₛ : {v : T *} {n : ℕ} ->
+    WSet n v ->
+    Item n *
+  Sₛ (start v rs) = rs
+  Sₛ (step w rs) = rs ++ map promote (Sₛ w)
   
   Wₙ : {v : T *} {n : ℕ} ->
     (w : WSet n v) ->
@@ -208,7 +213,7 @@ module parser (G : CFG) where
   
   predict-w₀-f : (n : ℕ) -> (r : N × (N ∣ T) *) -> CFG.rules G ∋ r -> Item n
   predict-w₀-f n (Y , α) p = (Y ∘ n ↦ ε ∘ α) {p} {≤-self n}
-  
+
   predict-w₀ : {v : T *} {n : ℕ} ->
     (X : N) ->
     WSet n v ->
@@ -394,13 +399,52 @@ module parser (G : CFG) where
   sound-lookup-? X ((Y ∘ j ↦ α ∘ l X ∷ β) ∷ rs) g f in-head     | yes refl = let x₁ = f in-head in complet x₁ g
   sound-lookup-? X ((Y ∘ j ↦ α ∘ l X ∷ β) ∷ rs) g f (in-tail p) | yes refl = sound-lookup-? X rs g (f ∘ in-tail) p
 
-  sound-complete-w₀ : ∀ {v u w n} -> ∀ X j -> (ω : WSet n v) ->
+  in-map-promote₂ : ∀ {n} -> {i : Item (suc n)} -> ∀ xs ->
+    map promote xs ∋ i ->
+    Σ λ i' -> i ≡ promote i'
+  in-map-promote₂ ε ()
+  in-map-promote₂ (x ∷ xs) in-head = σ x refl
+  in-map-promote₂ (x ∷ xs) (in-tail p) = in-map-promote₂ xs p
+
+  in-map-promote₃ : ∀ {n i i' xs} -> i ≡ promote {n} i' -> map promote xs ∋ i -> map promote xs ∋ promote i'
+  in-map-promote₃ refl q = q
+
+  gr-eq : ∀ {n i i' u w} -> i ≡ promote {n} i' -> G ⊢ u / w ⟶* Item.Y i' / Item.β i' -> G ⊢ u / w ⟶* Item.Y i / Item.β i
+  gr-eq refl q = q
+
+  sound-complete-w₀ : ∀ {v u w x n} -> ∀ X j -> (ω : WSet n x) ->
     G ⊢ v / w ⟶* X / ε ->
-    (∀ {i} -> Sₙ ω ∋ i -> G ⊢ u / v ⟶* Item.Y i / Item.β i) ->
+    (∀ {i} -> Sₛ ω ∋ i -> G ⊢ u / v ⟶* Item.Y i / Item.β i) ->
     (∀ {i} -> complete-w₀ X j ω ∋ i -> G ⊢ u / w ⟶* Item.Y i / Item.β i)
-  sound-complete-w₀ X zero ω g f p = sound-lookup-? X (Sₙ ω) g f p
+  sound-complete-w₀ X zero (start v rs) g f p = sound-lookup-? X rs g f p
+  sound-complete-w₀ X zero (step ω rs) g f p = sound-lookup-? X rs g (λ x → f (in-l x)) p
   sound-complete-w₀ X (suc j) (start v rs) g f ()
-  sound-complete-w₀ X (suc j) (step ω rs) g f p = let x₁ = sound-complete-w₀ X j ω {!!} {!!} {!!} in {!in-map!}
+  sound-complete-w₀ X (suc j) (step ω rs) g f p = 
+    let x₁ = in-map-promote₂ (complete-w₀ X j ω) p in
+    let x₂ = in-map-promote₃ {i' = Σ.proj₁ x₁} (Σ.proj₀ x₁) p in
+    let x₃ = sound-complete-w₀ X j ω g (λ x → f (in-r (in-map promote x))) (in-map-promote (Σ.proj₁ x₁) x₂) in
+    gr-eq {i' = Σ.proj₁ x₁} (Σ.proj₀ x₁) x₃
+
+  sound-predict-w₀ : ∀ {u v n X β} -> (i : Item n) -> 
+    ∀ rs -> rs ∋ i ->
+    G ⊢ u / v ⟶* X / l (Item.Y i) ∷ β ->
+    G ⊢ v / v ⟶* Item.Y i / (Item.α i ++ Item.β i)
+  sound-predict-w₀ i ε () g
+  sound-predict-w₀ i (.i ∷ rs) in-head g = predict (relevant-χ i) g
+  sound-predict-w₀ i (x ∷ rs) (in-tail q) g = sound-predict-w₀ i rs q g
+
+  S : ∀ {n v} -> ℕ -> WSet n v -> Item n *
+  S = {!!}
+
+  V : ∀ {n v} -> ℕ -> WSet n v -> T *
+  V = {!!}
+  
+  sound-pred-comp-w₀ : ∀ {v n X Y j α β γ} {w : WSet n v} ->
+    ∀ m n -> ∀ {χ ω χ₀ ω₀} ->
+    (X ∘ j ↦ α ∘ l Y ∷ β) {χ} {ω} ∈ S m w ->
+    (Y ∘ m ↦ γ ∘ ε) {χ₀} {ω₀} ∈ S n w ->
+    (X ∘ j ↦ α ∷← l Y ∘ β) {{!!}} {ω} ∈ S n w
+  sound-pred-comp-w₀ = {!!}
 
 --  sound-complete-w₀ : ∀ {v u n} (w : WSet n v) ->
 --    (∀ 
