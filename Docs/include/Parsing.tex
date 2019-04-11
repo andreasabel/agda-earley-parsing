@@ -4,9 +4,9 @@
 	Parsing is the process of analyzing the structure of a sequence of elements
 	(called \codett{Tokens}). This may simply consist of determeming
 	(\codett{recognizing}) wether a sequence conforms to a predefined structure
-	(a \codett{Grammar}), or to also create a description of how the sequence
-	conforms (\codett{parsing}), resulting in a ? (\codett{parse tree}).  For
-	our purposes, the Context-free grammers contain the structures we are
+	(a \codett{Grammar}), or to also create a description (\codett{parsing}) of
+	how the sequence conforms, resulting in a ? (\codett{parse tree}). For our
+	purposes, the Context-free grammers describe the structures we are
 	interested in:
 	
 	\begin{code}
@@ -21,7 +21,12 @@
 
 	\end{code}
 
-	
+	Here, type arguments \codett{N} and \codett{T} represent nonterminal and 
+	terminal symbols. Nonterminal symbols are used to 
+
+	A definition of wether a list of tokens conforms to a grammar is also 
+	nessecary:
+
 	\begin{code}
 	
 		data _⊢_∈_ (G : CFG) :  T * -> (N ∣ T) * -> Set where
@@ -35,9 +40,19 @@
 		    G ⊢ u ∈ α -> G ⊢ a ∷ u ∈ r a ∷ α
 		
 		  nonterm : {A : N} {α : (N ∣ T) *} {u : T *} ->
-		    CFG.rules G ∋ (A , α) -> G ⊢ u ∈ α -> G ⊢ u ∈ l A ∷ ε
+		    (A , α) ∈ CFG.rules G -> G ⊢ u ∈ α -> G ⊢ u ∈ l A ∷ ε
 
 	\end{code}
+
+	Here, a judgement of the form \codett{G ⊢ u ∈ α} would mean that, given a
+	grammar \codett{G} which give semantics to nonterminals, the sequence of
+	tokens \codett{u} conforms to the structure \codett{α}. That is, if
+	\codett{A} is a nonterminal and \codett{a} is a terminal symbol, any value
+	with the type \codett{G ⊢ a ∷ a ∷ ε ∈ a ∷ a ∷ ε} would constitue a proof
+	that the sequence \codett{aa} does indeed conform to the structure
+	\emph{"sequences that are equal to \codett{aa}"}.
+
+	Another possible definition for conformance could be: 
 
 	\begin{code}
 	
@@ -61,57 +76,13 @@
 
 	\end{code}
 
-	\begin{code}
-		data _⊢_/_⟶*_/_ (G : CFG) : T * -> T * -> N -> (N ∣ T) * -> Set where
-		  initial : {u : T *} ->
-		    G ⊢ u / u ⟶* CFG.start G / l (CFG.start G) ∷ ε
-		
-		  scanner : {u v : T *} {a : T} {X : N} {β : (N ∣ T) *} ->
-		    G ⊢ u / a ∷ v ⟶* X / r a ∷ β ->
-		      G ⊢ u / v ⟶* X / β
-		
-		  predict : {u v : T *} {X Y : N} {α β : (N ∣ T) *} ->
-		    CFG.rules G ∋ (Y , α) ->
-		    G ⊢ u / v ⟶* X / l Y ∷ β ->
-		      G ⊢ v / v ⟶* Y / α
-		
-		  complet : {u v w : T *} {X Y : N} {β : (N ∣ T) *} ->
-		    G ⊢ u / v ⟶* X / l Y ∷ β ->
-		    G ⊢ v / w ⟶* Y / ε ->
-		      G ⊢ u / w ⟶* X / β
-		
-	\end{code}
+	Here, a judgement of the form \codett{G ⊢ v / w ∈ α} would mean that, given
+	a grammar \codett{G}, the sequence \codett{v} up to, but not including 
+	\codett{w} conforms to the structure \codett{α}. This means \codett{w} will
+	always be a suffix of \codett{v}.
+
+	These definitons are, in fact, equivalent:
 
 	\begin{code}
-
-		sound : ∀ {u v w X β} {G : CFG} ->
-		  G ⊢ u / v ⟶* X / β ->
-		  G ⊢ v / w ∈ β ->
-		    G ⊢ u / w ∈ l X ∷ ε
-		sound initial b = b
-		sound (scanner a) b = sound a (term b)
-		sound (predict x a) b = nont x b
-		sound (complet a a₁) b =
-		  let x₁ = sound a₁ empt in
-		  let x₂ = conc x₁ b in
-		  sound a x₂
-
-	\end{code}
-
-	\begin{code}
-		
-		complete : ∀ {u v w X α} {G : CFG} ->
-		  G ⊢ u / v ⟶* X / α ->
-		  G ⊢ v / w ∈ α ->
-		    G ⊢ u / w ⟶* X / ε
-		complete a empt = a
-		complete a (conc (conc b empt) b₁) = complete a (conc b b₁)
-		complete a (conc (nont x b) b₁) =
-		  let x₁ = predict x a in
-		  let x₂ = complete x₁ b in
-		  let x₃ = complet a x₂ in
-		  complete x₃ b₁
-		complete a (term b) = complete (scanner a) b
-		complete a (nont x b) = complet a (complete (predict x a) b)
-
+	
 	\end{code}
