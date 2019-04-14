@@ -473,3 +473,99 @@ diff-suc {T} {x} {x  ∷ xs} {ys} eq in-head p₂      | no x₂  | no x₃ | ()
 diff-suc {T} {x} {x₁ ∷ xs} {ys} eq (in-tail p₁) p₂ | no x₂  | no x₃ =
   let f' = λ { in-head → x₃ in-head ; (in-tail x₄) → p₂ x₄} in
   app suc (trans (diff-suc {T} eq p₁ f') (app suc (app length (diff-flip x₁ x xs ys eq))))
+
+module Unique {T : Set} (Item : T * -> Set) (eq-item : ∀ {v}(a b : Item v) -> a ≡ b ??) where
+
+  data Unique {T : Set} : T * -> Set where
+    u-ε : Unique ε
+    u-∷ : {a : T} {as : T *} -> Unique as -> (as ∋ a -> Void) -> Unique (a ∷ as)
+  
+  pred-++ : ∀ {A n} {m : ℕ -> A} (xs ys : A *) ->
+    (f : ∀ {j} -> xs ∋ m j -> j ≤ n) ->
+    (g : ∀ {j} -> ys ∋ m j -> j ≤ n) ->
+    (∀ {j} -> (xs ++ ys) ∋ m j -> j ≤ n)
+  pred-++ ε ys f g p = g p
+  pred-++ (x ∷ xs) ys f g in-head = f in-head
+  pred-++ (x ∷ xs) ys f g (in-tail p) = pred-++ xs ys (f ∘ in-tail) g p
+  
+  _\\_ : ∀ {n} -> (x x₁ : Item n *) → Item n *
+  _\\_ = list-diff eq-item
+  
+  pred-\\ : ∀ {A n} {m : ℕ -> A} ->
+    (eq : (a b : A) -> a ≡ b ??) ->
+    (xs ys : A *) ->
+    (f : ∀ {j} -> xs ∋ m j -> j ≤ n) ->
+    (∀ {j} -> (list-diff eq xs ys) ∋ m j -> j ≤ n)
+  pred-\\ eq ε ys f ()
+  pred-\\ eq (x ∷ xs) ys f p with elem eq x ys
+  pred-\\ eq (x ∷ xs) ys f p | yes x₁ = pred-\\ eq xs ys (f ∘ in-tail) p
+  pred-\\ eq (x ∷ xs) ys f in-head | no x₁ = f in-head
+  pred-\\ eq (x ∷ xs) ys f (in-tail p) | no x₁ = pred-\\ eq xs (x ∷ ys) (f ∘ in-tail) p
+  
+  eq-not : {T : Set} {rs ss : T *} {i : T} ->
+    Unique (rs ++ ss) -> rs ∋ i -> ss ∋ i -> Void
+  eq-not (u-∷ urs x) in-head q = x (in-r q)
+  eq-not (u-∷ urs x) (in-tail p) q = eq-not urs p q
+  
+  unique-++ : ∀ {T} (as bs : T *) ->
+    Unique as ->
+    Unique bs ->
+    (∀ {b} -> bs ∋ b -> as ∋ b -> Void) ->
+    Unique (as ++ bs)
+  unique-++ ε bs ua ub f = ub
+  unique-++ (x ∷ as) bs (u-∷ ua x₁) ub f =
+    u-∷ (unique-++ as bs ua ub λ z → f z ∘ in-tail) (in-neither x₁ (λ x₂ → f x₂ in-head))
+  
+  unique-++₂ : {T : Set} (as bs cs : T *) ->
+    Unique (as ++ cs) ->
+    Unique bs ->
+    (∀ {b} -> as ∋ b -> bs ∋ b -> Void) ->
+    (∀ {b} -> cs ∋ b -> bs ∋ b -> Void) ->
+    Unique ((as ++ bs) ++ cs)
+  unique-++₂ ε bs cs uac ub f g = unique-++ bs cs ub uac g
+  unique-++₂ (x ∷ as) bs cs (u-∷ uac x₁) ub f g = u-∷ (unique-++₂ as bs cs uac ub (f ∘ in-tail) g)
+    (in-neither {bs = cs} (in-neither (not-in-l x₁) (f in-head)) (not-in-r x₁))
+  
+  unique-++-∷ : {T : Set} {a : T} -> (as bs : T *) ->
+    Unique (as ++ bs) ->
+    ((as ++ bs) ∋ a -> Void) ->
+    Unique (as ++ (a ∷ bs))
+  unique-++-∷ ε bs uab f = u-∷ uab f
+  unique-++-∷ (x ∷ as) bs (u-∷ uab x₁) f = u-∷ (unique-++-∷ as bs uab (f ∘ in-tail))
+    (in-neither {bs = _ ∷ bs} (not-in-l x₁) λ { in-head → f in-head ; (in-tail x₂) → x₁ (in-r x₂)})
+  
+  no-include-\\ : ∀ {n} -> {x : Item n} (as bs : Item n *) ->
+    (as ∋ x -> Void) ->
+    (as \\ bs) ∋ x -> Void
+  no-include-\\ ε bs f p = f p
+  no-include-\\ (x₁ ∷ as) bs f p                   with elem eq-item x₁ bs
+  no-include-\\ (x₁ ∷ as) bs f p                   | yes x₂ = no-include-\\ as bs (f ∘ in-tail) p
+  no-include-\\ (x₁ ∷ as) bs f in-head             | no x₂ = f in-head
+  no-include-\\ {n} {x} (x₁ ∷ as) bs f (in-tail p) | no x₂ = no-include-\\ as (x₁ ∷ bs) (f ∘ in-tail) p
+  
+  no-include-\\₂ : ∀ {n} -> {x : Item n} (as bs : Item n *) ->
+    bs ∋ x ->
+    (as \\ bs) ∋ x -> Void
+  no-include-\\₂ ε bs p ()
+  no-include-\\₂ (x₁ ∷ as) bs p q           with elem eq-item x₁ bs
+  no-include-\\₂ (x₁ ∷ as) bs p q           | yes x₂ = no-include-\\₂ as bs p q
+  no-include-\\₂ (x₁ ∷ as) bs p in-head     | no x₂ = void (x₂ p)
+  no-include-\\₂ (x₁ ∷ as) bs p (in-tail q) | no x₂ = no-include-\\₂ as (x₁ ∷ bs) (in-tail p) q
+  
+  unique-\\ : ∀ {n} -> (as bs : Item n *) ->
+    Unique as ->
+    Unique (as \\ bs)
+  unique-\\ ε bs ua = ua
+  unique-\\ (x ∷ as) bs (u-∷ ua f) with elem eq-item x bs
+  unique-\\ (x ∷ as) bs (u-∷ ua f) | yes x₁ = unique-\\ as bs ua
+  unique-\\ (x ∷ as) bs (u-∷ ua f) | no x₁ = u-∷ (unique-\\ as (x ∷ bs) ua) (no-include-\\ as (x ∷ bs) f)
+  
+  tmp : {T : Set} {a : T} (as bs cs : T *) ->
+    Unique ((a ∷ as) ++ cs) ->
+    Unique (a ∷ bs) ->
+    (∀ {b} -> as ∋ b -> bs ∋ b -> Void) ->
+    (∀ {b} -> cs ∋ b -> bs ∋ b -> Void) ->
+    Unique ((as ++ bs) ++ (a ∷ cs))
+  tmp as bs cs (u-∷ uac x) (u-∷ ub x₃) f g =
+    let x₁ = unique-++₂ as bs cs uac ub f g in
+    unique-++-∷ (as ++ bs) cs x₁ (in-neither {bs = cs} (in-neither (not-in-l x) x₃) (not-in-r x))
