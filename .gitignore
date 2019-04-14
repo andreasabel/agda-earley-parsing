@@ -18,6 +18,7 @@
 *.h.gch
 *.pdf
 *.hi
+*.agdai
 
 # Packages #
 ############
