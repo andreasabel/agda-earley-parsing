@@ -72,6 +72,60 @@ module parser (G : CFG) where
   eq-item (X ∘ j ↦ α₁ ∘ β₁) (Y ∘ k ↦ α₂ ∘ β₂) | x₁ , x₂ , no x₃ , x₄ = no (λ {refl → x₃ refl})
   eq-item (X ∘ j ↦ α₁ ∘ β₁) (Y ∘ k ↦ α₂ ∘ β₂) | x₁ , x₂ , x₃ , no x₄ = no (λ {refl → x₄ refl})
 
+  data _suffOf_ {T : Set} : T * -> T * -> Set where
+    suffix-id : {as : T *} -> as suffOf as
+    suffix-∷ : {b : T} {as bs : T *} -> as suffOf bs -> as suffOf b ∷ bs
+  infix 18 _suffOf_
+
+  all-rules₀ : ∀ {v} ->
+    ∀ Y u α β ->
+    Σ λ as -> ∀ γ δ .χ .ψ ->
+      (i : Item v) -> i ≡ (Y ∘ u ↦ γ ∘ δ [ χ ∘ ψ ]) ->
+      δ suffOf β -> α ++ β ≡ γ ++ δ ->
+      (Y , u , γ , δ) ∈ as
+  all-rules₀ Y u α ε = σ ((Y , u , α , ε) ∷ ε) λ { γ ε χ ψ i x suffix-id q → {!q!}}
+  all-rules₀ Y u α (x ∷ β) with all-rules₀ Y u (α ←∷ x) β
+  all-rules₀ Y u α (x ∷ β) | σ p₁ p₀ = σ ((Y , u , α , x ∷ β) ∷ p₁) λ {
+      γ β χ ψ i x₁ suffix-id q → {!!} ;
+      γ δ χ ψ i x₁ (suffix-∷ p) q → in-tail (p₀ γ δ χ ψ i x₁ p (trans (sym (in₀ x α β)) (sym q)))
+    }
+  
+  all-rules₁ : ∀ {v} ->
+    ∀ Y u β ->
+    Σ λ as -> ∀ γ δ .χ .ψ ->
+      (i : Item v) -> i ≡ (Y ∘ u ↦ γ ∘ δ [ χ ∘ ψ ]) ->
+      γ ++ δ ≡ β ->
+      (Y , u , γ , δ) ∈ as
+  all-rules₁ Y u β  = {!!}
+
+  all-rules : ∀ {v} ->
+    Σ λ as -> {i : Item v} -> i ∈ as
+  all-rules = {!!}
+  
+  --all-rules₀ : ∀ {n} ->
+  --  (X : N) (j : ℕ) (α β : (N ∣ T) *) ->
+  --  .(CFG.rules G ∋ (X , α ++ β)) ->
+  --  .(j ≤ n) ->
+  --  Item n *
+  --all-rules₀ X j α ε p q = (X ∘ j ↦ α ∘ ε) {p} {q} ∷ ε
+  --all-rules₀ X j α (x ∷ β) p q =
+  --  (X ∘ j ↦ α ∘ x ∷ β) {p} {q} ∷
+  --  all-rules₀ X j (α ←∷ x) β (in₂ (λ q → CFG.rules G ∋ (X , q)) (in₀ x α β) p) q
+  
+  --all-rules₁ :
+  --  (X : N) (j : ℕ) (β : (N ∣ T) *) ->
+  --  .(CFG.rules G ∋ (X , β)) ->
+  --  Item j *
+  --all-rules₁ X zero β p = all-rules₀ X zero ε β p ≤₀
+  --all-rules₁ X (suc j) β p = all-rules₀ X (suc j) ε β p (≤-self _) ++ map promote (all-rules₁ X j β p)
+  --
+  --all-rules₂ : (j : ℕ) -> (rs : (N × (N ∣ T)*)*) -> (∀ {r} -> rs ∋ r -> CFG.rules G ∋ r) -> Item j *
+  --all-rules₂ j ε f = ε
+  --all-rules₂ j ((X , β) ∷ rs) f = all-rules₁ X j β (f in-head) ++ all-rules₂ j rs (f ∘ in-tail)
+  --
+  --all-rules : (j : ℕ) -> Item j *
+  --all-rules j = all-rules₂ j (CFG.rules G) id
+
   open Unique Item eq-item
   
   relevant-χ : ∀ {v} -> (i : Item v) -> CFG.rules G ∋ (Item.Y i , Item.α i ++ Item.β i)
@@ -94,12 +148,6 @@ module parser (G : CFG) where
   Sₙ (start v rs) = rs
   Sₙ (step w rs) = rs
 
-  V : {v : T *} ->
-    WSet v ->
-    T *
-  V (start v rs) = v
-  V (step w rs) = V w
-  
   Wₙ : {v : T *} ->
     (w : WSet v) ->
     (rs : Item v * ) ->
@@ -123,7 +171,6 @@ module parser (G : CFG) where
     WSet (a ∷ v) ->
     WSet v
   scanner-w a v w = step w (scanner-w₀ a (Sₙ w))
-  
 
   complete-w₀ : ∀ {u v} ->
     (w : WSet v) ->
@@ -185,7 +232,7 @@ module parser (G : CFG) where
     (ss : Item v *) ->
     (rs : Item v *) ->
     (m : ℕ) ->
-    (p : m ≡ (suc ∘ length) ({! all-rules n !} \\ ss)) -> 
+    (p : m ≡ (suc ∘ length) (Σ.proj₁ all-rules \\ ss)) -> 
     Unique (rs ++ ss) ->
     WSet v
   pred-comp-w₂ w ss rs zero () q
@@ -193,7 +240,7 @@ module parser (G : CFG) where
   pred-comp-w₂ {v} w ss (r₁ ∷ rs) (suc m) p q =
     let x₁ = pred-comp-w₀ _ _ r₁ refl (Wₙ w ss) in
     let x₂ = Σ.proj₁ x₁ \\ (r₁ ∷ (ss ++ rs)) in
-    let p₁ = trans (unsuc p) (sym (diff-suc eq-item {! in-all _!} (eq-not q in-head))) in
+    let p₁ = trans (unsuc p) (sym (diff-suc {ys = ss} eq-item (Σ.proj₀ all-rules) (eq-not q in-head))) in
     let p₂ = (unique-\\ (Σ.proj₁ x₁) (r₁ ∷ (ss ++ rs)) (Σ.proj₀ x₁)) in
     let p₃ = (u-∷ p₂ (no-include-\\₂ (Σ.proj₁ x₁) _ in-head)) in
     let p₄ = (tmp rs x₂ ss q p₃ (λ x → no-include-\\₂ (Σ.proj₁ x₁) _ (in-tail (in-r x))) (λ x → no-include-\\₂ (Σ.proj₁ x₁) _ (in-tail (in-l x)))) in
@@ -207,8 +254,8 @@ module parser (G : CFG) where
     let x₂ = (unique-++ (Σ.proj₁ x₁) ε (Σ.proj₀ x₁) u-ε λ ()) in
     pred-comp-w₂ (Wₙ w ε) ε (Σ.proj₁ x₁) m (app suc refl) x₂
     where
-      m = suc (length ({!all-rules n!} \\ ε))
-  
+      m = suc (length (Σ.proj₁ all-rules \\ ε))
+
   step-w : ∀ {a v} ->
     WSet (a ∷ v) ->
     WSet v
@@ -219,21 +266,3 @@ module parser (G : CFG) where
      WSet ε
   parse {v = ε} w = pred-comp-w w
   parse {v = x ∷ v} w = parse (step-w w)
-
-----  test : WSet G₀ zero t
-----  test = start (s₀ ∷ a₀ ∷ s₀ ∷ ε) ((S₀ ∘ zero ↦ ε ∘ l S₀ ∷ ε) ∷ ε)
-----  
-----  test1 : _
-----  test1 = step-w G₀ test
-----  
-----  test2 : _
-----  test2 = step-w G₀ test1
-----  
-----  test3 : _
-----  test3 = step-w G₀ test2
-----  
-----  testn : _
-----  testn = parse G₀ test
-----  
-----  pcw0 : _
-----  pcw0 = pred-comp-w₀
