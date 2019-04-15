@@ -61,6 +61,9 @@ subtract (suc a) (suc b) (≤ₛ p) = subtract a b p
 suc-le : {n m : ℕ} -> suc n ≤ suc m -> n ≤ m
 suc-le (≤ₛ a) = a
 
+suc-≤ : {n m : ℕ} -> suc n ≤ m -> n ≤ m
+suc-≤ (≤ₛ p) = ≤-suc p
+
 ≤-self : (n : ℕ) -> n ≤ n
 ≤-self zero = ≤₀
 ≤-self (suc n) = ≤ₛ (≤-self n)
