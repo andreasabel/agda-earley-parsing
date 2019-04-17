@@ -33,6 +33,18 @@ suc a + b = suc (a + b)
 +ₛ {zero} = refl
 +ₛ {suc a} = app suc +ₛ
 
++-zero : {a : ℕ} -> a + zero ≡ a
++-zero {zero} = refl
++-zero {suc a} = app suc +-zero
+
+suc-comm : {a b : ℕ} -> b + suc a ≡ suc (b + a)
+suc-comm {a} {zero} = refl
+suc-comm {a} {suc b} = app suc suc-comm
+
++-comm : {a b : ℕ} -> a + b ≡ b + a
++-comm {zero} {b} = sym +-zero
++-comm {suc a} {b} = trans (app suc (+-comm {a} {b})) suc-comm
+
 record Injective {A B : Set} (f : A -> B) : Set where
   field
     inj : ({a b : A} -> f a ≡ f b -> a ≡ b)
@@ -84,11 +96,15 @@ any T = top
 
 infixr 0 ¬_
 
-void : {T : Set} -> Void -> T
+void : {T : Set} -> .Void -> T
 void ()
 
 void₁ : {T : Set₁} -> Void -> T
 void₁ ()
+
++-imp : {a b : ℕ} -> a ≡ suc (a + b) -> Void
++-imp {zero} {b} ()
++-imp {suc a} {b} p = +-imp (unsuc p)
 
 oddsuc : {a b : ℕ} -> a ≡ b -> a ≡ suc b -> Void
 oddsuc refl ()
@@ -99,8 +115,8 @@ oddsuc refl ()
 ≤-≠ {suc m} {zero}  () p₁
 ≤-≠ {suc m} {suc n} p₀ p₁ = ≤ₛ (≤-≠ (suc-le p₀) λ {refl → p₁ refl})
 
-data _≠_ {T : Set} : T -> T -> Set where
-  neq : {t u : T} -> (t ≡ u -> Void) -> t ≠ u
+_≠_ : {T : Set} -> T -> T -> Set
+a ≠ b = a ≡ b -> Void
 
 data _∣_ (A B : Set) : Set where
   r : B -> A ∣ B
@@ -205,6 +221,9 @@ inj-cons = record { inj = λ {refl → refl} }
 
 uncons : ∀ {T as bs} (a b : T) -> a ∷ as ≡ b ∷ bs -> as ≡ bs
 uncons a b refl = refl
+
+uncons₂ : ∀ {T as bs} (a b : T) -> a ∷ as ≡ b ∷ bs -> a ≡ b
+uncons₂ a b refl = refl
 
 _←∷_ : {T : Set} -> T * -> T -> T *
 ε ←∷ a = a ∷ ε
@@ -477,7 +496,7 @@ diff-suc {T} {x} {x₁ ∷ xs} {ys} eq (in-tail p₁) p₂ | no x₂  | no x₃ 
   let f' = λ { in-head → x₃ in-head ; (in-tail x₄) → p₂ x₄} in
   app suc (trans (diff-suc {T} eq p₁ f') (app suc (app length (diff-flip x₁ x xs ys eq))))
 
-module Unique {T : Set} (Item : T * -> Set) (eq-item : ∀ {v}(a b : Item v) -> a ≡ b ??) where
+module Unique {T : Set} (Item : T * -> T * -> Set) (eq-item : ∀ {w v}(a b : Item w v) -> a ≡ b ??) where
 
   data Unique {T : Set} : T * -> Set where
     u-ε : Unique ε
@@ -491,7 +510,7 @@ module Unique {T : Set} (Item : T * -> Set) (eq-item : ∀ {v}(a b : Item v) -> 
   pred-++ (x ∷ xs) ys f g in-head = f in-head
   pred-++ (x ∷ xs) ys f g (in-tail p) = pred-++ xs ys (f ∘ in-tail) g p
   
-  _\\_ : ∀ {n} -> (x x₁ : Item n *) → Item n *
+  _\\_ : ∀ {w n} -> (x x₁ : Item w n *) → Item w n *
   _\\_ = list-diff eq-item
   
   pred-\\ : ∀ {A n} {m : ℕ -> A} ->
@@ -537,7 +556,7 @@ module Unique {T : Set} (Item : T * -> Set) (eq-item : ∀ {v}(a b : Item v) -> 
   unique-++-∷ (x ∷ as) bs (u-∷ uab x₁) f = u-∷ (unique-++-∷ as bs uab (f ∘ in-tail))
     (in-neither {bs = _ ∷ bs} (not-in-l x₁) λ { in-head → f in-head ; (in-tail x₂) → x₁ (in-r x₂)})
   
-  no-include-\\ : ∀ {n} -> {x : Item n} (as bs : Item n *) ->
+  no-include-\\ : ∀ {w n} -> {x : Item w n} (as bs : Item w n *) ->
     (as ∋ x -> Void) ->
     (as \\ bs) ∋ x -> Void
   no-include-\\ ε bs f p = f p
@@ -546,7 +565,7 @@ module Unique {T : Set} (Item : T * -> Set) (eq-item : ∀ {v}(a b : Item v) -> 
   no-include-\\ (x₁ ∷ as) bs f in-head             | no x₂ = f in-head
   no-include-\\ {n} {x} (x₁ ∷ as) bs f (in-tail p) | no x₂ = no-include-\\ as (x₁ ∷ bs) (f ∘ in-tail) p
   
-  no-include-\\₂ : ∀ {n} -> {x : Item n} (as bs : Item n *) ->
+  no-include-\\₂ : ∀ {w n} -> {x : Item w n} (as bs : Item w n *) ->
     bs ∋ x ->
     (as \\ bs) ∋ x -> Void
   no-include-\\₂ ε bs p ()
@@ -555,7 +574,7 @@ module Unique {T : Set} (Item : T * -> Set) (eq-item : ∀ {v}(a b : Item v) -> 
   no-include-\\₂ (x₁ ∷ as) bs p in-head     | no x₂ = void (x₂ p)
   no-include-\\₂ (x₁ ∷ as) bs p (in-tail q) | no x₂ = no-include-\\₂ as (x₁ ∷ bs) (in-tail p) q
   
-  unique-\\ : ∀ {n} -> (as bs : Item n *) ->
+  unique-\\ : ∀ {w n} -> (as bs : Item w n *) ->
     Unique as ->
     Unique (as \\ bs)
   unique-\\ ε bs ua = ua
