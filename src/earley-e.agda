@@ -12,6 +12,9 @@ module parser (G : CFG) where
   v-step : ∀ {Y α x β} -> CFG.rules G ∋ (Y , α ++ (x ∷ β)) -> CFG.rules G ∋ (Y , (α ←∷ x) ++ β)
   v-step {Y} {α} {x} {β} v = in₂ (λ x → CFG.rules G ∋ (Y , x)) (in₀ x α β) v
 
+  v-unstep : ∀ {Y α x β} -> CFG.rules G ∋ (Y , (α ←∷ x) ++ β) -> CFG.rules G ∋ (Y , α ++ (x ∷ β))
+  v-unstep {Y} {α} {x} {β} v = in₂ (λ x → CFG.rules G ∋ (Y , x)) (sym (in₀ x α β)) v
+
   record Item (w : T *) (v : T *) : Set where
     constructor _∘_↦_∘_
     field
@@ -183,11 +186,11 @@ module parser (G : CFG) where
   Sound (start rs) = ∀ {i} -> i ∈ rs -> Valid i
   Sound (step ω rs) = Sound ω × (∀ {i} -> i ∈ rs -> Valid i)
 
-  Complete : ∀ {w v} {ω : WSet w v} ->
+  Complete : ∀ {v w} -> WSet w v -> Set
+  Complete {v} ω =
     ∀ {Y u β} ->
-    G ⊢ u / v ⟶* Y / β ->
-    Σ λ i -> (i ∈ Sₙ ω) × (Item.Y i ≡ Y) × (Item.u i ≡ u) × (Item.β i ≡ β) 
-  Complete = {!!}
+    G ⊢ u / v ⟶* Y / β -> ∀ α .χ .ψ ->
+    Σ λ i -> (i ∈ Sₙ ω) × (i ≡ (Y ∘ u ↦ α ∘ β [ χ ∘ ψ ]))
 
   H : ∀ {v w} {ω : WSet w v} -> Sound ω -> (∀ {i} -> i ∈ Sₙ ω -> Valid i)
   H {ω = start rs} s = s
@@ -216,6 +219,18 @@ module parser (G : CFG) where
   sound-scanner-w₀ {a} ((X ∘ u ↦ α ∘ r a ∷ β) ∷ rs) f (in-tail p) | yes refl
     = sound-scanner-w₀ rs (f ∘ in-tail) p
 
+  complete-scanner-w₀ : ∀ {a v w X u α β} -> ∀ .χ .ψ rs ->
+    ∀ i -> i ∈ rs -> i ≡ (X ∘ u ↦ α ∘ r a ∷ β [ χ ∘ ψ ]) ->
+    (X ∘ u ↦ α ←∷ r a ∘ β [ v-step χ ∘ ψ ]) ∈ scanner-w₀ {w} {v} a rs
+  complete-scanner-w₀ χ ψ ε i () q
+  complete-scanner-w₀ χ ψ ((Y ∘ t ↦ γ ∘ ε) ∷ rs) (X ∘ u ↦ α ∘ r a ∷ β) (in-tail p) refl = complete-scanner-w₀ χ ψ rs _ p refl
+  complete-scanner-w₀ χ ψ ((Y ∘ t ↦ γ ∘ l Z ∷ δ) ∷ rs) (X ∘ u ↦ α ∘ r a ∷ β) (in-tail p) refl = complete-scanner-w₀ χ ψ rs _ p refl
+  complete-scanner-w₀ χ ψ ((Y ∘ t ↦ γ ∘ r d ∷ δ) ∷ rs) (X ∘ u ↦ α ∘ r a ∷ β) p refl           with decidₜ a d
+  complete-scanner-w₀ χ ψ ((X ∘ u ↦ α ∘ r a ∷ β) ∷ rs) (X ∘ u ↦ α ∘ r a ∷ β) in-head refl     | yes refl = in-head
+  complete-scanner-w₀ χ ψ ((Y ∘ t ↦ γ ∘ r a ∷ δ) ∷ rs) (X ∘ u ↦ α ∘ r a ∷ β) (in-tail p) refl | yes refl = in-tail (complete-scanner-w₀ χ ψ rs _ p refl)
+  complete-scanner-w₀ χ ψ ((X ∘ u ↦ α ∘ r a ∷ β) ∷ rs) (X ∘ u ↦ α ∘ r a ∷ β) in-head refl     | no x = void (x refl)
+  complete-scanner-w₀ χ ψ ((Y ∘ t ↦ γ ∘ r d ∷ δ) ∷ rs) (X ∘ u ↦ α ∘ r a ∷ β) (in-tail p) refl | no x = complete-scanner-w₀ χ ψ rs _ p refl
+
   scanner-w : {w v : T *} ->
     (a : T) ->
     WSet w (a ∷ v) ->
@@ -227,6 +242,14 @@ module parser (G : CFG) where
   sound-scanner-w (start rs) s = s , sound-scanner-w₀ rs s
   sound-scanner-w (step w rs) (s , s₁) = s , s₁ , sound-scanner-w₀ rs s₁
 
+  complete-scanner-w : ∀ {a v w X u α β} (ω : WSet w (a ∷ v)) -> ∀ .χ .ψ ->
+    Complete ω ->
+    G ⊢ u / a ∷ v ⟶* X / r a ∷ β ->
+      ∀ i -> i ≡ (X ∘ u ↦ α ←∷ r a ∘ β [ χ ∘ ψ ]) -> i ∈ Sₙ (scanner-w a ω)
+  complete-scanner-w {a} {α = α} ω χ ψ c g (X ∘ u ↦ .(α ←∷ r a) ∘ β) refl with c g α (v-unstep χ) ψ
+  complete-scanner-w {a} {α = α} ω χ ψ c g (X ∘ u ↦ .(α ←∷ r a) ∘ β) refl | σ .(X ∘ u ↦ α ∘ r a ∷ β) (x , refl) =
+    complete-scanner-w₀ (v-unstep χ) ψ (Sₙ ω) _ x refl
+
   complete-w₀ : ∀ {u v w} ->
     (ω : WSet w v) ->
     Item w u *
@@ -237,10 +260,13 @@ module parser (G : CFG) where
 
   sound-complete-w₀ : ∀ {u v w} (w : WSet w v) ->
     Sound w -> (∀ {i} -> i ∈ complete-w₀ {u} {v} w -> Valid i)
-  sound-complete-w₀ {u} {v} w s p             with eq-T* u v
-  sound-complete-w₀ {v} {v} w s p             | yes refl = H s p
+  sound-complete-w₀ {u} {v} w s p           with eq-T* u v
+  sound-complete-w₀ {v} {v} w s p           | yes refl = H s p
   sound-complete-w₀ {u} {v} (start rs) s () | no x
-  sound-complete-w₀ {u} {v} (step w rs) s p   | no x = sound-complete-w₀ w (fst s) p
+  sound-complete-w₀ {u} {v} (step w rs) s p | no x = sound-complete-w₀ w (fst s) p
+
+  complete-complete-w₀ : ?
+  complete-complete-w₀ = ?
 
   complete-w₁ : ∀ {X u v w α} -> ∀ .χ .ψ ->
     (i : Item w v) -> i ≡ (X ∘ u ↦ α ∘ ε [ χ ∘ ψ ])->
