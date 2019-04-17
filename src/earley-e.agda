@@ -26,9 +26,6 @@ module parser (G : CFG) where
   pattern _∘_↦_∘_[_∘_] Y u α β χ ψ = (Y ∘ u ↦ α ∘ β) {χ} {ψ}
   infixl 3 _∘_↦_∘_[_∘_]
 
---  promote : ∀ {w u us} -> Item w (u ∷ us) -> Item w us
---  promote (Y ∘ u ↦ α ∘ β [ χ ∘ ψ ]) = Y ∘ u ↦ α ∘ β [ χ ∘ {!ψ!} ]
-
   eq-α :
     (a b : (N ∣ T)*) ->
     a ≡ b ??
@@ -129,35 +126,7 @@ module parser (G : CFG) where
   relevant-χ : ∀ {w v} -> (i : Item w v) -> CFG.rules G ∋ (Item.Y i , Item.α i ++ Item.β i)
   relevant-χ ((Y ∘ j ↦ α ∘ β) {χ}) = elem' eq-rule (Y , α ++ β) (CFG.rules G) χ
 
-  .ε₁ : ∀ {a b} {x : T} -> a ++ (x ∷ b) ≡ ε -> Void
-  ε₁ {ε} ()
-  ε₁ {x ∷ a} ()
-
-  .ε-0 : (as bs : T *) -> length (as ++ bs) ≡ length as + length bs
-  ε-0 ε bs = refl
-  ε-0 (x ∷ as) bs = app suc (ε-0 as bs)
-
-  .ε-1 : (as bs : T *) -> as ≡ bs -> length as ≡ length bs
-  ε-1 as as refl = refl
-
-  .ε₂ : ∀ {a b} {x : T} -> a ++ (x ∷ b) ≡ b -> Void
-  ε₂ {as} {bs} {x} p = +-imp (trans (trans (sym (ε-1 _ _ p)) (sym (ε-0 as _))) (+-comm {b = length as}))
-
-  .ε₃ : ∀ {a b} {x y : T} -> (x ≡ y -> Void) -> a ++ (y ∷ b) ≡ (x ∷ b) -> Void
-  ε₃ {ε} p refl = void (p refl)
-  ε₃ {a ∷ as} {b} {x} {y} p q with decidₜ a x
-  ε₃ {x ∷ as} {b} {x} {y} p q | yes refl = ε₂ (uncons _ _ q)
-  ε₃ {a ∷ as} {b} {x} {y} p q | no x₁ = x₁ (uncons₂ a x q)
-
-  .ε₄ : ∀ {t u w} {x y : T} -> t ++ (y ∷ u) ≡ x ∷ w -> x ≠ y -> Σ λ v -> v ++ (y ∷ u) ≡ w
-  ε₄ {ε} {u} {v} p x₁ = void (x₁ (uncons₂ _ _ (sym p)))
-  ε₄ {x ∷ t} {u} {v} p x₁ with uncons _ _ p
-  ε₄ {x ∷ t} {u} {.(t ++ (_ ∷ u))} p x₁ | refl = σ t refl
-
-  .ε₅ : ∀ {t u w} {x : T} -> t ++ (x ∷ u) ≡ x ∷ w -> w ≠ u -> Σ λ v -> v ++ (x ∷ u) ≡ w
-  ε₅ {ε} p x = void (x (uncons _ _ (sym p)))
-  ε₅ {t ∷ ts} p x with uncons _ _ p
-  ε₅ {t ∷ ts} p x | refl = σ ts refl
+  open ε decidₜ
 
   relevant-ψ : ∀ {w v} -> (i : Item w v) -> Σ λ t -> t ++ Item.u i ≡ w
   relevant-ψ {ε} ((Y ∘ ε ↦ α ∘ β) {χ} {ψ}) = σ ε refl
@@ -207,6 +176,23 @@ module parser (G : CFG) where
   Wₙ (start rs) rs₁ = start rs₁
   Wₙ (step w rs) rs₁ = step w rs₁
   
+  Valid : ∀ {w v} -> Item w v -> Set
+  Valid {w} {v} i = G ⊢ Item.u i / v ⟶* Item.Y i / Item.β i
+
+  Sound : ∀ {w v} -> WSet w v -> Set
+  Sound (start rs) = ∀ {i} -> i ∈ rs -> Valid i
+  Sound (step ω rs) = Sound ω × (∀ {i} -> i ∈ rs -> Valid i)
+
+  Complete : ∀ {w v} {ω : WSet w v} ->
+    ∀ {Y u β} ->
+    G ⊢ u / v ⟶* Y / β ->
+    Σ λ i -> (i ∈ Sₙ ω) × (Item.Y i ≡ Y) × (Item.u i ≡ u) × (Item.β i ≡ β) 
+  Complete = {!!}
+
+  H : ∀ {v w} {ω : WSet w v} -> Sound ω -> (∀ {i} -> i ∈ Sₙ ω -> Valid i)
+  H {ω = start rs} s = s
+  H {ω = step ω rs} s = snd s
+
   scanner-w₀ : ∀ {w v} ->
     (a : T) ->
     Item w (a ∷ v)* ->
@@ -218,17 +204,6 @@ module parser (G : CFG) where
   ... | yes refl = (X ∘ u ↦ α ←∷ r a ∘ β [ v-step χ ∘ ψ ]) ∷ (scanner-w₀ a rs)
   ... | no x = scanner-w₀ a rs
   
-  Valid : ∀ {w v} -> Item w v -> Set
-  Valid {w} {v} i = G ⊢ Item.u i / v ⟶* Item.Y i / Item.β i
-
-  Sound : ∀ {w v} -> WSet w v -> Set
-  Sound (start rs) = ∀ {i} -> i ∈ rs -> Valid i
-  Sound (step w rs) = Sound w × (∀ {i} -> i ∈ rs -> Valid i)
-
-  H : ∀ {v w} {ω : WSet w v} -> Sound ω -> (∀ {i} -> i ∈ Sₙ ω -> Valid i)
-  H {ω = start rs} s = s
-  H {ω = step ω rs} s = snd s
-
   sound-scanner-w₀ : ∀ {a v w} -> ∀ rs ->
     (∀ {i} -> i ∈ rs -> Valid i) ->
     (∀ {i} -> i ∈ scanner-w₀ {w} {v} a rs -> Valid i)
@@ -387,15 +362,35 @@ module parser (G : CFG) where
     Unique (rs ++ ss) ->
     WSet w n
   pred-comp-w₂ w ss rs zero () q
-  pred-comp-w₂ w ss ε (suc m) p q = w
+  pred-comp-w₂ w ss ε (suc m) p q = Wₙ w ss
   pred-comp-w₂ {n} w ss (r₁ ∷ rs) (suc m) p q =
-    let x₁ = pred-comp-w₀ _ _ r₁ refl w in
+    let x₁ = pred-comp-w₀ _ _ r₁ refl (Wₙ w ss) in
     let x₂ = Σ.proj₁ x₁ \\ (r₁ ∷ (ss ++ rs)) in
-    let p₁ = trans (unsuc p) (sym (diff-suc eq-item (Σ.proj₀ (all-rules {n})) (eq-not q in-head))) in
-    let p₂ = (unique-\\ (Σ.proj₁ x₁) (r₁ ∷ (ss ++ rs)) (Σ.proj₀ x₁)) in
-    let p₃ = (u-∷ p₂ (no-include-\\₂ (Σ.proj₁ x₁) _ in-head)) in
-    let p₄ = (tmp rs x₂ ss q p₃ (λ x → no-include-\\₂ (Σ.proj₁ x₁) _ (in-tail (in-r x))) (λ x → no-include-\\₂ (Σ.proj₁ x₁) _ (in-tail (in-l x)))) in
-    pred-comp-w₂ w (r₁ ∷ ss) (rs ++ x₂) m p₁ p₄
+    let p₁ = wf-pcw₀ (Σ.proj₀ all-rules) p q  in
+    let p₂ = wf-pcw₁ r₁ (Σ.proj₁ x₁) rs ss (Σ.proj₀ x₁) q in
+    pred-comp-w₂ w (r₁ ∷ ss) (rs ++ x₂) m p₁ p₂
+
+  sound-Wₙ : ∀ {w v ss} (ω : WSet w v) ->
+    (∀ {i} -> i ∈ ss -> Valid i) ->
+    Sound ω -> Sound (Wₙ ω ss)
+  sound-Wₙ (start rs) f s = f
+  sound-Wₙ (step ω rs) f s = fst s , f
+
+  sound-pred-comp-w₂ : ∀ {w v} (ω : WSet w v) -> ∀ ss rs m p q ->
+    (∀ {i} -> i ∈ ss -> Valid i) ->
+    (∀ {i} -> i ∈ rs -> Valid i) ->
+    Sound ω -> Sound (pred-comp-w₂ ω ss rs m p q)
+  sound-pred-comp-w₂ ω ss rs zero () q f g s
+  sound-pred-comp-w₂ ω ss ε (suc m) p q f g s = sound-Wₙ ω f s
+  sound-pred-comp-w₂ ω ss (r₁ ∷ rs) (suc m) p q f g s =
+    let x₁ = pred-comp-w₀ _ _ r₁ refl (Wₙ ω ss) in
+    let x₂ = Σ.proj₁ x₁ \\ (r₁ ∷ (ss ++ rs)) in
+    let p₁ = wf-pcw₀ (Σ.proj₀ all-rules) p q  in
+    let p₂ = wf-pcw₁ r₁ (Σ.proj₁ x₁) rs ss (Σ.proj₀ x₁) q in
+    sound-pred-comp-w₂ ω (r₁ ∷ ss) (rs ++ x₂) m p₁ p₂
+      (λ {in-head → g in-head ; (in-tail x) → f x})
+      (s-pcw Valid (g ∘ in-tail) (sound-pred-comp-w₀ _ _ r₁ refl (Wₙ ω ss) (g in-head) (sound-Wₙ ω f s)))
+      s
 
   pred-comp-w : ∀ {w v} ->
     WSet w v ->
@@ -404,15 +399,34 @@ module parser (G : CFG) where
     let x₁ = deduplicate (Sₙ w) in
     let x₂ = (unique-++ (Σ.proj₁ x₁) ε (Σ.proj₀ x₁) u-ε λ ()) in
     let m = suc (length (Σ.proj₁ (all-rules {v}) \\ ε)) in
-    pred-comp-w₂ (Wₙ w ε) ε (Σ.proj₁ x₁) m (app suc refl) x₂
+    pred-comp-w₂ w ε (Σ.proj₁ x₁) m (app suc refl) x₂
+
+  sound-pred-comp-w : ∀ {w v} {ω : WSet w v} ->
+    Sound ω -> Sound (pred-comp-w ω)
+  sound-pred-comp-w {w} {v} {ω} s = 
+    let x₁ = deduplicate (Sₙ ω) in
+    let x₂ = (unique-++ (Σ.proj₁ x₁) ε (Σ.proj₀ x₁) u-ε λ ()) in
+    let m = suc (length (Σ.proj₁ (all-rules {w}) \\ ε)) in
+    sound-pred-comp-w₂ ω ε (Σ.proj₁ x₁) m (app suc refl) x₂ (λ ())
+      (sound-deduplicate (Sₙ ω) (H s))
+      s
 
   step-w : ∀ {w a v} ->
     WSet w (a ∷ v) ->
     WSet w v
   step-w {w} {a} {v} ω = scanner-w a (pred-comp-w ω)
+
+  sound-step-w : ∀ {w a v} {ω : WSet w (a ∷ v)} ->
+    Sound ω -> Sound (step-w ω)
+  sound-step-w {ω = ω} s = sound-scanner-w (pred-comp-w ω) (sound-pred-comp-w s)
   
   parse : ∀ {w v} ->
      WSet w v ->
      WSet w ε
   parse {v = ε} w = pred-comp-w w
   parse {v = x ∷ v} w = parse (step-w w)
+
+  sound-parse : ∀ {w v} -> {ω : WSet w v} ->
+    Sound ω -> Sound (parse ω)
+  sound-parse {v = ε} s = sound-pred-comp-w s
+  sound-parse {v = x ∷ v} s = sound-parse (sound-step-w s)
