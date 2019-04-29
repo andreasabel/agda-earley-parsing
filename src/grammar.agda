@@ -43,6 +43,22 @@ data _⊢_/_∈_ (G : CFG) : T * -> T * -> (N ∣ T)* -> Set where
 
 infixl 10 _⊢_/_∈_
 
+data _⊢_&_∈_ (G : CFG) : T * -> T * -> (N ∣ T)* -> Set where
+  empt : {w : T *} ->
+    G ⊢ w & w ∈ ε
+
+  conc : {u v w : T *} {X : N} {α β : (N ∣ T) *} ->
+    (X , α) ∈ CFG.rules G ->
+    G ⊢ u & v ∈ α ->
+    G ⊢ v & w ∈ β ->
+      G ⊢ u & w ∈ l X ∷ β
+
+  term : {a : T} {u v : T *} {α : (N ∣ T) *} ->
+    G ⊢ u & v ∈ α ->
+      G ⊢ a ∷ u & v ∈ r a ∷ α
+
+infixl 10 _⊢_&_∈_
+
 s : ∀ {u v w α G} ->
   G ⊢ u / v ∈ α ->
   G ⊢ u ++ w / v ++ w ∈ α

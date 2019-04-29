@@ -265,8 +265,12 @@ module parser (G : CFG) where
   sound-complete-w₀ {u} {v} (start rs) s () | no x
   sound-complete-w₀ {u} {v} (step w rs) s p | no x = sound-complete-w₀ w (fst s) p
 
-  complete-complete-w₀ : ?
-  complete-complete-w₀ = ?
+  complete-complete-w₀ : ∀ {u v w X Y α β} {ω : WSet u w} -> ∀ .χ .ψ ->
+    Sound ω ->
+    G ⊢ u / v ⟶* X / l Y ∷ β ->
+    G ⊢ v / w ⟶* Y / ε ->
+    Σ λ (i : Item u v) -> (i ≡ (X ∘ w ↦ α ←∷ l Y ∘ β [ χ ∘ ψ ])) × (i ∈ complete-w₀ ω)
+  complete-complete-w₀ χ ψ s g h = {!!}
 
   complete-w₁ : ∀ {X u v w α} -> ∀ .χ .ψ ->
     (i : Item w v) -> i ≡ (X ∘ u ↦ α ∘ ε [ χ ∘ ψ ])->
