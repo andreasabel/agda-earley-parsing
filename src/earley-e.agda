@@ -8,7 +8,7 @@ open import grammar N T
 module parser (G : CFG) where
 
   open import count N T decidₙ decidₜ
-  
+
   v-step : ∀ {Y α x β} -> CFG.rules G ∋ (Y , α ++ (x ∷ β)) -> CFG.rules G ∋ (Y , (α ←∷ x) ++ β)
   v-step {Y} {α} {x} {β} v = in₂ (λ x → CFG.rules G ∋ (Y , x)) (in₀ x α β) v
 
@@ -47,7 +47,7 @@ module parser (G : CFG) where
   eq-α (l A ∷ α) (l A ∷ α) | yes refl | yes refl = yes refl
   eq-α (l A ∷ α) (l A ∷ β) | yes refl | no x = no (λ {refl → x refl})
   eq-α (l A ∷ α) (l B ∷ β) | no x = no (λ {refl → x refl})
-  
+
   eq-N : (a b : N) -> a ≡ b ??
   eq-N X Y = decidₙ X Y
 
@@ -66,7 +66,7 @@ module parser (G : CFG) where
   eq-rule (X , α) (X , α) | yes refl , yes refl = yes refl
   eq-rule (X , α) (Y , β) | yes x , no x₁ = no λ {refl → x₁ refl}
   eq-rule (X , α) (Y , β) | no x , x₁ = no λ {refl → x refl}
-  
+
   eq-item : ∀ {w v} -> (a b : Item w v) -> a ≡ b ??
   eq-item (X ∘ j ↦ α₁ ∘ β₁) (Y ∘ k ↦ α₂ ∘ β₂) with eq-N X Y , eq-T* j k , eq-α α₁ α₂ , eq-α β₁ β₂
   eq-item (X ∘ j ↦ α₁ ∘ β₁) (X ∘ j ↦ α₁ ∘ β₁) | yes refl , yes refl , yes refl , yes refl = yes refl
@@ -76,7 +76,7 @@ module parser (G : CFG) where
   eq-item (X ∘ j ↦ α₁ ∘ β₁) (Y ∘ k ↦ α₂ ∘ β₂) | x₁ , x₂ , x₃ , no x₄ = no (λ {refl → x₄ refl})
 
   in₄ : ∀ {rs} {X : N} {α β : _} {x : N ∣ T} -> (X , (α ++ (x ∷ β))) ∈ rs -> (X , ((α ←∷ x) ++ β)) ∈ rs
-  in₄ {rs} {X} χ = in₂ (λ q → (X , q) ∈ rs) (in₀ _ _ _) χ 
+  in₄ {rs} {X} χ = in₂ (λ q → (X , q) ∈ rs) (in₀ _ _ _) χ
 
   case_of_ : ∀ {a b} {A : Set a} {B : Set b} -> A -> (A -> B) -> B
   case x of f = f x
@@ -133,27 +133,27 @@ module parser (G : CFG) where
 
   relevant-ψ : ∀ {w v} -> (i : Item w v) -> Σ λ t -> t ++ Item.u i ≡ w
   relevant-ψ {ε} ((Y ∘ ε ↦ α ∘ β) {χ} {ψ}) = σ ε refl
-  relevant-ψ {ε} ((Y ∘ x ∷ u ↦ α ∘ β) {χ} {σ p₁ p₀}) = void (ε₁ p₀)
-  relevant-ψ {x ∷ w} {v} (Y ∘ ε ↦ α ∘ β [ χ ∘ σ p₁ p₀ ]) = σ (x ∷ w) (++-ε (x ∷ w))
-  relevant-ψ {x ∷ w} {v} (Y ∘ y ∷ u ↦ α ∘ β [ χ ∘ σ p₁ p₀ ]) with decidₜ x y | eq-T* w u
-  relevant-ψ {x ∷ w} {v} (Y ∘ x ∷ w ↦ α ∘ β [ χ ∘ σ p₁ p₀ ]) | yes refl | yes refl = σ ε refl
-  relevant-ψ {x ∷ w} {v} (Y ∘ x ∷ u ↦ α ∘ β [ χ ∘ σ p₁ p₀ ]) | yes refl | no x₁ with relevant-ψ {w} {v} (Y ∘ x ∷ u ↦ α ∘ β [ χ ∘ ε₅ p₀ x₁ ])
-  relevant-ψ {x ∷ w} {v} (Y ∘ x ∷ u ↦ α ∘ β [ χ ∘ σ p₁ p₀ ]) | yes refl | no x₁ | σ q₁ q₀ = σ (x ∷ q₁) (app (x ∷_) q₀)
-  relevant-ψ {x ∷ w} {v} (Y ∘ y ∷ w ↦ α ∘ β [ χ ∘ σ p₁ p₀ ]) | no x₂    | yes refl = void (ε₃ x₂ p₀)
-  relevant-ψ {x ∷ w} {v} (Y ∘ y ∷ u ↦ α ∘ β [ χ ∘ σ p₁ p₀ ]) | no x₂    | no x₁ with relevant-ψ {w} {v} (Y ∘ y ∷ u ↦ α ∘ β [ χ ∘ ε₄ p₀ x₂ ])
-  relevant-ψ {x ∷ w} {v} (Y ∘ y ∷ u ↦ α ∘ β [ χ ∘ σ p₁ p₀ ]) | no x₂    | no x₁ | σ q₁ q₀ = σ (x ∷ q₁) (app (x ∷_) q₀)
+  relevant-ψ {ε} ((Y ∘ x ∷ u ↦ α ∘ β) {χ} {p}) = void (ε₁ (Σ.proj₀ p))
+  relevant-ψ {x ∷ w} {v} (Y ∘ ε ↦ α ∘ β [ χ ∘ p ]) = σ (x ∷ w) (++-ε (x ∷ w))
+  relevant-ψ {x ∷ w} {v} (Y ∘ y ∷ u ↦ α ∘ β [ χ ∘ p ]) with decidₜ x y | eq-T* w u
+  relevant-ψ {x ∷ w} {v} (Y ∘ x ∷ w ↦ α ∘ β [ χ ∘ p ]) | yes refl | yes refl = σ ε refl
+  relevant-ψ {x ∷ w} {v} (Y ∘ x ∷ u ↦ α ∘ β [ χ ∘ p ]) | yes refl | no x₁ with relevant-ψ {w} {v} (Y ∘ x ∷ u ↦ α ∘ β [ χ ∘ ε₅ (Σ.proj₀ p) x₁ ])
+  relevant-ψ {x ∷ w} {v} (Y ∘ x ∷ u ↦ α ∘ β [ χ ∘ p ]) | yes refl | no x₁ | σ q₁ q₀ = σ (x ∷ q₁) (app (x ∷_) q₀)
+  relevant-ψ {x ∷ w} {v} (Y ∘ y ∷ w ↦ α ∘ β [ χ ∘ p ]) | no x₂    | yes refl = void (ε₃ x₂ (Σ.proj₀ p))
+  relevant-ψ {x ∷ w} {v} (Y ∘ y ∷ u ↦ α ∘ β [ χ ∘ p ]) | no x₂    | no x₁ with relevant-ψ {w} {v} (Y ∘ y ∷ u ↦ α ∘ β [ χ ∘ ε₄ (Σ.proj₀ p) x₂ ])
+  relevant-ψ {x ∷ w} {v} (Y ∘ y ∷ u ↦ α ∘ β [ χ ∘ p ]) | no x₂    | no x₁ | σ q₁ q₀ = σ (x ∷ q₁) (app (x ∷_) q₀)
 
   all-rules : ∀ {w} {v} -> Σ λ as -> {i : Item w v} -> i ∈ as
   all-rules with all-rules₂ (CFG.rules G) id
   all-rules | σ p₁ p₀ = σ p₁ λ {i} -> p₀ (relevant-χ i) (relevant-ψ i) i refl (relevant-χ i)
 
   open Unique Item eq-item
-  
+
   data WSet : T * -> T * -> Set where
     start : {v : T *} ->
       (rs : Item v v * ) ->
       WSet v v
-  
+
     step : {a : T} {w v : T *} ->
       (ω : WSet w (a ∷ v)) ->
       (rs : Item w v * ) ->
@@ -165,7 +165,7 @@ module parser (G : CFG) where
   V {w} {w} (start rs) = σ ε refl
   V {w} {v} (step ω rs) with V ω
   V {w} {v} (step {a} ω rs) | σ p₁ p₀ = σ (p₁ ←∷ a) (trans (sym (in₀ a p₁ v)) (sym p₀))
-  
+
   Sₙ : {w v : T *} ->
     WSet w v ->
     Item w v *
@@ -178,7 +178,7 @@ module parser (G : CFG) where
     WSet w v
   Wₙ (start rs) rs₁ = start rs₁
   Wₙ (step w rs) rs₁ = step w rs₁
-  
+
   Valid : ∀ {w v} -> Item w v -> Set
   Valid {w} {v} i = G ⊢ Item.u i / v ⟶* Item.Y i / Item.β i
 
@@ -206,7 +206,7 @@ module parser (G : CFG) where
   scanner-w₀ a ((X ∘ u ↦ α ∘ r b ∷ β [ χ ∘ ψ ]) ∷ rs) with decidₜ a b
   ... | yes refl = (X ∘ u ↦ α ←∷ r a ∘ β [ v-step χ ∘ ψ ]) ∷ (scanner-w₀ a rs)
   ... | no x = scanner-w₀ a rs
-  
+
   sound-scanner-w₀ : ∀ {a v w} -> ∀ rs ->
     (∀ {i} -> i ∈ rs -> Valid i) ->
     (∀ {i} -> i ∈ scanner-w₀ {w} {v} a rs -> Valid i)
@@ -287,7 +287,7 @@ module parser (G : CFG) where
     (i : Item w v) -> (p : i ≡ (X ∘ u ↦ α ∘ ε [ χ ∘ ψ ])) ->
     (rs : Item w u *) ->
     Valid i -> (∀ {j} -> j ∈ rs -> Valid j) ->
-    (∀ {j} -> j ∈ complete-w₁ χ ψ i p rs -> Valid j) 
+    (∀ {j} -> j ∈ complete-w₁ χ ψ i p rs -> Valid j)
   sound-complete-w₁ χ ψ (X ∘ u ↦ α ∘ ε) refl ε v f ()
   sound-complete-w₁ χ ψ (X ∘ u ↦ α ∘ ε) refl ((Y ∘ u₁ ↦ α₁ ∘ ε) ∷ rs) v f q =
     sound-complete-w₁ χ ψ _ refl rs v (f ∘ in-tail) q
@@ -313,7 +313,7 @@ module parser (G : CFG) where
     (∀ {j} -> j ∈ complete-w₂ χ ψ i p w -> Valid j)
   sound-complete-w₂ χ ψ i p v w s q =
     sound-complete-w₁ χ ψ i p (complete-w₀ w) v (sound-complete-w₀ w s) q
-  
+
   predict-w₀ : ∀ {u v w X α Y β} -> ∀ .χ .ψ ->
     (Σ λ t -> t ++ v ≡ w) ->
     (i : Item w v) ->  i ≡ (X ∘ u ↦ α ∘ l Y ∷ β [ χ ∘ ψ ]) ->
@@ -363,7 +363,7 @@ module parser (G : CFG) where
   sound-deduplicate (x ∷ as) f p           | yes x₁ = sound-deduplicate as (f ∘ in-tail) p
   sound-deduplicate (x ∷ as) f in-head     | no x₁ = f in-head
   sound-deduplicate (x ∷ as) f (in-tail p) | no x₁ = sound-deduplicate as (f ∘ in-tail) p
-  
+
   pred-comp-w₀ : ∀ {u v w X α β} -> ∀ .χ .ψ
     (i : Item w v) -> i ≡ (X ∘ u ↦ α ∘ β [ χ ∘ ψ ]) ->
     (ω : WSet w v) ->
@@ -388,7 +388,7 @@ module parser (G : CFG) where
     (ss : Item w n *) ->
     (rs : Item w n *) ->
     (m : ℕ) ->
-    (p : m ≡ suc (length (Σ.proj₁ (all-rules {w} {n}) \\ ss))) -> 
+    (p : m ≡ suc (length (Σ.proj₁ (all-rules {w} {n}) \\ ss))) ->
     Unique (rs ++ ss) ->
     WSet w n
   pred-comp-w₂ w ss rs zero () q
@@ -433,7 +433,7 @@ module parser (G : CFG) where
 
   sound-pred-comp-w : ∀ {w v} {ω : WSet w v} ->
     Sound ω -> Sound (pred-comp-w ω)
-  sound-pred-comp-w {w} {v} {ω} s = 
+  sound-pred-comp-w {w} {v} {ω} s =
     let x₁ = deduplicate (Sₙ ω) in
     let x₂ = (unique-++ (Σ.proj₁ x₁) ε (Σ.proj₀ x₁) u-ε λ ()) in
     let m = suc (length (Σ.proj₁ (all-rules {w}) \\ ε)) in
@@ -449,7 +449,7 @@ module parser (G : CFG) where
   sound-step-w : ∀ {w a v} {ω : WSet w (a ∷ v)} ->
     Sound ω -> Sound (step-w ω)
   sound-step-w {ω = ω} s = sound-scanner-w (pred-comp-w ω) (sound-pred-comp-w s)
-  
+
   parse : ∀ {w v} ->
      WSet w v ->
      WSet w ε
