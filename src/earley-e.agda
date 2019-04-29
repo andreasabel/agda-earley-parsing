@@ -15,6 +15,14 @@ module parser (G : CFG) where
   v-unstep : ∀ {Y α x β} -> CFG.rules G ∋ (Y , (α ←∷ x) ++ β) -> CFG.rules G ∋ (Y , α ++ (x ∷ β))
   v-unstep {Y} {α} {x} {β} v = in₂ (λ x → CFG.rules G ∋ (Y , x)) (sym (in₀ x α β)) v
 
+  -- Earley items:
+  --   Y ∘ u ↦ α ∘ β : Item w v
+  -- means
+  -- * we are parsing input w
+  -- * it remains to parse v (v is the leftover)
+  -- * Y ↦ αβ is a rule of the grammar
+  -- * the item was predicted when the leftover was u
+
   record Item (w : T *) (v : T *) : Set where
     constructor _∘_↦_∘_
     field
@@ -22,7 +30,7 @@ module parser (G : CFG) where
       u : T *
       α β : (N ∣ T) *
       .{χ} : CFG.rules G ∋ (Y , α ++ β)
-      .{ψ} : (Σ λ t -> t ++ u ≡ w)
+      .{ψ} : (Σ λ t -> t ++ u ≡ w)        -- u is a suffix of w
 
   infixl 3 _∘_↦_∘_
 
@@ -149,6 +157,10 @@ module parser (G : CFG) where
 
   open Unique Item eq-item
 
+  -- Working set.
+  -- State sets the Earley parser constructs.
+  -- start rs₀ `step` rs₁ `step` rs₂ ...
+
   data WSet : T * -> T * -> Set where
     start : {v : T *} ->
       (rs : Item v v * ) ->
@@ -159,6 +171,8 @@ module parser (G : CFG) where
       (rs : Item w v * ) ->
       WSet w v
 
+  -- Invariant: v is suffix of w.
+
   V : {w v : T *} ->
     WSet w v ->
     Σ λ t -> t ++ v ≡ w
@@ -166,11 +180,15 @@ module parser (G : CFG) where
   V {w} {v} (step ω rs) with V ω
   V {w} {v} (step {a} ω rs) | σ p₁ p₀ = σ (p₁ ←∷ a) (trans (sym (in₀ a p₁ v)) (sym p₀))
 
+  -- Get the latest state.
+
   Sₙ : {w v : T *} ->
     WSet w v ->
     Item w v *
   Sₙ (start rs) = rs
   Sₙ (step w rs) = rs
+
+  -- Replace the latest state.
 
   Wₙ : {w v : T *} ->
     (ω : WSet w v) ->
@@ -179,12 +197,18 @@ module parser (G : CFG) where
   Wₙ (start rs) rs₁ = start rs₁
   Wₙ (step w rs) rs₁ = step w rs₁
 
+  -- Valid items, those that are Earley-derivable.
+
   Valid : ∀ {w v} -> Item w v -> Set
   Valid {w} {v} i = G ⊢ Item.u i / v ⟶* Item.Y i / Item.β i
+
+  -- Sound state sets (contain only valid items).
 
   Sound : ∀ {w v} -> WSet w v -> Set
   Sound (start rs) = ∀ {i} -> i ∈ rs -> Valid i
   Sound (step ω rs) = Sound ω × (∀ {i} -> i ∈ rs -> Valid i)
+
+  -- Complete state sets (contain all derivable items).
 
   Complete : ∀ {v w} -> WSet w v -> Set
   Complete {v} ω =
@@ -195,6 +219,8 @@ module parser (G : CFG) where
   H : ∀ {v w} {ω : WSet w v} -> Sound ω -> (∀ {i} -> i ∈ Sₙ ω -> Valid i)
   H {ω = start rs} s = s
   H {ω = step ω rs} s = snd s
+
+  -- Scanning step.
 
   scanner-w₀ : ∀ {w v} ->
     (a : T) ->
@@ -300,6 +326,8 @@ module parser (G : CFG) where
     complet (f in-head) v
   sound-complete-w₁ χ ψ (X ∘ u ↦ α ∘ ε) refl ((Y ∘ u₁ ↦ α₁ ∘ l X ∷ β) ∷ rs) v f (in-tail q) | yes refl =
     sound-complete-w₁ χ ψ _ refl rs v (f ∘ in-tail) q
+
+  -- For a completed item X ↦ α.ε, get the set of possible ancestors (callers).
 
   complete-w₂ : ∀ {u X v w α} -> ∀ .χ .ψ ->
     (i : Item w v) -> i ≡ (X ∘ u ↦ α ∘ ε [ χ ∘ ψ ]) ->
