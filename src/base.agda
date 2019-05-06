@@ -1,3 +1,5 @@
+{-# OPTIONS --allow-unsolved-metas #-}
+
 _∘_ : {A B C : Set} -> (B -> C) -> (A -> B) -> A -> C
 (f ∘ g) x = f (g x)
 infixl 20 _∘_
@@ -384,6 +386,12 @@ _∷←_ : {T : Set} -> T * -> T -> T *
 reverse : {T : Set} -> T * -> T *
 reverse ε = ε
 reverse (x ∷ xs) = reverse xs ∷← x
+
+constrained-eq : ∀ {T} {as bs : T *} ->
+  (Σ λ cs -> cs ++ as ≡ bs) -> 
+  (Σ λ cs -> cs ++ bs ≡ as) ->
+  as ≡ bs
+constrained-eq p q = ?
 
 filter-unique : {T : Set} -> ((a b : T) -> a ≡ b ??) -> T * -> T *
 filter-unique eq ε = ε

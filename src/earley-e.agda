@@ -210,11 +210,21 @@ module parser (G : CFG) where
 
   -- Complete state sets (contain all derivable items).
 
-  Complete : ∀ {v w} -> WSet w v -> Set
-  Complete {v} ω =
+  Complete₀ : ∀ {v w} -> WSet w v -> Set
+  Complete₀ {v} ω =
     ∀ {Y u β} ->
     G ⊢ u / v ⟶* Y / β -> ∀ α .χ .ψ ->
     Σ λ i -> (i ∈ Sₙ ω) × (i ≡ (Y ∘ u ↦ α ∘ β [ χ ∘ ψ ]))
+
+  Complete* : ∀ {v w} -> Item w v * -> Set
+  Complete* {v} rs =
+    ∀ {Y u β} ->
+    G ⊢ u / v ⟶* Y / β -> ∀ α .χ .ψ ->
+    Σ λ i -> (i ∈ rs) × (i ≡ (Y ∘ u ↦ α ∘ β [ χ ∘ ψ ]))
+
+  Complete : ∀ {v w} -> WSet w v -> Set
+  Complete (start rs) = Complete₀ (start rs)
+  Complete (step ω rs) = Complete ω × Complete₀ (step ω rs)
 
   H : ∀ {v w} {ω : WSet w v} -> Sound ω -> (∀ {i} -> i ∈ Sₙ ω -> Valid i)
   H {ω = start rs} s = s
@@ -269,7 +279,7 @@ module parser (G : CFG) where
   sound-scanner-w (step w rs) (s , s₁) = s , s₁ , sound-scanner-w₀ rs s₁
 
   complete-scanner-w : ∀ {a v w X u α β} (ω : WSet w (a ∷ v)) -> ∀ .χ .ψ ->
-    Complete ω ->
+    Complete₀ ω ->
     G ⊢ u / a ∷ v ⟶* X / r a ∷ β ->
       ∀ i -> i ≡ (X ∘ u ↦ α ←∷ r a ∘ β [ χ ∘ ψ ]) -> i ∈ Sₙ (scanner-w a ω)
   complete-scanner-w {a} {α = α} ω χ ψ c g (X ∘ u ↦ .(α ←∷ r a) ∘ β) refl with c g α (v-unstep χ) ψ
@@ -291,12 +301,18 @@ module parser (G : CFG) where
   sound-complete-w₀ {u} {v} (start rs) s () | no x
   sound-complete-w₀ {u} {v} (step w rs) s p | no x = sound-complete-w₀ w (fst s) p
 
-  complete-complete-w₀ : ∀ {u v w X Y α β} {ω : WSet u w} -> ∀ .χ .ψ ->
-    Sound ω ->
-    G ⊢ u / v ⟶* X / l Y ∷ β ->
-    G ⊢ v / w ⟶* Y / ε ->
-    Σ λ (i : Item u v) -> (i ≡ (X ∘ w ↦ α ←∷ l Y ∘ β [ χ ∘ ψ ])) × (i ∈ complete-w₀ ω)
-  complete-complete-w₀ χ ψ s g h = {!!}
+  Contains : ∀ {v w} -> ∀ X u α β .χ .ψ -> WSet w v -> Set
+  Contains X u α β χ ψ (start rs) = (X ∘ u ↦ α ∘ β [ χ ∘ ψ ]) ∈ rs
+  Contains X u α β χ ψ (step ω rs) = Contains X u α β χ ψ ω ∣ (X ∘ u ↦ α ∘ β [ χ ∘ ψ ]) ∈ rs
+
+  complete-complete-w₀ : ∀ {u v w X t α β} (ω : WSet w v) -> ∀ .χ .ψ ->
+    Contains X t α β χ ψ ω ->
+    (X ∘ t ↦ α ∘ β [ χ ∘ ψ ]) ∈ complete-w₀ {u} ω
+  complete-complete-w₀ {u} {v} ω χ ψ g                with eq-T* u v
+  complete-complete-w₀ {u} {u} ω χ ψ g                | yes refl = {!!}
+  complete-complete-w₀ {u} {v} (start rs) χ ψ g       | no x = {!!}
+  complete-complete-w₀ {u} {v} (step ω rs) χ ψ (r x₁) | no x = {!!}
+  complete-complete-w₀ {u} {v} (step ω rs) χ ψ (l x₁) | no x = {!!}
 
   complete-w₁ : ∀ {X u v w α} -> ∀ .χ .ψ ->
     (i : Item w v) -> i ≡ (X ∘ u ↦ α ∘ ε [ χ ∘ ψ ])->
@@ -327,6 +343,27 @@ module parser (G : CFG) where
   sound-complete-w₁ χ ψ (X ∘ u ↦ α ∘ ε) refl ((Y ∘ u₁ ↦ α₁ ∘ l X ∷ β) ∷ rs) v f (in-tail q) | yes refl =
     sound-complete-w₁ χ ψ _ refl rs v (f ∘ in-tail) q
 
+  complete-complete-w₁ : ∀ {t u v w X Y β γ} -> ∀ α .χ .ψ .χ₁ .ψ₁ ->
+    (rs : Item t w *) ->
+    (i : Item t w) ->
+    (p : i ≡ (Y ∘ w ↦ γ ∘ ε)) ->
+    (X ∘ u ↦ α ∘ l Y ∷ β [ in₁ (app (X ,_) (sym (in₀ (l Y) α β))) χ₁ ∘ ψ₁ ]) ∈ rs ->
+    G ⊢ u / v ⟶* X / l Y ∷ β ->
+    G ⊢ v / w ⟶* Y / ε ->
+    (X ∘ u ↦ α ←∷ l Y ∘ β [ χ₁ ∘ ψ₁ ]) ∈ complete-w₁ χ ψ i p rs
+  complete-complete-w₁ α χ ψ χ₁ ψ₁ ε (X ∘ u ↦ α₁ ∘ ε) refl () g h
+  complete-complete-w₁ α χ ψ χ₁ ψ₁ ((Y ∘ u₁ ↦ α₂ ∘ ε) ∷ rs) (X ∘ u ↦ α₁ ∘ ε) refl (in-tail q) g h =
+    complete-complete-w₁ α χ ψ χ₁ ψ₁ rs _ refl q g h
+  complete-complete-w₁ α χ ψ χ₁ ψ₁ ((Y ∘ u₁ ↦ α₂ ∘ r a ∷ β) ∷ rs) (X ∘ u ↦ α₁ ∘ ε) refl (in-tail q) g h =
+    complete-complete-w₁ α χ ψ χ₁ ψ₁ rs _ refl q g h
+  complete-complete-w₁ α χ ψ χ₁ ψ₁ ((Y ∘ u₁ ↦ α₂ ∘ l Z ∷ β) ∷ rs) (X ∘ u ↦ α₁ ∘ ε) refl q g h with decidₙ X Z
+  complete-complete-w₁ α χ ψ χ₁ ψ₁ ((Y ∘ u₁ ↦ .α ∘ l X ∷ β) ∷ rs) (X ∘ u ↦ α₁ ∘ ε) refl in-head g h     | no x = void (x refl)
+  complete-complete-w₁ α χ ψ χ₁ ψ₁ ((Y ∘ u₁ ↦ α₂ ∘ l Z ∷ β) ∷ rs) (X ∘ u ↦ α₁ ∘ ε) refl (in-tail q) g h | no x =
+    complete-complete-w₁ α χ ψ χ₁ ψ₁ rs _ refl q g h
+  complete-complete-w₁ α χ ψ χ₁ ψ₁ ((Y ∘ u₁ ↦ .α ∘ l Z ∷ β) ∷ rs) (Z ∘ u ↦ α₁ ∘ ε) refl in-head g h     | yes refl = in-head
+  complete-complete-w₁ α χ ψ χ₁ ψ₁ ((Y ∘ u₁ ↦ α₂ ∘ l Z ∷ β) ∷ rs) (Z ∘ u ↦ α₁ ∘ ε) refl (in-tail q) g h | yes refl =
+    in-tail (complete-complete-w₁ α χ ψ χ₁ ψ₁ rs _ refl q g h)
+
   -- For a completed item X ↦ α.ε, get the set of possible ancestors (callers).
 
   complete-w₂ : ∀ {u X v w α} -> ∀ .χ .ψ ->
@@ -341,6 +378,17 @@ module parser (G : CFG) where
     (∀ {j} -> j ∈ complete-w₂ χ ψ i p w -> Valid j)
   sound-complete-w₂ χ ψ i p v w s q =
     sound-complete-w₁ χ ψ i p (complete-w₀ w) v (sound-complete-w₀ w s) q
+
+  complete-complete-w₂ : ∀ {t u v w X Y β γ} -> ∀ α .χ .ψ .χ₁ .ψ₁ ->
+    (ω : WSet t w) ->
+    (i : Item t w) ->
+    (p : i ≡ (Y ∘ w ↦ γ ∘ ε)) ->
+    G ⊢ u / v ⟶* X / l Y ∷ β ->
+    G ⊢ v / w ⟶* Y / ε ->
+    (X ∘ u ↦ α ←∷ l Y ∘ β [ χ₁ ∘ ψ₁ ]) ∈ complete-w₂ χ ψ i p ω
+  complete-complete-w₂ α χ ψ χ₁ ψ₁ ω i p g h =
+    let c₁ = complete-complete-w₀ ω (in₁ (app (_ ,_) (sym (in₀ _ _ _))) χ₁) ψ₁ {!!} in
+    complete-complete-w₁ α χ ψ χ₁ ψ₁ (complete-w₀ ω) i p c₁ g h
 
   predict-w₀ : ∀ {u v w X α Y β} -> ∀ .χ .ψ ->
     (Σ λ t -> t ++ v ≡ w) ->
@@ -362,20 +410,44 @@ module parser (G : CFG) where
   sound-predict-w₀ χ ψ ψ₁ (X ∘ u ↦ α ∘ l Y ∷ β) refl (σ (Y , γ) (p , refl) ∷ f) v (in-tail q) =
     sound-predict-w₀ χ ψ ψ₁ _ refl f v q
 
+  complete-predict-w₀ : ∀ {t u v X Y β γ} -> ∀ α χ .ψ .χ₁ .ψ₁ ->
+    (ψ₀ : Σ λ s -> s ++ v ≡ t) ->
+    (i : Item t v) ->
+    (p : i ≡ (X ∘ u ↦ γ ∘ l Y ∷ β)) ->
+    (rs : (Σ λ t -> (t ∈ CFG.rules G) × (fst t ≡ Y)) *) ->
+    (Σ λ e -> σ (Y , α) e ∈ rs) -> 
+    G ⊢ u / v ⟶* X / l Y ∷ β ->
+    (Y ∘ v ↦ ε ∘ α [ χ ∘ ψ ]) ∈ predict-w₀ χ₁ ψ₁ ψ₀ i p rs
+  complete-predict-w₀ α χ ψ χ₁ ψ₁ ψ₀ i p ε () g
+  complete-predict-w₀ α χ ψ χ₁ ψ₁ ψ₀ (X ∘ u ↦ γ ∘ l Y ∷ β) refl (σ (Y , δ) (p , refl) ∷ rs) q g with eq-α α δ
+  complete-predict-w₀ α χ ψ χ₁ ψ₁ ψ₀ (X ∘ u ↦ γ ∘ l Y ∷ β) refl (σ (Y , α) (p , refl) ∷ rs) q g | yes refl = in-head
+  complete-predict-w₀ α χ ψ χ₁ ψ₁ ψ₀ (X ∘ u ↦ γ ∘ l Y ∷ β) refl (σ (Y , α) (p , refl) ∷ rs) (σ (q , refl) in-head) g | no x = void (x refl)
+  complete-predict-w₀ α χ ψ χ₁ ψ₁ ψ₀ (X ∘ u ↦ γ ∘ l Y ∷ β) refl (σ (Y , δ) (p , refl) ∷ rs) (σ q₁ (in-tail q₀)) g | no x = in-tail (complete-predict-w₀ α χ ψ χ₁ ψ₁ ψ₀ _ refl rs (σ q₁ q₀) g)
+
   predict-w₁ : ∀ {u X v w α Y β} -> ∀ .χ .ψ ->
     (i : Item w v) ->  i ≡ (X ∘ u ↦ α ∘ l Y ∷ β [ χ ∘ ψ ]) ->
     WSet w v ->
     Item w v *
-  predict-w₁ χ ψ (X ∘ u ↦ α ∘ l Y ∷ β) refl ω with lookup Y (CFG.rules G)
-  predict-w₁ χ ψ (X ∘ u ↦ α ∘ l Y ∷ β) refl ω | ps = predict-w₀ {u} χ ψ (V ω) _ refl ps
+  predict-w₁ χ ψ (X ∘ u ↦ α ∘ l Y ∷ β) refl ω =
+    predict-w₀ {u} χ ψ (V ω) _ refl (lookup Y (CFG.rules G))
 
   sound-predict-w₁ : ∀ {v X u w α Y β} -> ∀ .χ .ψ ->
     (i : Item w v) ->  (p : i ≡ (X ∘ u ↦ α ∘ l Y ∷ β [ χ ∘ ψ ])) ->
     (w : WSet w v) ->
     Valid i -> Sound w ->
     (∀ {j} -> j ∈ predict-w₁ χ ψ i p w -> Valid j)
-  sound-predict-w₁ χ ψ (X ∘ u ↦ α ∘ l Y ∷ β) refl ω v s q with lookup Y (CFG.rules G)
-  sound-predict-w₁ χ ψ (X ∘ u ↦ α ∘ l Y ∷ β) refl ω v s q | ps = sound-predict-w₀ χ ψ (V ω) _ refl ps v q
+  sound-predict-w₁ χ ψ (X ∘ u ↦ α ∘ l Y ∷ β) refl ω v s q =
+    sound-predict-w₀ χ ψ (V ω) _ refl (lookup Y (CFG.rules G)) v q
+
+  complete-predict-w₁ : ∀ {t u v X Y α β γ} -> ∀ .χ .ψ .χ₁ .ψ₁ ->
+    (ω : WSet t v) ->
+    (i : Item t v) ->
+    (p : i ≡ (X ∘ u ↦ γ ∘ l Y ∷ β)) ->
+    CFG.rules G ∋ (Y , α) ->
+    G ⊢ u / v ⟶* X / l Y ∷ β ->
+    (Y ∘ v ↦ ε ∘ α [ χ ∘ ψ ]) ∈ predict-w₁ χ₁ ψ₁ i p ω
+  complete-predict-w₁ χ ψ χ₁ ψ₁ ω (X ∘ u ↦ α ∘ l Y ∷ β) refl q g =
+    complete-predict-w₀ _ q ψ χ₁ ψ₁ (V ω) _ refl (lookup Y (CFG.rules G)) (lookup-sound q) g
 
   deduplicate : ∀ {w v} -> Item w v * -> Σ λ as -> Unique as
   deduplicate ε = σ ε u-ε
@@ -410,6 +482,20 @@ module parser (G : CFG) where
   sound-pred-comp-w₀ χ ψ (X ∘ u ↦ α ∘ r a ∷ β) refl w v s ()
   sound-pred-comp-w₀ χ ψ (X ∘ u ↦ α ∘ l Y ∷ β) refl w v s q =
     sound-deduplicate (predict-w₁ {u} χ ψ _ refl w) (sound-predict-w₁ χ ψ _ refl w v s) q
+
+--    (ω : WSet t v) ->
+--    (i : Item t v) ->
+--    (p : i ≡ (X ∘ u ↦ γ ∘ l Y ∷ β)) ->
+--    CFG.rules G ∋ (Y , α) ->
+--    G ⊢ u / v ⟶* X / l Y ∷ β ->
+--    (Y ∘ v ↦ ε ∘ α [ χ ∘ ψ ]) ∈ predict-w₁ χ₁ ψ₁ i p ω
+--
+--  complete-pred-comp-w₀ :
+--    (ω : WSet t v) ->
+--    (i : Item t v) ->
+--    (p : i ≡ ( X ∘ u ↦ α ∘ β [ χ ∘ ψ ] ->
+--    
+--  complete-pred-comp-w₀ = ?
 
   pred-comp-w₂ : {w n : T *} ->
     (ω : WSet w n) ->
