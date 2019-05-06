@@ -10,45 +10,86 @@
 	
 	\begin{code}
 	
-		data Nat : Set where
-			zero : Nat
-			suc : Nat -> Nat
-	
+		data ℕ : Set where
+		  zero : ℕ
+		  suc : ℕ -> ℕ
+
 	\end{code}
 
 	The keyword \codett{data} here marks the start of the definition of a new
-	data type \codett{Nat}. It is perfectly valid to use most of unicode for
+	data type \codett{Nat}. It is perfectly valid to use most of Unicode for
 	identifiers in Agda. \codett{Nat} has the type \codett{Set}, which is the
 	type of small types. This data type has two constructors, \codett{zero}
-	representing zero from the natural numbers, and \codett{suc} the sucsessor
-	furction. Let's take a look at a function definition using this data type:
+	representing zero from the natural numbers, and \codett{suc} the successor
+	function. Let's take a look at a function definition using this data type:
 	
 	\begin{code}
-	
-		_+_ : Nat -> Nat -> Nat
-		zero  + b = b
-		suc a + b = suc (a + b)
 
+		_+_ : (a b : ℕ) -> ℕ
+		zero + b = b
+		suc a + b = suc (a + b)
+	
 	\end{code}
 	
-	In Agda arbitrary mixfix operators can be introduced using \codett{\_} to
-	denote the arguments of the mixfix operator. Here, our operator
+	In Agda arbitrary mix-fix operators can be introduced using \codett{\_} to
+	denote the arguments of the mix-fix operator. Here, our operator
 	\codett{\_+\_} takes two natural numbers and returns a natural number
 	(spoiler: we're defining addition over the natural numbers). Next, we
 	pattern-match on the first argument: if it is zero, the result of the
-	addition should be equal to the second number. If it is thee sucsessor of
-	another number \codett{a}, the sum is th e sucsessor of the sum of a and
+	addition should be equal to the second number. If it is the successor of
+	another number \codett{a}, the sum is the successor of the sum of a and
 	the second argument.
-	
 
-	Propositions as types.
+	Agda's dependent types also allow us to define more interesting data types:
 	
 	\begin{code}
 		
-		data _<=_ : Nat -> Nat -> Set where
-		    <=0 : forall n -> zero <= n
-		    <=s : forall a b -> a <= b -> suc a <= suc b
+		data _≤_ : ℕ -> ℕ -> Set where
+		  ≤₀ : {n : ℕ} -> zero ≤ n
+		  ≤ₛ : {m n : ℕ} -> m ≤ n -> suc m ≤ suc n
+
+	\end{code}
+	
+	Here, the data type \codett{\_≤\_} is parameterized on two natural numbers,
+	with constructors \codett{≤₀} and \codett{≤ₛ}. Interestingly, the types of
+	the constructors are not fully general, and as such constrain the
+	constructible members of the type. For example, it is not possible to
+	construct a value of type \codett{suc zero ≤ zero}: \codett{≤₀} can not be
+	used as the first type arguments don't match, and neither can \codett{≤ₛ},
+	because the second type arguments don't match. In fact, as the name of the
+	data type suggests, it is equivalent to the proposition \emph{less than or
+	equal to}, as no value with type \codett{a ≤ b} can be constructed where
+	\codett{a} is greater than \codett{b}.
+
+	Finally, let's take a look at these definitions:
+
+	\begin{code}
+
+		data _* (T : Set) : Set where
+		  ε : T *
+		  _∷_ : T -> T * -> T *
+		
+		data _≡_ {T : Set} (t : T) : T -> Set where
+		  refl : t ≡ t
+		
+		_++_ : {T : Set} -> T * -> T * -> T *
+		ε ++ b = b
+		(x ∷ a) ++ b = x ∷ (a ++ b)
+		
+		assoc-++ : ∀ {T} -> (as bs cs : T *) -> (as ++ bs) ++ cs ≡ as ++ (bs ++ cs)
+		assoc-++ ε bs cs = refl
+		assoc-++ (x ∷ as) bs cs = app (x ∷_) (assoc-++ as bs cs)
 
 	\end{code}
 
-	\section{The Curry-Howard Sauce}
+	The type \codett{\_*} defines simple lists over a data type. The type
+	argument to \codett{\_*} is placed before \codett{:} to indicate that all
+	constructors must use the same type argument (that is, the constructors do
+	not constrain this argument in any way). \codett{\_≡\_} defines
+	propositional equality and should be fairly straightforward to understand,
+	and \codett{\_++\_} concatenates two lists. Finally we have a proof of
+	associativity for the \codett{\_++\_} operator. Since \codett{\_≡\_} takes
+	two values as arguments, it is perfectly valid to use \codett{\_++\_} as
+	part of the type definition.
+
+	\section{The Curry-Howard Isomorphism}

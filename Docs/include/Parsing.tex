@@ -2,11 +2,11 @@
 \chapter{Parsing}
 
 	Parsing is the process of analyzing the structure of a sequence of elements
-	(called \codett{Tokens}). This may simply consist of determeming
-	(\codett{recognizing}) wether a sequence conforms to a predefined structure
+	(called \codett{Tokens}). This may simply consist of determining
+	(\codett{recognizing}) whether a sequence conforms to a predefined structure
 	(a \codett{Grammar}), or to also create a description (\codett{parsing}) of
 	how the sequence conforms, resulting in a ? (\codett{parse tree}). For our
-	purposes, the Context-free grammers describe the structures we are
+	purposes, the Context-free grammars describe the structures we are
 	interested in:
 	
 	\begin{code}
@@ -24,8 +24,8 @@
 	Here, type arguments \codett{N} and \codett{T} represent nonterminal and 
 	terminal symbols. Nonterminal symbols are used to 
 
-	A definition of wether a list of tokens conforms to a grammar is also 
-	nessecary:
+	A definition of whether a list of tokens conforms to a grammar is also 
+	necessary:
 
 	\begin{code}
 	
@@ -44,11 +44,11 @@
 
 	\end{code}
 
-	Here, a judgement of the form \codett{G ⊢ u ∈ α} would mean that, given a
+	Here, a judgment of the form \codett{G ⊢ u ∈ α} would mean that, given a
 	grammar \codett{G} which give semantics to nonterminals, the sequence of
 	tokens \codett{u} conforms to the structure \codett{α}. That is, if
 	\codett{A} is a nonterminal and \codett{a} is a terminal symbol, any value
-	with the type \codett{G ⊢ a ∷ a ∷ ε ∈ a ∷ a ∷ ε} would constitue a proof
+	with the type \codett{G ⊢ a ∷ a ∷ ε ∈ a ∷ a ∷ ε} would constitute a proof
 	that the sequence \codett{aa} does indeed conform to the structure
 	\emph{"sequences that are equal to \codett{aa}"}.
 
@@ -76,12 +76,12 @@
 
 	\end{code}
 
-	Here, a judgement of the form \codett{G ⊢ v / w ∈ α} would mean that, given
+	Here, a judgment of the form \codett{G ⊢ v / w ∈ α} would mean that, given
 	a grammar \codett{G}, the sequence \codett{v} up to, but not including 
 	\codett{w} conforms to the structure \codett{α}. This means \codett{w} will
 	always be a suffix of \codett{v}.
 
-	These definitons are, in fact, equivalent:
+	These definitions are, in fact, equivalent:
 
 	\begin{code}
 	
