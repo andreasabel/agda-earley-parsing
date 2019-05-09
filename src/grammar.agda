@@ -136,6 +136,25 @@ data _⊢_/_⟶*_/_ (G : CFG) : T * -> T * -> N -> (N ∣ T) * -> Set where
     G ⊢ v / w ⟶* Y / ε ->
       G ⊢ u / w ⟶* X / β
 
+infixl 10 _⊢_/_⟶*_/_∙_
+data _⊢_/_⟶*_/_∙_ (G : CFG) : T * -> T * -> N -> (N ∣ T) * -> (N ∣ T) * -> Set where
+  initial : {u : T *} ->
+    G ⊢ u / u ⟶* CFG.start G / ε ∙ l (CFG.start G) ∷ ε
+
+  scanner : {u v : T *} {a : T} {X : N} {α β : (N ∣ T) *} ->
+    G ⊢ u / a ∷ v ⟶* X / α ∙ r a ∷ β ->
+      G ⊢ u / v ⟶* X / α ←∷ r a ∙ β
+
+  predict : {u v : T *} {X Y : N} {α β δ : (N ∣ T) *} -> 
+    CFG.rules G ∋ (Y , δ) ->
+    G ⊢ u / v ⟶* X / α ∙ l Y ∷ β ->
+      G ⊢ v / v ⟶* Y / ε ∙ δ
+
+  complet : {u v w : T *} {X Y : N} {α β γ : (N ∣ T) *} ->
+    G ⊢ u / v ⟶* X / α ∙ l Y ∷ β ->
+    G ⊢ v / w ⟶* Y / γ ∙ ε ->
+      G ⊢ u / w ⟶* X / α ←∷ l Y ∙ β
+
 sound : ∀ {u v w X β} {G : CFG} ->
   G ⊢ u / v ⟶* X / β ->
   G ⊢ v / w ∈ β ->

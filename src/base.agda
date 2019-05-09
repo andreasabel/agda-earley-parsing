@@ -98,7 +98,7 @@ any T = top
 
 infixr 0 ¬_
 
-void : {T : Set} -> .Void -> T
+void : {l : _} {T : Set l} -> .Void -> T
 void ()
 
 void₁ : {T : Set₁} -> Void -> T
@@ -138,6 +138,12 @@ data _×_ (A B : Set) : Set where
 infixl 2 _,_
 infixl 20 _×_
 
+record Σₗ {l : _} {A : Set l} (f : A -> Set) : Set l where
+  constructor σ
+  field
+    proj₁ : A
+    proj₀ : f proj₁
+
 record Σ {A : Set} (f : A -> Set) : Set where
   constructor σ
   field
@@ -167,10 +173,6 @@ record Σ₄ {A B C D : Set} (f : A -> B -> C -> D -> Set) : Set where
     p₃ : C
     p₄ : D
     p₀ : f p₁ p₂ p₃ p₄
-
-_∙_ : {A B : Set} -> A -> B -> A × B
-_∙_ = _,_
-infixl 2 _∙_
 
 fst : {A B : Set} -> A × B -> A
 fst (a , b) = a
@@ -391,7 +393,7 @@ constrained-eq : ∀ {T} {as bs : T *} ->
   (Σ λ cs -> cs ++ as ≡ bs) -> 
   (Σ λ cs -> cs ++ bs ≡ as) ->
   as ≡ bs
-constrained-eq p q = ?
+constrained-eq p q = {!!}
 
 filter-unique : {T : Set} -> ((a b : T) -> a ≡ b ??) -> T * -> T *
 filter-unique eq ε = ε
