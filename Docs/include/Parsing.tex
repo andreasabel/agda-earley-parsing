@@ -90,10 +90,15 @@
 	Here, a judgment of the form \codett{G ⊢ v / w ∈ α} would mean that, given
 	a grammar \codett{G}, the sequence \codett{v} up to, but not including 
 	\codett{w} conforms to the structure \codett{α}. This means \codett{w} will
-	always be a suffix of \codett{v}.
+	always be a suffix of \codett{v}. This definition, while very similar to 
+	the one above, has one significant advantage: the constructor 
+	\codett{conc} is not reliant on the list concatenation operator 
+	\codett{++}, while its counterpart \codett{concat} is.
 
-	These definitions are, in fact, equivalent:
+	These definitions are, as one might expect, equivalent, and here is the 
+	proof:
 
 	\begin{code}
 	
 	\end{code}
+
