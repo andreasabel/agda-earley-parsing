@@ -335,6 +335,12 @@ in-neither {T} {ε} {bs} p q s = q s
 in-neither {T} {x ∷ as} {bs} p q in-head = p in-head
 in-neither {T} {x ∷ as} {bs} p q (in-tail s) = in-neither (p ∘ in-tail) q s
 
+in-either : ∀ {T as bs} {a : T} -> (P : T -> Set) ->
+  (a ∈ as -> P a) -> (a ∈ bs -> P a) -> a ∈ (as ++ bs) -> P a
+in-either {T} {ε} {bs} P p q s = q s
+in-either {T} {x ∷ as} {bs} P p q in-head = p in-head
+in-either {T} {x ∷ as} {bs} P p q (in-tail s) = in-either P (p ∘ in-tail) q s
+
 not-in-l : {T : Set} {b : T} {as bs : T *} -> ((as ++ bs) ∋ b -> Void) -> as ∋ b -> Void
 not-in-l f in-head = f in-head
 not-in-l f (in-tail p) = not-in-l (f ∘ in-tail) p
@@ -628,7 +634,6 @@ module Unique {T : Set} (Item : T * -> T * -> Set) (eq-item : ∀ {w v}(a b : It
     let x₁ = unique-++₂ as bs cs uac ub f g in
     unique-++-∷ (as ++ bs) cs x₁ (in-neither {bs = cs} (in-neither (not-in-l x) x₃) (not-in-r x))
 
-
   wf-pcw₀ : ∀ {w v r₁ m} {as ss rs : Item w v *}
     (f : ∀ {a} -> a ∈ as)
     (p : suc m ≡ suc (length (as \\ ss)))
@@ -648,6 +653,20 @@ module Unique {T : Set} (Item : T * -> T * -> Set) (eq-item : ∀ {w v}(a b : It
     tmp rs x₂ ss q p₃
       (λ x → no-include-\\₂ as _ (in-tail (in-r x)))
       (λ x → no-include-\\₂ as _ (in-tail (in-l x)))
+
+  wf-pcw₂ : ∀ {w v} -> (as bs : Item w v *) ->
+    Unique bs ->
+    Unique ((as \\ bs) ++ bs)
+  wf-pcw₂ as bs = {!!}
+
+  wf-pcw₃ : ∀ {w v r₁ m} {as ss rs : Item w v *}
+    (f : ∀ {a} -> a ∈ as)
+    (p : (suc ∘ length) (as \\ ss) ≤ suc m)
+    (q : Unique (r₁ ∷ (rs ++ ss))) ->
+    (suc ∘ length) (as \\ (r₁ ∷ (rs ++ ss))) ≤ m
+  wf-pcw₃ f (≤ₛ p) q = {!p!}
+
+
 
 module ε {T : Set} (decidₜ : (a b : T) -> a ≡ b ??) where
 
