@@ -372,29 +372,52 @@ module parser (G : CFG) where
     Item w v *
   complete-w₂ χ ψ i p w = complete-w₁ χ ψ i p (complete-w₀ w)
 
-  test : ∀ {G t v} ->
+  _≋_ : ∀ {t u v X α β} -> (i : Item t v) -> G ∙ t ⊢ u / v ⟶* X / α ∙ β -> Set
+  _≋_ {t} {u} {v} {X} {α} {β} i g = (Item.Y i , Item.u i , Item.α i , Item.β i) ≡ (X , u , α , β)
+
+  test : ∀ {t v} ->
     {P : Item t v -> Set} ->
 
-    (∀ {u a X α β} -> ∀ .χ .ψ ->
-      G ⊢ u / a ∷ v ⟶* X / α ∙ r a ∷ β ->
-      (i : Item t v) -> (i ≡ (X ∘ u ↦ α ←∷ r a ∘ β [ χ ∘ ψ ])) ->
+    (∀ {u a X α β} ->
+      (g : G ∙ t ⊢ u / a ∷ v ⟶* X / α ∙ r a ∷ β) ->
+      (i : Item t v) -> (i ≋ scanner g) ->
       P i
     ) ->
 
-    (∀ {β} -> ∀ .χ .ψ ->
-      P (CFG.start G ∘ v ↦ ε ∘ β [ χ ∘ ψ ])
+    (∀ {β} ->
+      (x : (CFG.start G , β) ∈ CFG.rules G) ->
+      (i : Item v v) ->
+      i ≋ initial x -> Σ {t ≡ v} (λ {refl -> P i})
     ) ->
 
-    (∀ {u X α β} -> ∀ .χ .ψ ->
-      G ⊢ u / v ⟶* X / α ∙ β ->
+    (∀ {u X Y α β δ} (x : (Y , δ) ∈ CFG.rules G) ->
+      (i j : Item t v) ->
+      (g : G ∙ t ⊢ u / v ⟶* X / α ∙ l Y ∷ β) ->
+      (i ≋ g) -> P i ->
+      (j ≋ predict x g) -> P j
+    ) ->
+
+    (∀ {u w X Y α β γ} ->
+      (j k : Item t v) ->
+      (g : G ∙ t ⊢ u / w ⟶* X / α ∙ l Y ∷ β) ->
+      (h : G ∙ t ⊢ w / v ⟶* Y / γ ∙ ε) ->
+      (j ≋ h) -> P j ->
+      (k ≋ complet g h) -> P k
+    ) ->
+
+    (∀ {u X α β} ->
+      (g : G ∙ t ⊢ u / v ⟶* X / α ∙ β) ->
       (i : Item t v) ->
-      i ≡ (X ∘ u ↦ α ∘ β [ χ ∘ ψ ]) ->
+      i ≋ g ->
       P i
     )
-  test f ini χ ψ initial _ refl = ini χ ψ
-  test f ini χ ψ (scanner g) i p = f χ ψ g i p
-  test f ini χ ψ (predict x g) i p = {!!}
-  test f ini χ ψ (complet g g₁) i p = {!!}
+  test f ini h c (initial x) i refl with ini x i refl
+  ... | σ refl proj₀ = proj₀
+  test f ini h c (scanner g) i refl = f g i refl
+  test f ini h c (predict x g) i@(X ∘ u ↦ α ∘ β [ χ ∘ ψ ]) refl =
+    h x (_ ∘ _ ↦ _ ∘ _ [ in-g g ∘ suff-g₁ g ]) i g refl (test f ini h c g _ refl) refl
+  test f ini h c (complet g g₁) i p =
+    c (_ ∘ _ ↦ _ ∘ _ [ in-g g₁ ∘ suff-g₂ g ]) i g g₁ refl (test f ini h c g₁ _ refl) p
 
   sound-complete-w₂ : ∀ {u X v w α} -> ∀ .χ .ψ ->
     (i : Item w v) -> (p : i ≡ (X ∘ u ↦ α ∘ ε [ χ ∘ ψ ])) ->
