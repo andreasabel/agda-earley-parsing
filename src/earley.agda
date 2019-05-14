@@ -39,51 +39,18 @@ module parser (G : CFG) where
   eq-α :
     (a b : (N ∣ T)*) ->
     a ≡ b ??
-  eq-α ε ε = yes refl
-  eq-α        ε  (x   ∷ β) = no (λ ())
-  eq-α (x   ∷ α)        ε  = no (λ ())
-  eq-α (r a ∷ α) (r b ∷ β) with decidₜ a b
-  eq-α (r a ∷ α) (r a ∷ β) | yes refl with eq-α α β
-  eq-α (r a ∷ α) (r a ∷ α) | yes refl | yes refl = yes refl
-  eq-α (r a ∷ α) (r a ∷ β) | yes refl | no x = no (λ {refl → x refl})
-  eq-α (r a ∷ α) (r b ∷ β) | no x = no (λ {refl → x refl})
-  eq-α (r a ∷ α) (l B ∷ β) = no (λ ())
-  eq-α (l A ∷ α) (r b ∷ β) = no (λ ())
-  eq-α (l A ∷ α) (l B ∷ β) with decidₙ A B
-  eq-α (l A ∷ α) (l A ∷ β) | yes refl with eq-α α β
-  eq-α (l A ∷ α) (l A ∷ α) | yes refl | yes refl = yes refl
-  eq-α (l A ∷ α) (l A ∷ β) | yes refl | no x = no (λ {refl → x refl})
-  eq-α (l A ∷ α) (l B ∷ β) | no x = no (λ {refl → x refl})
+  eq-α = eq-* (eq-∣ decidₙ decidₜ)
 
   eq-T* : (a b : T *) -> a ≡ b ??
-  eq-T* ε ε = yes refl
-  eq-T* ε (b ∷ bs) = no (λ ())
-  eq-T* (a ∷ as) ε = no (λ ())
-  eq-T* (a ∷ as) (b ∷ bs) with decidₜ a b
-  eq-T* (a ∷ as) (a ∷ bs) | yes refl with eq-T* as bs
-  eq-T* (a ∷ as) (a ∷ bs) | yes refl | yes x = yes (app (a ∷_) x)
-  eq-T* (a ∷ as) (a ∷ bs) | yes refl | no x = no λ {refl → x refl}
-  eq-T* (a ∷ as) (b ∷ bs) | no x = no λ {refl → x refl}
+  eq-T* = eq-* decidₜ
 
   eq-rule : (a b : N × (N ∣ T) *) -> a ≡ b ??
-  eq-rule (X , α) (Y , β) with decidₙ X Y , eq-α α β
-  eq-rule (X , α) (X , α) | yes refl , yes refl = yes refl
-  eq-rule (X , α) (Y , β) | yes x , no x₁ = no λ {refl → x₁ refl}
-  eq-rule (X , α) (Y , β) | no x , x₁ = no λ {refl → x refl}
+  eq-rule = eq-× decidₙ eq-α
 
   eq-item : ∀ {w v} -> (a b : Item w v) -> a ≡ b ??
-  eq-item (X ∘ j ↦ α₁ ∘ β₁) (Y ∘ k ↦ α₂ ∘ β₂) with decidₙ X Y , eq-T* j k , eq-α α₁ α₂ , eq-α β₁ β₂
-  eq-item (X ∘ j ↦ α₁ ∘ β₁) (X ∘ j ↦ α₁ ∘ β₁) | yes refl , yes refl , yes refl , yes refl = yes refl
-  eq-item (X ∘ j ↦ α₁ ∘ β₁) (Y ∘ k ↦ α₂ ∘ β₂) | no x₁ , x₂ , x₃ , x₄ = no (λ {refl → x₁ refl})
-  eq-item (X ∘ j ↦ α₁ ∘ β₁) (Y ∘ k ↦ α₂ ∘ β₂) | x₁ , no x₂ , x₃ , x₄ = no (λ {refl → x₂ refl})
-  eq-item (X ∘ j ↦ α₁ ∘ β₁) (Y ∘ k ↦ α₂ ∘ β₂) | x₁ , x₂ , no x₃ , x₄ = no (λ {refl → x₃ refl})
-  eq-item (X ∘ j ↦ α₁ ∘ β₁) (Y ∘ k ↦ α₂ ∘ β₂) | x₁ , x₂ , x₃ , no x₄ = no (λ {refl → x₄ refl})
-
-  in₄ : ∀ {rs} {X : N} {α β : _} {x : N ∣ T} -> (X , (α ++ (x ∷ β))) ∈ rs -> (X , ((α ←∷ x) ++ β)) ∈ rs
-  in₄ {rs} {X} χ = in₂ (λ q → (X , q) ∈ rs) (in₀ _ _ _) χ
-
-  case_of_ : ∀ {a b} {A : Set a} {B : Set b} -> A -> (A -> B) -> B
-  case x of f = f x
+  eq-item (X ∘ i ↦ α ∘ β) (Y ∘ j ↦ γ ∘ δ) with eq-×₄ decidₙ eq-T* eq-α eq-α (X , i , α , β) (Y , j , γ , δ)
+  eq-item (X ∘ i ↦ α ∘ β) (X ∘ i ↦ α ∘ β) | yes refl = yes refl
+  eq-item (X ∘ i ↦ α ∘ β) (Y ∘ j ↦ γ ∘ δ) | no x = no λ {refl → x refl}
 
   all-rules₀ : ∀ {v w X u α β} -> ∀ χ ψ ->
     (i : Item w v) -> i ≡ (X ∘ u ↦ α ∘ β [ χ ∘ ψ ]) ->

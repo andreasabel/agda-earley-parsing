@@ -185,9 +185,6 @@ data _?? (A : Set) : Set where
   no  : (A -> Void) -> A ??
 infixl 1 _??
 
-Dec : Set -> Set
-Dec T = (a b : T) -> a ≡ b ??
-
 record Equality (A : Set) : Set where
   field
     eq : (a b : A) -> a ≡ b ??
@@ -366,6 +363,12 @@ in₂ P refl p = p
 
 in₃ : ∀ {T} (a b c d : T *) -> a ≡ b ++ c -> b ++ (c ++ d) ≡ a ++ d
 in₃ a b c d p = let x₁ = sym (assoc-++ b c d) in sym (trans (app (_++ d) p) x₁)
+
+in₄ : ∀ {N T rs} {X : N} {α β : _} {x : N ∣ T} -> (X , (α ++ (x ∷ β))) ∈ rs -> (X , ((α ←∷ x) ++ β)) ∈ rs
+in₄ {rs = rs} {X} χ = in₂ (λ q → (X , q) ∈ rs) (in₀ _ _ _) χ
+
+case_of_ : ∀ {a b} {A : Set a} {B : Set b} -> A -> (A -> B) -> B
+case x of f = f x
 
 dropSuffix : {T : Set} -> (as bs : T *) -> bs suffixOf as -> T *
 dropSuffix as as suffix-id = ε
@@ -699,3 +702,38 @@ module ε {T : Set} (decidₜ : (a b : T) -> a ≡ b ??) where
   ε₅ {ε} p x = void (x (uncons _ _ (sym p)))
   ε₅ {t ∷ ts} p x with uncons _ _ p
   ε₅ {t ∷ ts} p x | refl = σ ts refl
+
+Dec : Set -> Set
+Dec T = (a b : T) -> a ≡ b ??
+
+eq-× : ∀ {A B} -> Dec A -> Dec B -> Dec (A × B)
+eq-× f g (a , a₁) (b , b₁) with f a b , g a₁ b₁
+eq-× f g (a , a₁) (a , a₁) | yes refl , yes refl = yes refl
+eq-× f g (a , a₁) (b , b₁) | yes x , no x₁ = no (λ {refl → x₁ refl})
+eq-× f g (a , a₁) (b , b₁) | no x , g₁ = no λ {refl → x refl}
+
+eq-×₃ : ∀ {A B C} -> Dec A -> Dec B -> Dec C -> Dec (A × B × C)
+eq-×₃ f g h = eq-× (eq-× f g) h
+
+eq-×₄ : ∀ {A B C D} -> Dec A -> Dec B -> Dec C -> Dec D -> Dec (A × B × C × D)
+eq-×₄ f g h i = eq-×₃ (eq-× f g) h i
+
+eq-* : ∀ {A} -> Dec A -> Dec (A *)
+eq-* f ε ε = yes refl
+eq-* f ε (b ∷ bs) = no λ ()
+eq-* f (a ∷ as) ε = no λ ()
+eq-* f (a ∷ as) (b ∷ bs) with f a b
+eq-* f (a ∷ as) (a ∷ bs) | yes refl with eq-* f as bs
+eq-* f (a ∷ as) (a ∷ bs) | yes refl | yes refl = yes refl
+eq-* f (a ∷ as) (a ∷ bs) | yes refl | no x = no λ {refl → x refl}
+eq-* f (a ∷ as) (b ∷ bs) | no x = no λ {refl → x refl}
+
+eq-∣ : ∀ {A B} -> Dec A -> Dec B -> Dec (A ∣ B)
+eq-∣ f g (r x) (r y) with g x y
+eq-∣ f g (r x) (r y) | yes refl = yes refl
+eq-∣ f g (r x) (r y) | no x₁ = no λ {refl → x₁ refl}
+eq-∣ f g (r x) (l y) = no (λ ())
+eq-∣ f g (l x) (r y) = no (λ ())
+eq-∣ f g (l x) (l y) with f x y
+eq-∣ f g (l x) (l y) | yes refl = yes refl
+eq-∣ f g (l x) (l y) | no x₁ = no λ {refl → x₁ refl}
