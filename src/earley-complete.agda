@@ -185,17 +185,133 @@ module parser-sound (G : CFG) where
   complete₂-pred-comp-w₀ ω i j g h refl refl =
     complete-deduplicate (complete-w₂ i refl ω) {!!}
 
-  complete₂-pred-comp-w₂ : ∀ {t v ss rs m p q} ->
+  complete₁-pred-comp-w₁ : ∀ {t u v X Y α β δ ss} -> ∀ rs ->
+    (ω : WSet t v)
+    (x : (Y , δ) ∈ CFG.rules G) ->
+    (i j : Item t v) ->
+    (g : G ∙ t ⊢ u / v ⟶* X / α ∙ l Y ∷ β) ->
+    i ≋ g -> 
+    i ∈ rs ->
+    j ≋ predict x g ->
+      j ∈ pred-comp-w₁ ω ss rs
+  complete₁-pred-comp-w₁ {ss = ss} (i  ∷ rs) ω x i j g o in-head q =
+    in-l (complete₁-pred-comp-w₀ (Wₙ ω ss) x i j g o q)
+  complete₁-pred-comp-w₁ (r₁ ∷ rs) ω x i j g o (in-tail p) q =
+    in-r (complete₁-pred-comp-w₁ rs ω x i j g o p q)
+
+  in-after : ∀ {v w} ->
+    (i : Item w v) ->
+    (ω : WSet w v) ->
+    (rs ss : Item w v *)
+    (m : ℕ)
+    (p : suc (length (Σ.proj₁ (all-rules {w} {v}) \\ ss)) ≤ m)
+    (q : Unique (rs ++ ss)) ->
+      Set
+  in-after i ω rs ss zero () q
+  in-after i ω ε ss (suc m) p q = ⊥
+  in-after i ω rs@(_ ∷ _) ss (suc m) p q =
+    let x₁ = pred-comp-w₁ ω ss rs in
+    let x₂ = x₁ \\ (rs ++ ss) in
+    let p₁ = wf-pcw₃ (Σ.proj₀ all-rules) p q in
+    let q₁ = wf-pcw₂ x₁ (rs ++ ss) q in
+    i ∈ Sₙ (pred-comp-w₂ ω (rs ++ ss) x₂ m p₁ q₁)
+  
+  complete₁₋₁-pred-comp-w₂ : ∀ {t v} -> ∀ ss rs m p q ->
+    (ω : WSet t v) ->
+    (i : Item t v) ->
+    in-after i ω rs ss m p q ->
+    i ∈ Sₙ (pred-comp-w₂ ω ss rs m p q)
+  complete₁₋₁-pred-comp-w₂ ss rs zero () q ω i a
+  complete₁₋₁-pred-comp-w₂ ss ε (suc m) p q ω i ()
+  complete₁₋₁-pred-comp-w₂ ss (x ∷ rs) (suc m) p q ω i a = a
+
+  complete₁₀-pred-comp-w₂ : ∀ {t v ss rs m p q} ->
+    (ω : WSet t v) ->
+    (i : Item t v) ->
+    i ∈ ss ->
+    i ∈ Sₙ (pred-comp-w₂ ω ss rs m p q)
+  complete₁₀-pred-comp-w₂ {ss = ss} {rs} {zero} {()} ω i s
+  complete₁₀-pred-comp-w₂ {ss = ss} {ε} {suc m} {p} (start rs) i s = s
+  complete₁₀-pred-comp-w₂ {ss = ss} {ε} {suc m} {p} (step ω rs) i s = s
+  complete₁₀-pred-comp-w₂ {ss = ss} {rs@(_ ∷ _)} {suc m} {p} {q} ω i s =
+    complete₁₀-pred-comp-w₂ {m = m} ω i (in-r s)
+
+  complete₁₁-pred-comp-w₂ : ∀ {t v ss rs m p q} ->
+    (ω : WSet t v) ->
+    (i : Item t v) ->
+    i ∈ rs ->
+    i ∈ Sₙ (pred-comp-w₂ ω ss rs m p q)
+  complete₁₁-pred-comp-w₂ {ss = ss} {rs} {zero} {()} ω i s
+  complete₁₁-pred-comp-w₂ {ss = ss} {ε} {suc m} {p} ω i ()
+  complete₁₁-pred-comp-w₂ {ss = ss} {rs@(_ ∷ _)} {suc m} {p} ω i s =
+    complete₁₀-pred-comp-w₂ {m = m} ω i (in-l s)
+
+  complete₁₂-pred-comp-w₂ : ∀ {t v ss rs m p q} ->
     (ω : WSet t v) ->
     ∀ {u X Y α β δ} ->
     (x : (Y , δ) ∈ CFG.rules G) ->
     (i j : Item t v) ->
     (g : G ∙ t ⊢ u / v ⟶* X / α ∙ l Y ∷ β) ->
-    i ≋ g -> i ∈ Sₙ (pred-comp-w₂ ω ss rs m p q) ->
+    i ≋ g -> i ∈ rs ->
     j ≋ predict x g -> j ∈ Sₙ (pred-comp-w₂ ω ss rs m p q)
-  complete₂-pred-comp-w₂ ω x i j g p p' q = {!!}
+  complete₁₂-pred-comp-w₂ {ss = ss} {rs} {zero} {p = ()} ω x i j g p p' q
+  complete₁₂-pred-comp-w₂ {ss = ss} {ε} {suc m} ω x i j g p () q
+  complete₁₂-pred-comp-w₂ {ss = ss} {rs@(_ ∷ _)} {suc m} ω x i j g p p' q =
+    let x₁ = pred-comp-w₁ ω ss rs in
+    let x₂ = x₁ \\ (rs ++ ss) in
+    let y₁ = complete₁-pred-comp-w₁ rs ω x i j g p p' q in
+    let y₂ = include-\\ {as = x₁} {bs = rs ++ ss} y₁ in
+    case in-lr x₂ (rs ++ ss) y₂ of
+      λ { (r z) → complete₁₀-pred-comp-w₂ {m = m} ω j z
+        ; (l z) → complete₁₁-pred-comp-w₂ {m = m} ω j z
+        }
 
-  complete₃-pred-comp-w₂ : ∀ {t v ss rs m p q} ->
+  Nx : ∀ {t v} -> Item t v * -> Item t v * -> Set
+  Nx {t} {v} ss rs =
+    ∀ {u X Y α β δ} ->
+    (x : (Y , δ) ∈ CFG.rules G) ->
+    (i j : Item t v) ->
+    (g : G ∙ t ⊢ u / v ⟶* X / α ∙ l Y ∷ β) ->
+    i ≋ g -> i ∈ ss ->
+    j ≋ predict x g ->
+      j ∈ (rs ++ ss)
+  
+  nx' : ∀ {t v rs ss} (ω : WSet t v) ->
+    Nx ss rs ->
+    Nx (rs ++ ss) (pred-comp-w₁ ω ss rs \\ (rs ++ ss))
+  nx' {rs = ε} {ss} ω nx x i j g z₁ z₂ z₃ = nx x i j g z₁ z₂ z₃
+  nx' {rs = rs@(r₁ ∷ rs₀)} {ss} ω nx x i j g z₁ z₂ z₃ =
+    case in-lr rs ss z₂ of
+      λ { (r x₁) →
+        let x₁ = nx x i j g z₁ x₁ z₃  in
+        in-r x₁
+      ; (l x₁) →
+        let y₁ = complete₁-pred-comp-w₁ rs ω x i j g z₁ x₁ z₃ in
+        include-\\ y₁
+      }
+
+  complete₁-pred-comp-w₂ : ∀ {t v} -> ∀ ss rs m p q ->
+    (ω : WSet t v) ->
+    Nx ss rs ->
+    ∀ {u X Y α β δ}
+    (x : (Y , δ) ∈ CFG.rules G) ->
+    (i j : Item t v) ->
+    (g : G ∙ t ⊢ u / v ⟶* X / α ∙ l Y ∷ β) ->
+    i ≋ g -> 
+    i ∈ Sₙ (pred-comp-w₂ ω ss rs m p q) ->
+    j ≋ predict x g ->
+      j ∈ Sₙ (pred-comp-w₂ ω ss rs m p q)
+  complete₁-pred-comp-w₂ ss rs            zero    () q ω           nx x i j g z₁ z₂ z₃
+  complete₁-pred-comp-w₂ ss ε             (suc m) p  q (start rs)  nx x i j g z₁ z₂ z₃ =
+    nx x i j g z₁ z₂ z₃ 
+  complete₁-pred-comp-w₂ ss ε             (suc m) p  q (step ω rs) nx x i j g z₁ z₂ z₃ =
+    nx x i j g z₁ z₂ z₃
+  complete₁-pred-comp-w₂ ss rs@(r₁ ∷ rs₀) (suc m) p  q ω           nx x i j g z₁ z₂ z₃ =
+    let p₁ = wf-pcw₃ (Σ.proj₀ all-rules) p q in
+    let q₁ = wf-pcw₂ (pred-comp-w₁ ω ss rs) (rs ++ ss) q in
+    complete₁-pred-comp-w₂ (rs ++ ss) _ m p₁ q₁ ω (nx' ω nx) x i j g z₁ z₂ z₃
+
+  complete₂-pred-comp-w₂ : ∀ {t v ss rs m p q} ->
     (ω : WSet t v) ->
     ∀ {u w X Y α β γ} ->
     (j k : Item t v) ->
@@ -203,10 +319,11 @@ module parser-sound (G : CFG) where
     (h : G ∙ t ⊢ w / v ⟶* Y / γ ∙ ε) ->
     j ≋ h -> j ∈ Sₙ (pred-comp-w₂ ω ss rs m p q) ->
     k ≋ complet g h -> k ∈ Sₙ (pred-comp-w₂ ω ss rs m p q)
-  complete₃-pred-comp-w₂ ω j k g h p p' q = {!!}
+  complete₂-pred-comp-w₂ ω j k g h p p' q = {!!}
 
   complete-pred-comp-w₂ : ∀ {t v ss rs m p q} ->
     (ω : WSet t v) ->
+    Nx ss rs ->
     (∀ {u a X α β} ->
       (g : G ∙ t ⊢ u / a ∷ v ⟶* X / α ∙ r a ∷ β) ->
       (i : Item t v) -> (i ≋ scanner g) ->
@@ -221,11 +338,18 @@ module parser-sound (G : CFG) where
     (g : G ∙ t ⊢ u / v ⟶* X / α ∙ β) ->
     (i : Item t v) ->
     i ≋ g -> i ∈ Sₙ (pred-comp-w₂ ω ss rs m p q)
-  complete-pred-comp-w₂ {t} {v} {ss} {rs} {m} {p} {q} ω s u g i e =
+  complete-pred-comp-w₂ {t} {v} {ss} {rs} {m} {p} {q} ω nx s u g i e =
     test {P = λ i -> i ∈ Sₙ (pred-comp-w₂ ω ss rs m p q)}
       s
       u
+      (complete₁-pred-comp-w₂ ss rs m p q ω nx)
       (complete₂-pred-comp-w₂ {ss = ss} {rs} {m} {p} {q} ω)
-      (complete₃-pred-comp-w₂ {ss = ss} {rs} {m} {p} {q} ω)
       g i e
 
+-- om alla scannade items finns i ω, sȧ Complete (pred-comp-w ω)
+--  complete-pred-comp-w : ∀ {t u v a X α β} -> ∀ .χ .ψ ->
+--    (ω : WSet t v) ->
+--    G ⊢ u / a ∷ v ⟶* X / r a ∷ β ->
+--    (X ∘ u ↦ α ∘ β [ χ ∘ ψ ]) ∈ Sₙ ω ->
+--    Complete (pred-comp-w ω)
+--  complete-pred-comp-w χ ψ ω g p = {!!}

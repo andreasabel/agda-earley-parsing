@@ -204,7 +204,7 @@ module parser (G : CFG) where
     (i : Item w v) -> Item.β i ≡ ε ->
     WSet w v ->
     Item w v *
-  complete-w₂ {_} {w} i p ω = complete-w₁ {u = Item.u i} i p (complete-w₀ ω)
+  complete-w₂ i p ω = complete-w₁ {u = Item.u i} i p (complete-w₀ ω)
 
   predict-w₀ : ∀ {v w Y β} ->
     (Σ λ t -> t ++ v ≡ w) ->
@@ -271,14 +271,6 @@ module parser (G : CFG) where
     let x₂ = (unique-++ (Σ.proj₁ x₁) ε (Σ.proj₀ x₁) u-ε λ ()) in
     let m = suc (length (Σ.proj₁ (all-rules {v}) \\ ε)) in
     pred-comp-w₂ w ε (Σ.proj₁ x₁) m (≤ₛ (≤-self _)) x₂
-
-  -- om alla scannade items finns i ω, sȧ Complete (pred-comp-w ω)
---  complete-pred-comp-w : ∀ {t u v a X α β} -> ∀ .χ .ψ ->
---    (ω : WSet t v) ->
---    G ⊢ u / a ∷ v ⟶* X / r a ∷ β ->
---    (X ∘ u ↦ α ∘ β [ χ ∘ ψ ]) ∈ Sₙ ω ->
---    Complete (pred-comp-w ω)
---  complete-pred-comp-w χ ψ ω g p = {!!}
 
   step-w : ∀ {w a v} ->
     WSet w (a ∷ v) ->
