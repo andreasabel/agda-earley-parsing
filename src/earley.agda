@@ -281,4 +281,4 @@ module parser (G : CFG) where
      WSet w v ->
      WSet w ε
   parse {v = ε} w = pred-comp-w w
-  parse {v = x ∷ v} w = parse (step-w w)
+  parse {v = x ∷ v} w = pred-comp-w (parse (step-w w))

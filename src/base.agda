@@ -411,6 +411,9 @@ in₄ {rs = rs} {X} χ = in₂ (λ q → (X , q) ∈ rs) (in₀ _ _ _) χ
 case_of_ : ∀ {a b} {A : Set a} {B : Set b} -> A -> (A -> B) -> B
 case x of f = f x
 
+case'_of_ : {A B : Set} -> (a₁ : A) -> ((a₂ : A) -> a₁ ≡ a₂ -> B) -> B
+case' x of f = f x refl
+
 dropSuffix : {T : Set} -> (as bs : T *) -> bs suffixOf as -> T *
 dropSuffix as as suffix-id = ε
 dropSuffix (a ∷ as) bs (suffix-∷ p) = a ∷ dropSuffix as bs p
