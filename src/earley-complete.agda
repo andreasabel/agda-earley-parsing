@@ -80,19 +80,49 @@ module parser-sound (G : CFG) where
 --  complete-complete-w₀ {u} {v} (step ω rs) χ ψ (r x₁) | no x = {!!}
 --  complete-complete-w₀ {u} {v} (step ω rs) χ ψ (l x₁) | no x = {!!}
 
-  test : ∀ {t v} ->
-    {P : Item t v -> Set} ->
+  test₃ : ∀ {a t} ->
+    (Σ λ s -> s ++ (a ∷ t) ≡ t) -> Void
+  test₃ (σ p₁ p₀) = void (ε.ε₂ decidₜ p₀)
 
-    (∀ {u a X α β} ->
+  test₂ : ∀ {v a} {a₀ : T} p q ->
+    p ++ (a ∷ v) ≡ q ++ (a₀ ∷ v) ->
+    a ≡ a₀
+  test₂ ε ε refl = refl
+  test₂ {v = v} ε (x ∷ q) s = void (ε.ε₆ decidₜ _ v (sym s))
+  test₂ {v = v} (x ∷ p) ε s = void (ε.ε₆ decidₜ _ v s)
+  test₂ (x ∷ p) (x₁ ∷ q) s = test₂ p q (uncons x x₁ s)
+  
+  test₁ : ∀ {a₀ v t} {a : T} ->
+    (Σ λ u -> u ++ (a ∷ v) ≡ t) ∣ v ≡ t ->
+    (Σ λ u -> u ++ (a₀ ∷ v) ≡ t) ->
+    a ≡ a₀
+  test₁ (r refl) (σ q₁ q₀) = void (ε.ε₂ decidₜ q₀)
+  test₁ (l (σ ε refl)) (σ ε refl) = refl
+  test₁ {v = v} (l (σ ε refl)) (σ (x ∷ q₁) q₀) = void (ε.ε₆ decidₜ _ v q₀)
+  test₁ {v = v} (l (σ (x ∷ p₁) p₀)) (σ ε refl) = void (ε.ε₆ decidₜ _ v p₀)
+  test₁ (l (σ (x ∷ p₁) p₀)) (σ (x₁ ∷ q₁) refl) = test₂ p₁ q₁ (uncons x x₁ p₀)
+
+  test₀ : ∀ {t u v a a₀ X α β} ->
+    (Σ λ u -> u ++ (a ∷ v) ≡ t) ∣ v ≡ t ->
+    (h : G ∙ t ⊢ u / a₀ ∷ v ⟶* X / α ∙ r a₀ ∷ β) ->
+    a ≡ a₀
+  test₀ p g = test₁ p (suff-g₂ g)
+    
+  test : ∀ {a t v} ->
+    {P : Item t v -> Set} ->
+    (Σ λ u -> u ++ (a ∷ v) ≡ t) ∣ v ≡ t ->
+
+    (∀ {u X α β} ->
       (g : G ∙ t ⊢ u / a ∷ v ⟶* X / α ∙ r a ∷ β) ->
       (i : Item t v) -> (i ≋ scanner g) ->
       P i
     ) ->
 
     (∀ {β} ->
+      (z : t ≡ v) ->
       (x : (CFG.start G , β) ∈ CFG.rules G) ->
       (i : Item v v) ->
-      i ≋ initial x -> Σ λ t -> eq-prop P i t
+      i ≋ initial x -> eq-prop P i z
     ) ->
 
     (∀ {u X Y α β δ} (x : (Y , δ) ∈ CFG.rules G) ->
@@ -116,13 +146,12 @@ module parser-sound (G : CFG) where
       i ≋ g ->
       P i
     )
-  test f ini h c (initial x) i refl with ini x i refl
-  ... | σ refl proj₀ = proj₀
-  test f ini h c (scanner g) i refl = f g i refl
-  test f ini h c (predict x g) i@(X ∘ u ↦ α ∘ β [ χ ∘ ψ ]) refl =
-    h x (_ ∘ _ ↦ _ ∘ _ [ in-g g ∘ suff-g₁ g ]) i g refl (test f ini h c g _ refl) refl
-  test f ini h c (complet g g₁) i p =
-    c (_ ∘ _ ↦ _ ∘ _ [ in-g g₁ ∘ suff-g₂ g ]) i g g₁ refl (test f ini h c g₁ _ refl) p
+  test s f ini h c (initial x) i refl = ini refl x i refl
+  test {a} s f ini h c (scanner g) i p = case test₀ s g of λ {refl -> f g i p}
+  test s f ini h c (predict x g) i@(X ∘ u ↦ α ∘ β [ χ ∘ ψ ]) refl =
+    h x (_ ∘ _ ↦ _ ∘ _ [ in-g g ∘ suff-g₁ g ]) i g refl (test s f ini h c g _ refl) refl
+  test s f ini h c (complet g g₁) i p =
+    c (_ ∘ _ ↦ _ ∘ _ [ in-g g₁ ∘ suff-g₂ g ]) i g g₁ refl (test s f ini h c g₁ _ refl) p
 
 --  complete-complete-w₂ : ∀ {t u v w X Y β γ} -> ∀ α .χ .ψ .χ₁ .ψ₁ ->
 --    (ω : WSet t w) ->
@@ -364,94 +393,137 @@ module parser-sound (G : CFG) where
     let q₁ = wf-pcw₂ (pred-comp-w₁ ω ss rs) (rs ++ ss) q in
     complete₂-pred-comp-w₂ (rs ++ ss) _ m p₁ q₁ ω c (nx₂' ω c nx) x i j g z₁ z₂ z₃
 
-  complete-pred-comp-w₂ : ∀ {t v ss rs m p q} ->
+  complete-pred-comp-w₂ : ∀ {a t v ss rs m p q} ->
+    (Σ λ u -> u ++ (a ∷ v) ≡ t) ∣ v ≡ t ->
     (ω : WSet t v) ->
     Complete* ω ->
     Nx ss rs ->
     Nx₂ ss rs ->
-    (∀ {u a X α β} ->
+    (∀ {u X α β} ->
       (g : G ∙ t ⊢ u / a ∷ v ⟶* X / α ∙ r a ∷ β) ->
       (i : Item t v) -> (i ≋ scanner g) ->
       i ∈ Sₙ (pred-comp-w₂ ω ss rs m p q)
     ) ->
     (∀ {β} ->
+      (z : t ≡ v) ->
       (x : (CFG.start G , β) ∈ CFG.rules G) ->
       (i : Item v v) ->
-      i ≋ initial x -> Σ λ z -> eq-prop (λ i -> i ∈ Sₙ (pred-comp-w₂ ω ss rs m p q)) i z
+      i ≋ initial x -> eq-prop (λ i -> i ∈ Sₙ (pred-comp-w₂ ω ss rs m p q)) i z
     ) ->
     ∀ {u X α β} ->
     (g : G ∙ t ⊢ u / v ⟶* X / α ∙ β) ->
     (i : Item t v) ->
     i ≋ g -> i ∈ Sₙ (pred-comp-w₂ ω ss rs m p q)
-  complete-pred-comp-w₂ {t} {v} {ss} {rs} {m} {p} {q} ω c nx nx₂ s u g i e =
+  complete-pred-comp-w₂ {a} {t} {v} {ss} {rs} {m} {p} {q} h ω c nx nx₂ s u g i e =
     test {P = λ i -> i ∈ Sₙ (pred-comp-w₂ ω ss rs m p q)}
+      h
       s
-      u
+      u 
       (complete₁-pred-comp-w₂ ss rs m p q ω nx)
       (complete₂-pred-comp-w₂ ss rs m p q ω c nx₂)
       g i e
 
-  complete₀-pred-comp-w : ∀ {t v} ->
+  complete₀-pred-comp-w : ∀ {a t v} ->
+    (Σ λ u -> u ++ (a ∷ v) ≡ t) ∣ v ≡ t ->
     (ω : WSet t v) ->
     Complete* ω ->
     Nx ε (Σ.proj₁ (deduplicate (Sₙ ω))) ->
     Nx₂ ε (Σ.proj₁ (deduplicate (Sₙ ω))) ->
-    (∀ {u a X α β} ->
+    (∀ {u X α β} ->
       (g : G ∙ t ⊢ u / a ∷ v ⟶* X / α ∙ r a ∷ β) ->
       (i : Item t v) -> (i ≋ scanner g) ->
-      i ∈ Sₙ (pred-comp-w ω)
+      i ∈ (Σ.proj₁ (deduplicate (Sₙ ω)))
     ) ->
     (∀ {β} ->
+      (z : t ≡ v) ->
       (x : (CFG.start G , β) ∈ CFG.rules G) ->
       (i : Item v v) ->
-      i ≋ initial x -> Σ λ z -> eq-prop (_∈ Sₙ (pred-comp-w ω)) i z
+      i ≋ initial x -> eq-prop (_∈ Σ.proj₁ (deduplicate (Sₙ ω))) i z
     ) ->
     ∀ {u X α β} ->
     (g : G ∙ t ⊢ u / v ⟶* X / α ∙ β) ->
     (i : Item t v) ->
     i ≋ g -> i ∈ Sₙ (pred-comp-w ω)
-  complete₀-pred-comp-w {t} ω c nx nx₂ fx fx₂ g i p =
+  complete₀-pred-comp-w {a} {t} s ω c nx nx₂ fx fx₂ g i p =
     let x₁ = deduplicate (Sₙ ω) in
     let x₂ = (unique-++ (Σ.proj₁ x₁) ε (Σ.proj₀ x₁) u-ε λ ()) in
-    complete-pred-comp-w₂ {p = ≤ₛ (≤-self _)} {q = x₂} ω c nx nx₂ fx fx₂ g i p
+    complete-pred-comp-w₂ {p = ≤ₛ (≤-self _)} {q = x₂} s ω c nx nx₂
+      (λ g₁ i₁ x → complete₁₁-pred-comp-w₂ {p = ≤ₛ (≤-self _)} {q = x₂} ω i₁ (fx g₁ i₁ x))
+      (λ {refl x i₁ x₃ → complete₁₁-pred-comp-w₂ {p = ≤ₛ (≤-self _)} {q = x₂} ω i₁ (fx₂ refl x i₁ x₃)})
+      g i p
+
+  complete₃-pred-comp-w₂ : ∀ {t v} -> ∀ ss rs m p q ->
+    (ω : WSet t v) ->
+    Complete* ω ->
+    Complete* (pred-comp-w₂ ω ss rs m p q)
+  complete₃-pred-comp-w₂ ss rs zero () q ω c
+  complete₃-pred-comp-w₂ ss ε (suc m) p q (start rs) c = top
+  complete₃-pred-comp-w₂ ss ε (suc m) p q (step ω rs) c = c
+  complete₃-pred-comp-w₂ ss rs@(_ ∷ _) (suc m) p q ω c =
+    let x₁ = pred-comp-w₁ ω ss rs in
+    let x₂ = x₁ \\ (rs ++ ss) in
+    let p₁ = wf-pcw₃ (Σ.proj₀ all-rules) p q in
+    let q₁ = wf-pcw₂ x₁ (rs ++ ss) q in
+    complete₃-pred-comp-w₂ (rs ++ ss) x₂ m p₁ q₁ ω c 
 
   complete₁-pred-comp-w : ∀ {t v} ->
     (ω : WSet t v) ->
+    Complete* ω ->
+    Complete* (pred-comp-w ω)
+  complete₁-pred-comp-w ω =
+    let x₁ = deduplicate (Sₙ ω) in
+    let x₂ = (unique-++ (Σ.proj₁ x₁) ε (Σ.proj₀ x₁) u-ε λ ()) in
+    complete₃-pred-comp-w₂ ε _ _ (≤ₛ (≤-self _)) x₂ ω
+    
+  complete₂-pred-comp-w : ∀ {t v} ->
+    (ω : WSet t v) ->
+    Complete* ω ->
     (∀ {u X α β} ->
       (g : G ∙ t ⊢ u / v ⟶* X / α ∙ β) ->
       (i : Item t v) ->
       i ≋ g -> i ∈ Sₙ (pred-comp-w ω)
     ) ->
     Complete (pred-comp-w ω)
-  complete₁-pred-comp-w ω f = (λ i g x → f g i x) , {!ω!}
+  complete₂-pred-comp-w ω c f = (λ i g x → f g i x) , complete₁-pred-comp-w ω c
 
-  complete-pred-comp-w : ∀ {t v} ->
+  complete-pred-comp-w : ∀ {a t v} ->
+    (Σ λ u -> u ++ (a ∷ v) ≡ t) ∣ v ≡ t ->
     (ω : WSet t v) ->
     Complete* ω ->
-    Nx ε (Σ.proj₁ (deduplicate (Sₙ ω))) ->
-    Nx₂ ε (Σ.proj₁ (deduplicate (Sₙ ω))) ->
-    (∀ {u a X α β} ->
+    (∀ {u X α β} ->
       (g : G ∙ t ⊢ u / a ∷ v ⟶* X / α ∙ r a ∷ β) ->
       (i : Item t v) -> (i ≋ scanner g) ->
-      i ∈ Sₙ (pred-comp-w ω)
+      i ∈ Sₙ ω
     ) ->
     (∀ {β} ->
+      (z : t ≡ v) ->
       (x : (CFG.start G , β) ∈ CFG.rules G) ->
       (i : Item v v) ->
-      i ≋ initial x -> Σ λ z -> eq-prop (_∈ Sₙ (pred-comp-w ω)) i z
+      i ≋ initial x -> eq-prop (_∈ Sₙ ω) i z
     ) ->
     Complete (pred-comp-w ω)
-  complete-pred-comp-w {t} ω c nx nx₂ fx fx₂ =
-    let x₅ = complete₀-pred-comp-w ω c nx nx₂ fx fx₂ in
-    complete₁-pred-comp-w ω x₅
+  complete-pred-comp-w {a} {t} s ω c fx fx₂ =
+    let
+      x₅ = complete₀-pred-comp-w s ω c (λ x i j g x₁ ()) (λ j k g h x ())
+        (λ {g i x → complete-deduplicate (Sₙ ω) (fx g i x)})
+        λ {refl x i x₁ → complete-deduplicate (Sₙ ω) (fx₂ refl x i x₁)}
+    in
+    complete₂-pred-comp-w ω c x₅
 
-  complete-step-w : ∀ {a t v} ->
+  complete-step-w : ∀ {a₀ a t v} ->
+    (Σ λ u -> u ++ (a₀ ∷ a ∷ v) ≡ t) ∣ (a ∷ v) ≡ t ->
     (ω : WSet t (a ∷ v)) ->
-    Complete ω ->
+    Complete* ω ->
+    (∀ {u X α β} ->
+      (g : G ∙ t ⊢ u / a₀ ∷ a ∷ v ⟶* X / α ∙ r a₀ ∷ β) ->
+      (i : Item t (a ∷ v)) -> (i ≋ scanner g) ->
+      i ∈ Sₙ ω
+    ) ->
     (∀ {β} ->
+      (z : t ≡ a ∷ v) ->
       (x : (CFG.start G , β) ∈ CFG.rules G) ->
       (i : Item (a ∷ v) (a ∷ v)) ->
-      i ≋ initial x -> Σ λ z -> eq-prop (_∈ Sₙ (pred-comp-w ω)) i z
+      i ≋ initial x -> eq-prop (_∈ Sₙ ω) i z
     ) ->
     ∀ {u X α β} ->
     (i : Item t (a ∷ v)) ->
@@ -460,14 +532,101 @@ module parser-sound (G : CFG) where
     i ≋ g ->
     j ≋ scanner g ->
       j ∈ Sₙ (step-w ω)
-  complete-step-w {a} ω c fx i j g refl refl =
-    complete-scanner-w a (pred-comp-w ω) {!!} i j g refl refl
-    
+  complete-step-w {a₀} {a} s ω c fx fx₂ i j g refl refl =
+    let
+      x₁ = complete-pred-comp-w s ω c fx fx₂
+    in complete-scanner-w a (pred-comp-w ω) x₁ i j g refl refl
 
--- om alla scannade items finns i ω, sȧ Complete (pred-comp-w ω)
---  complete-pred-comp-w : ∀ {t u v a X α β} -> ∀ .χ .ψ ->
---    (ω : WSet t v) ->
---    G ⊢ u / a ∷ v ⟶* X / r a ∷ β ->
---    (X ∘ u ↦ α ∘ β [ χ ∘ ψ ]) ∈ Sₙ ω ->
---    Complete (pred-comp-w ω)
---  complete-pred-comp-w χ ψ ω g p = {!!}
+  complete*-step-w : ∀ {a₀ a t v} ->
+    (Σ λ u -> u ++ (a₀ ∷ a ∷ v) ≡ t) ∣ (a ∷ v) ≡ t ->
+    (ω : WSet t (a ∷ v)) ->
+    Complete* ω ->
+    (∀ {u X α β} ->
+      (g : G ∙ t ⊢ u / a₀ ∷ a ∷ v ⟶* X / α ∙ r a₀ ∷ β) ->
+      (i : Item t (a ∷ v)) -> (i ≋ scanner g) ->
+      i ∈ Sₙ ω
+    ) ->
+    (∀ {β} ->
+      (z : t ≡ a ∷ v) ->
+      (x : (CFG.start G , β) ∈ CFG.rules G) ->
+      (i : Item (a ∷ v) (a ∷ v)) ->
+      i ≋ initial x -> eq-prop (_∈ Sₙ ω) i z
+    ) ->
+    Complete* (step-w ω)
+  complete*-step-w s ω c fx fx₂ =
+    complete-pred-comp-w s ω c fx fx₂
+
+  complete-parse₀ : ∀ {a t v} ->
+    (Σ λ u -> u ++ (a ∷ v) ≡ t) ∣ v ≡ t ->
+    (ω : WSet t v) ->
+    Complete* ω ->
+    (∀ {u X α β} ->
+      (g : G ∙ t ⊢ u / a ∷ v ⟶* X / α ∙ r a ∷ β) ->
+      (i : Item t v) -> (i ≋ scanner g) ->
+      i ∈ Sₙ ω
+    ) ->
+    (∀ {β} ->
+      (z : t ≡ v) ->
+      (x : (CFG.start G , β) ∈ CFG.rules G) ->
+      (i : Item v v) ->
+      i ≋ initial x -> eq-prop (_∈ Sₙ ω) i z
+    ) ->
+    Complete (parse₀ ω)
+  complete-parse₀ {a₀} {t} {v = ε} k ω c fx fx₂ = complete-pred-comp-w k ω c fx fx₂
+  complete-parse₀ {a₀} {t} {v = a ∷ v} k ω c fx fx₂ =
+    let
+      x₁ = complete-pred-comp-w k ω c fx fx₂
+      x₂ = case k of
+        λ { (r refl) → l (σ ε refl)
+          ; (l (σ p₁ p₀)) → l (σ (p₁ ←∷ a₀) (trans (sym (in₀ _ _ _)) (sym p₀)))
+          }
+    in
+    complete-parse₀ {v = v} x₂ (step-w ω) x₁
+      (λ {g i refl → complete-scanner-w a (pred-comp-w ω) x₁
+        (_ ∘ _ ↦ _ ∘ _ [ v-unstep (Item.χ i) ∘ Item.ψ i ]) i g refl refl})
+      (λ {refl x₂ i x₃ → case k of
+        λ { (r ())
+          ; (l (σ p₁ p₀)) → void (ε.ε₂ decidₜ (trans (sym (in₀ _ _ _)) (sym p₀)))
+          }
+        })
+
+  complete₀-itemize : ∀ w {β} ->
+    (rs : (Σ λ t -> (t ∈ CFG.rules G) × (fst t ≡ CFG.start G)) *) ->
+    (x : (CFG.start G , β) ∈ CFG.rules G) ->
+    (CFG.start G , β) ∈ map Σ.proj₁ rs ->
+    (i : Item w w) ->
+    i ≋ initial x ->
+      i ∈ itemize w rs
+  complete₀-itemize w ε x () i refl
+  complete₀-itemize w (σ (X , β) p₀ ∷ rs) x in-head i refl = in-head
+  complete₀-itemize w (σ (X , β) p₀ ∷ rs) x (in-tail p) i refl =
+    in-tail (complete₀-itemize w rs x p i refl)
+
+  complete-itemize : ∀ w {β} ->
+    (x : (CFG.start G , β) ∈ CFG.rules G) ->
+    (i : Item w w) ->
+    i ≋ initial x ->
+      i ∈ itemize w (lookup (CFG.start G) (CFG.rules G))
+  complete-itemize w x i refl =
+    let x₁ = Σ.proj₀ (lookup-sound x) in
+    complete₀-itemize w (lookup _ _) x (in-map Σ.proj₁ x₁) i refl
+
+  complete-parse : ∀ a₀ w ->
+    Complete (parse w)
+  complete-parse a₀ ε =
+    complete-parse₀ {a = a₀} (r refl) (start (itemize ε (lookup _ _))) top
+      (λ {g i x → void (test₃ (suff-g₂ g))})
+      (λ {refl x i x₁ → complete-itemize ε x i x₁})
+  complete-parse a₀ (x ∷ w) =
+    let
+      x₁ = start (itemize (x ∷ w) (lookup _ _)) 
+      x₂ = complete-pred-comp-w {a = a₀} (r refl) x₁ top
+        (λ {g i x₂ → void (test₃ (suff-g₂ g))})
+        (λ {refl x₂ i refl → complete-itemize (x ∷ w) x₂ i refl})
+    in
+    complete-parse₀ (l (σ ε refl)) (step-w x₁) x₂
+      (λ g i x₃ → complete-step-w {a₀ = x} (r refl) x₁ top
+        (λ {g₁ i₁ x₄ → void (test₃ (suff-g₂ g₁))})
+        (λ {refl x₄ i₁ x₅ → complete-itemize (x ∷ w) x₄ i₁ x₅})
+        (_ ∘ _ ↦ _ ∘ _ [ in-g g ∘ suff-g₁ g ]) i g refl x₃)
+      (λ ())

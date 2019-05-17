@@ -801,6 +801,13 @@ module ε {T : Set} (decidₜ : (a b : T) -> a ≡ b ??) where
   
   .ε₂ : ∀ {a b} {x : T} -> a ++ (x ∷ b) ≡ b -> Void
   ε₂ {as} {bs} {x} p = +-imp (trans (trans (sym (ε-1 _ _ p)) (sym (ε-0 as _))) (+-comm {b = length as}))
+
+  .ε₆ : ∀ a b {x y z : T} -> (x ∷ a) ++ (y ∷ b) ≡ (z ∷ b) -> Void
+  ε₆ as bs p =
+    let x₁ = unsuc (ε-1 _ _ p) in
+    let x₂ = trans (sym x₁) (sym (ε-0 as (_ ∷ bs))) in
+    let x₃ = trans x₂ (+-comm {suc (length bs)}) in
+    +-imp x₃
   
   .ε₃ : ∀ {a b} {x y : T} -> (x ≡ y -> Void) -> a ++ (y ∷ b) ≡ (x ∷ b) -> Void
   ε₃ {ε} p refl = void (p refl)
