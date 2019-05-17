@@ -277,8 +277,19 @@ module parser (G : CFG) where
     WSet w v
   step-w {w} {a} {v} ω = scanner-w a (pred-comp-w ω)
 
-  parse : ∀ {w v} ->
+  parse₀ : ∀ {w v} ->
      WSet w v ->
      WSet w ε
-  parse {v = ε} w = pred-comp-w w
-  parse {v = x ∷ v} w = pred-comp-w (parse (step-w w))
+  parse₀ {v = ε} w = pred-comp-w w
+  parse₀ {v = x ∷ v} w = parse₀ (step-w w)
+
+  itemize : ∀ w ->
+    Σ (λ t -> (t ∈ CFG.rules G) × (fst t ≡ CFG.start G)) * ->
+    Item w w *
+  itemize w ε = ε
+  itemize w (σ (X , β) p₀ ∷ rs) = (X ∘ w ↦ ε ∘ β [ fst p₀ ∘ σ ε refl ]) ∷ itemize w rs
+
+  parse : ∀ w -> WSet w ε
+  parse w =
+    let x₁ = lookup (CFG.start G) (CFG.rules G) in
+    parse₀ (start (itemize w x₁))
