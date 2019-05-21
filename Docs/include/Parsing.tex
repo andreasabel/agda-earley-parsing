@@ -27,17 +27,27 @@
 	concrete tokens whereas nonterminal symbols are used as labels for more
 	complex structures. Two examples: a grammar \codett{ S ; (S , r s ∷ ε) ∷ ε
 	; \_ }, where \codett{S} is a nonterminal symbol and \codett{s} is a
-	terminal symbol, will have a single conforming string, consisting of a
-	single token \emph{'s'}. A grammar \codett{ S ; (S , r s ∷ l S ∷ ε) ∷ (S ,
-	ε) ∷ ε ; \_ } will have conforming strings that either are empty, or start
-	with the token \emph{'s'} followed by any sequence that conforms to the
-	\codett{S} nonterminal. The set of conforming sequences for this second
+	terminal symbol (and \codett{r} is the right side constructor for the
+	optional type \codett{|}), will have a single conforming string, consisting
+	of a single token \emph{'s'}. A grammar \codett{ S ; (S , r s ∷ l S ∷ ε) ∷
+	(S , ε) ∷ ε ; \_ } will have conforming strings that either are empty, or
+	start with the token \emph{'s'} followed by any sequence that conforms to
+	the \codett{S} nonterminal. The set of conforming sequences for this second
 	grammar is the set of (possibly empty) sequences only containing the token
 	\emph{'s'}.
 
 	A formal definition of when a list of tokens conforms to a grammar is also
 	necessary:
 
+	\begin{table}[h]
+		\centering
+		\begin{tabular}{cccc}
+			 empty & concat & term & nonterm
+		\end{tabular}
+	\end{table}
+	
+	This may be expressed in Agda using the following data type:
+	
 	\begin{code}
 	
 		data _⊢_∈_ (G : CFG) :  T * -> (N ∣ T) * -> Set where
@@ -88,12 +98,84 @@
 	\end{code}
 
 	Here, a judgment of the form \codett{G ⊢ v / w ∈ α} would mean that, given
-	a grammar \codett{G}, the sequence \codett{v} up to, but not including 
+	a grammar \codett{G}, the sequence \codett{v} up to, but not including
 	\codett{w} conforms to the structure \codett{α}. This means \codett{w} will
-	always be a suffix of \codett{v}.
+	always be a suffix of \codett{v}. This definition, while very similar to
+	the one above, has one advantage: the constructor \codett{conc} is not
+	reliant on the list concatenation operator \codett{++}, while its
+	counterpart \codett{concat} is. This can simplify proofs using this data
+	type, as they will not be dependent on the normalization of the \codett{++}
+	operator.
 
-	These definitions are, in fact, equivalent:
+	This second data type can be constructed if the first one can:
 
+	\begin{code}
+	
+		s : ∀ {u v w α G} ->
+		  G ⊢ u / v ∈ α ->
+		  G ⊢ u ++ w / v ++ w ∈ α
+		s = {! ... !}
+		
+		sound₀ :  ∀ {G u α} ->
+		  G ⊢ u ∈ α ->
+		  G ⊢ u / ε ∈ α
+		sound₀ empty = empt
+		sound₀ (concat a b) = conc (s (sound₀ a)) (sound₀ b)
+		sound₀ (term a) = term (sound₀ a)
+		sound₀ (nonterm x a) = nont x (sound₀ a)
+
+	\end{code}
+
+	This proof is fairly simple: constructors \codett{empty}, \codett{term}, 
+	and \codett{nonterm} match perfectly with their counterparts \codett{empt},
+	\codett{term}, and \codett{nont}. \codett{concat} and \codett{conc} are 
+	also almost identical, but require that we introduce some string 
+	concatenation to the first argument.
+
+	One problem with these data types is that it is possible to construct
+	several different proofs for the same derivation of the same rule using the
+	conc and empt rules:
+
+	\begin{code}
+
+		same-but-different : ∀ {u v X G} ->
+		  G ⊢ u / v ∈ l X ∷ ε ->
+		  G ⊢ u / v ∈ l X ∷ ε
+		same-but-different g = conc g empt
+
+	\end{code}
+
+	This rule could be applied to the rule any number of times, and as such 
+	judgments may not be equal even if they represent the same derivation of 
+	the same rule. This will make it harder for us to reason about ambiguous 
+	derivations, where the same structure can be derived from a sequence in 
+	many different distinct ways. This problem is not present in the following 
+	data structure.
+
+	\begin{code}
+
+		data _⊢_&_∈_ (G : CFG) : T * -> T * -> (N ∣ T)* -> Set where
+		  empt : {w : T *} ->
+		    G ⊢ w & w ∈ ε
+		
+		  conc : {u v w : T *} {X : N} {α β : (N ∣ T) *} ->
+		    (X , α) ∈ CFG.rules G ->
+		    G ⊢ u & v ∈ α ->
+		    G ⊢ v & w ∈ β ->
+		      G ⊢ u & w ∈ l X ∷ β
+		
+		  term : {a : T} {u v : T *} {α : (N ∣ T) *} ->
+		    G ⊢ u & v ∈ α ->
+		      G ⊢ a ∷ u & v ∈ r a ∷ α
+
+	\end{code}
+
+	This data structure merges the concatenation and nonterminal constructors, 
+	so that concatenation can only be performed when introducing a new 
+	nonterminal. This ensures that each constructor makes progress and 
+	therefore prevents the problem above. This data structure is both sound and 
+	complete with respect to the previous definitions.
+	
 	\begin{code}
 	
 	\end{code}
