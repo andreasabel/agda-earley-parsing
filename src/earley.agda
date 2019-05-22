@@ -162,65 +162,65 @@ module parser (G : CFG) where
 
   -- Scanning step.
 
-  scanner-w₀ : ∀ {w v} ->
+  scanr₀ : ∀ {w v} ->
     (a : T) ->
     Item w (a ∷ v)* ->
     Item w v *
-  scanner-w₀ a ε = ε
-  scanner-w₀ a ((X ∘ u ↦ α ∘ ε) ∷ rs) = scanner-w₀ a rs
-  scanner-w₀ a ((X ∘ u ↦ α ∘ l Y ∷ β) ∷ rs) = scanner-w₀ a rs
-  scanner-w₀ a ((X ∘ u ↦ α ∘ r b ∷ β [ χ ∘ ψ ]) ∷ rs) with decidₜ a b
-  ... | yes refl = (X ∘ u ↦ α ←∷ r a ∘ β [ v-step χ ∘ ψ ]) ∷ (scanner-w₀ a rs)
-  ... | no x = scanner-w₀ a rs
+  scanr₀ a ε = ε
+  scanr₀ a ((X ∘ u ↦ α ∘ ε) ∷ rs) = scanr₀ a rs
+  scanr₀ a ((X ∘ u ↦ α ∘ l Y ∷ β) ∷ rs) = scanr₀ a rs
+  scanr₀ a ((X ∘ u ↦ α ∘ r b ∷ β [ χ ∘ ψ ]) ∷ rs) with decidₜ a b
+  ... | yes refl = (X ∘ u ↦ α ←∷ r a ∘ β [ v-step χ ∘ ψ ]) ∷ (scanr₀ a rs)
+  ... | no x = scanr₀ a rs
 
-  scanner-w : {w v : T *} ->
+  scanr : {w v : T *} ->
     (a : T) ->
     WSet w (a ∷ v) ->
     WSet w v
-  scanner-w a ω = step ω (scanner-w₀ a (Sₙ ω))
+  scanr a ω = step ω (scanr₀ a (Sₙ ω))
 
-  complete-w₀ : ∀ {u v w} ->
+  compl₀ : ∀ {u v w} ->
     (ω : WSet w v) ->
     Item w u *
-  complete-w₀ {u} {v} w           with eq-T* u v
-  complete-w₀ {u} {u} w           | yes refl = Sₙ w
-  complete-w₀ {u} {v} (start rs)  | no x = ε
-  complete-w₀ {u} {v} (step w rs) | no x = complete-w₀ w
+  compl₀ {u} {v} w           with eq-T* u v
+  compl₀ {u} {u} w           | yes refl = Sₙ w
+  compl₀ {u} {v} (start rs)  | no x = ε
+  compl₀ {u} {v} (step w rs) | no x = compl₀ w
 
-  complete-w₁ : ∀ {u v w} ->
+  compl₁ : ∀ {u v w} ->
     (i : Item w v) -> Item.β i ≡ ε ->
     Item w u * -> Item w v *
-  complete-w₁ i@(X ∘ u ↦ α ∘ ε) refl ε = ε
-  complete-w₁ i@(X ∘ u ↦ α ∘ ε) refl ((Y ∘ u₁ ↦ α₁ ∘ ε) ∷ rs) = complete-w₁ i refl rs
-  complete-w₁ i@(X ∘ u ↦ α ∘ ε) refl ((Y ∘ u₁ ↦ α₁ ∘ r a ∷ β) ∷ rs) = complete-w₁ i refl rs
-  complete-w₁ i@(X ∘ u ↦ α ∘ ε) refl ((Y ∘ u₁ ↦ α₁ ∘ l Z ∷ β) ∷ rs) with decidₙ X Z
-  complete-w₁ i@(X ∘ u ↦ α ∘ ε) refl ((Y ∘ u₁ ↦ α₁ ∘ l Z ∷ β) ∷ rs) | no x = complete-w₁ i refl rs
-  complete-w₁ i@(X ∘ u ↦ α ∘ ε) refl ((Y ∘ u₁ ↦ α₁ ∘ l X ∷ β [ χ₁ ∘ ψ₁ ]) ∷ rs) | yes refl =
-    (Y ∘ u₁ ↦ α₁ ←∷ l X ∘ β [ v-step χ₁ ∘ ψ₁ ]) ∷ complete-w₁ i refl rs
+  compl₁ i@(X ∘ u ↦ α ∘ ε) refl ε = ε
+  compl₁ i@(X ∘ u ↦ α ∘ ε) refl ((Y ∘ u₁ ↦ α₁ ∘ ε) ∷ rs) = compl₁ i refl rs
+  compl₁ i@(X ∘ u ↦ α ∘ ε) refl ((Y ∘ u₁ ↦ α₁ ∘ r a ∷ β) ∷ rs) = compl₁ i refl rs
+  compl₁ i@(X ∘ u ↦ α ∘ ε) refl ((Y ∘ u₁ ↦ α₁ ∘ l Z ∷ β) ∷ rs) with decidₙ X Z
+  compl₁ i@(X ∘ u ↦ α ∘ ε) refl ((Y ∘ u₁ ↦ α₁ ∘ l Z ∷ β) ∷ rs) | no x = compl₁ i refl rs
+  compl₁ i@(X ∘ u ↦ α ∘ ε) refl ((Y ∘ u₁ ↦ α₁ ∘ l X ∷ β [ χ₁ ∘ ψ₁ ]) ∷ rs) | yes refl =
+    (Y ∘ u₁ ↦ α₁ ←∷ l X ∘ β [ v-step χ₁ ∘ ψ₁ ]) ∷ compl₁ i refl rs
 
   -- For a completed item X ↦ α.ε, get the set of possible ancestors (callers).
 
-  complete-w₂ : ∀ {v w} ->
+  compl₂ : ∀ {v w} ->
     (i : Item w v) -> Item.β i ≡ ε ->
     WSet w v ->
     Item w v *
-  complete-w₂ i p ω = complete-w₁ {u = Item.u i} i p (complete-w₀ ω)
+  compl₂ i p ω = compl₁ {u = Item.u i} i p (compl₀ ω)
 
-  predict-w₀ : ∀ {v w Y β} ->
+  predict₀ : ∀ {v w Y β} ->
     (Σ λ t -> t ++ v ≡ w) ->
     (i : Item w v) -> Item.β i ≡ l Y ∷ β ->
     (Σ λ t -> (t ∈ CFG.rules G) × (fst t ≡ Y)) * ->
     Item w v *
-  predict-w₀ ψ₁ i p ε = ε
-  predict-w₀ {v} ψ₁ i@(X ∘ u ↦ α ∘ l Y ∷ β) refl (σ (Y , γ) (p , refl) ∷ ps) =
-    (Y ∘ v ↦ ε ∘ γ [ p ∘ ψ₁ ]) ∷ predict-w₀ ψ₁ i refl ps
+  predict₀ ψ₁ i p ε = ε
+  predict₀ {v} ψ₁ i@(X ∘ u ↦ α ∘ l Y ∷ β) refl (σ (Y , γ) (p , refl) ∷ ps) =
+    (Y ∘ v ↦ ε ∘ γ [ p ∘ ψ₁ ]) ∷ predict₀ ψ₁ i refl ps
 
-  predict-w₁ : ∀ {v w Y β} ->
+  predict₁ : ∀ {v w Y β} ->
     (i : Item w v) -> Item.β i ≡ l Y ∷ β ->
     WSet w v ->
     Item w v *
-  predict-w₁ i@(X ∘ u ↦ α ∘ l Y ∷ β) refl ω =
-    predict-w₀ (V ω) i refl (lookup Y (CFG.rules G))
+  predict₁ i@(X ∘ u ↦ α ∘ l Y ∷ β) refl ω =
+    predict₀ (V ω) i refl (lookup Y (CFG.rules G))
 
   deduplicate : ∀ {w v} -> Item w v * -> Σ λ as -> Unique as
   deduplicate ε = σ ε u-ε
@@ -228,25 +228,25 @@ module parser (G : CFG) where
   deduplicate (x ∷ as) | yes x₁ = deduplicate as
   deduplicate (x ∷ as) | no x₁ = σ (x ∷ (Σ.proj₁ (deduplicate as))) (u-∷ (Σ.proj₀ (deduplicate as)) x₁)
 
-  pred-comp-w₀ : ∀ {v w} ->
+  pred-comp₀ : ∀ {v w} ->
     (i : Item w v) ->
     (ω : WSet w v) ->
     Σ {Item w v *} λ as -> Unique as
-  pred-comp-w₀ i@(X ∘ u ↦ α ∘ ε) w = deduplicate (complete-w₂ i refl w)
-  pred-comp-w₀ i@(X ∘ u ↦ α ∘ r a ∷ β) w = σ ε u-ε
-  pred-comp-w₀ i@(X ∘ u ↦ α ∘ l Y ∷ β) w = deduplicate (predict-w₁ i refl w)
+  pred-comp₀ i@(X ∘ u ↦ α ∘ ε) w = deduplicate (compl₂ i refl w)
+  pred-comp₀ i@(X ∘ u ↦ α ∘ r a ∷ β) w = σ ε u-ε
+  pred-comp₀ i@(X ∘ u ↦ α ∘ l Y ∷ β) w = deduplicate (predict₁ i refl w)
 
-  pred-comp-w₁ : {w n : T *} ->
+  pred-comp₁ : {w n : T *} ->
     (ω : WSet w n) ->
     (ss : Item w n *) ->
     (rs : Item w n *) ->
     Item w n *
-  pred-comp-w₁ ω ss ε = ε
-  pred-comp-w₁ ω ss (r₁ ∷ rs) =
-    let x₁ = pred-comp-w₀ r₁ (Wₙ ω ss) in
-    Σ.proj₁ x₁ ++ pred-comp-w₁ ω ss rs
+  pred-comp₁ ω ss ε = ε
+  pred-comp₁ ω ss (r₁ ∷ rs) =
+    let x₁ = pred-comp₀ r₁ (Wₙ ω ss) in
+    Σ.proj₁ x₁ ++ pred-comp₁ ω ss rs
 
-  pred-comp-w₂ : {w n : T *} ->
+  pred-comp₂ : {w n : T *} ->
     (ω : WSet w n) ->
     (ss : Item w n *) ->
     (rs : Item w n *) ->
@@ -254,34 +254,34 @@ module parser (G : CFG) where
     (p : suc (length (Σ.proj₁ (all-rules {w} {n}) \\ ss)) ≤ m) ->
     Unique (rs ++ ss) ->
     WSet w n
-  pred-comp-w₂ {n} ω ss rs zero () q
-  pred-comp-w₂ {n} ω ss ε (suc m) p q = Wₙ ω ss
-  pred-comp-w₂ {n} ω ss rs@(r₁ ∷ _) (suc m) p q =
-    let x₁ = pred-comp-w₁ ω ss rs in
+  pred-comp₂ {n} ω ss rs zero () q
+  pred-comp₂ {n} ω ss ε (suc m) p q = Wₙ ω ss
+  pred-comp₂ {n} ω ss rs@(r₁ ∷ _) (suc m) p q =
+    let x₁ = pred-comp₁ ω ss rs in
     let x₂ = x₁ \\ (rs ++ ss) in
     let p₁ = wf-pcw₃ (Σ.proj₀ all-rules) p q in
     let p₂ = wf-pcw₂ x₁ (rs ++ ss) q in
-    pred-comp-w₂ ω (rs ++ ss) x₂ m p₁ p₂
+    pred-comp₂ ω (rs ++ ss) x₂ m p₁ p₂
 
-  pred-comp-w : ∀ {w v} ->
+  pred-comp : ∀ {w v} ->
     WSet w v ->
     WSet w v
-  pred-comp-w {v} w =
+  pred-comp {v} w =
     let x₁ = deduplicate (Sₙ w) in
     let x₂ = (unique-++ (Σ.proj₁ x₁) ε (Σ.proj₀ x₁) u-ε λ ()) in
     let m = suc (length (Σ.proj₁ (all-rules {v}) \\ ε)) in
-    pred-comp-w₂ w ε (Σ.proj₁ x₁) m (≤ₛ (≤-self _)) x₂
+    pred-comp₂ w ε (Σ.proj₁ x₁) m (≤ₛ (≤-self _)) x₂
 
-  step-w : ∀ {w a v} ->
+  step₀ : ∀ {w a v} ->
     WSet w (a ∷ v) ->
     WSet w v
-  step-w {w} {a} {v} ω = scanner-w a (pred-comp-w ω)
+  step₀ {w} {a} {v} ω = scanr a (pred-comp ω)
 
   parse₀ : ∀ {w v} ->
      WSet w v ->
      WSet w ε
-  parse₀ {v = ε} w = pred-comp-w w
-  parse₀ {v = x ∷ v} w = parse₀ (step-w w)
+  parse₀ {v = ε} w = pred-comp w
+  parse₀ {v = x ∷ v} w = parse₀ (step₀ w)
 
   itemize : ∀ w ->
     Σ (λ t -> (t ∈ CFG.rules G) × (fst t ≡ CFG.start G)) * ->
