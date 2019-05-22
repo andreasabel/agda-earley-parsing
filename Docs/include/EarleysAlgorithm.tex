@@ -131,81 +131,216 @@
 		useful (and probably expected) invariant: $\alpha \concat \beta \in 
 		\textrm{CFG.rules } G$.
 	
+		We also provide proofs that these propositions are sound and complete
+		with respect to the parsing propositions provided in chapter
+		\ref{Parsing}:
+
 		\begin{code}
-	
-			sound : ∀ {u v w X β} {G : CFG} ->
-			  G ⊢ u / v ⟶* X / β ->
-			  G ⊢ v / w ∈ β ->
-			    G ⊢ u / w ∈ l X ∷ ε
-			sound initial b = b
-			sound (scanner a) b = sound a (term b)
-			sound (predict x a) b = nont x b
-			sound (complet a a₁) b =
-			  let x₁ = sound a₁ empt in
-			  let x₂ = conc x₁ b in
-			  sound a x₂
-	
-		\end{code}
-	
-		\begin{code}
+
+			sound : ∀ {G t u v w X α β} ->
+			  G ∙ t ⊢ u / v ⟶* X / α ∙ β ->
+			    G ⊢ v & w ∈ β ->
+			    G ⊢ u & w ∈ α ++ β
+			sound (initial x) b = b
+			sound (scanner g) b = sound g (term b)
+			sound (predict x g) b = b
+			sound (complet g g₁) b =
+			  let x₁ = sound g₁ empt in
+			  let x₂ = in-g g₁ in
+			  let x₃ = conc x₂ x₁ b in
+			  sound g x₃
 			
-			complete : ∀ {u v w X α} {G : CFG} ->
-			  G ⊢ u / v ⟶* X / α ->
-			  G ⊢ v / w ∈ α ->
-			    G ⊢ u / w ⟶* X / ε
+		\end{code}
+	
+		Soundness is fairly straightforward. The \codett{in-g} function proves 
+		the invariant $\alpha \concat \beta \in \textrm{CFG.rules } G$ for the 
+		Earley propositions. The function as shown here is not entirely 
+		complete: there are several instances of string concatenation that 
+		are not normalized away, but these are not directly relevant to the 
+		proof at hand. Completness follows in a similar fashion:
+		
+		\begin{code}
+
+			complete : ∀ {t u v w X α β} {G : CFG} ->
+			  G ∙ t ⊢ u / v ⟶* X / α ∙ β ->
+			  G ⊢ v & w ∈ β ->
+			    G ∙ t ⊢ u / w ⟶* X / α ++ β ∙ ε
 			complete a empt = a
-			complete a (conc (conc b empt) b₁) = complete a (conc b b₁)
-			complete a (conc (nont x b) b₁) =
+			complete a (conc x g g₁) =
 			  let x₁ = predict x a in
-			  let x₂ = complete x₁ b in
+			  let x₂ = complete x₁ g in
 			  let x₃ = complet a x₂ in
-			  complete x₃ b₁
-			complete a (term b) = complete (scanner a) b
-			complete a (nont x b) = complet a (complete (predict x a) b)
+			  complete x₃ g₁
+			complete a (term g) = complete (scanner a) g
 	
 		\end{code}
+
+		Like with the soundness proof some parts related to string 
+		concatenation equalities have been elided. Being both sound and 
+		complete, we expect the propositions we have given for Earley parsing
+		to be reasonable enough to be useful for proving the correctness of an 
+		implementation of the algorithm. The close similarities between the 
+		constructors for the Earley porpositions and the steps in the algorithm 
+		itself will also make it easier to show these properties for an 
+		implementation.
 	
 	\section{Implementation}
 
+		The implementation, like the proofs surrounding it, is written in cold 
+		hard Agda
+
 		\begin{code}
-	
-			record Item (n : ℕ) : Set where
+
+			record Item (w : T *) (v : T *) : Set where
 			  constructor _∘_↦_∘_
 			  field
 			    Y : N
-			    j : ℕ
+			    u : T *
 			    α β : (N ∣ T) *
 			    .{χ} : CFG.rules G ∋ (Y , α ++ β)
-			    .{ω} : j ≤ n
-	
-		\end{code}
-	
-		\begin{code}
-	
-			data WSet : ℕ -> T * -> Set where
-			  start :
-			    (v : T *) ->
-			    (rs : Item zero * ) ->
-			    WSet zero v
-			
-			  step : {a : T} {v : T *} {n : ℕ} ->
-			    (w : WSet n (a ∷ v)) ->
-			    (rs : Item (suc n) * ) ->
-			    WSet (suc n) v
+			    .{ψ} : (Σ λ t -> t ++ u ≡ w)        -- u is a suffix of w
 	
 		\end{code}
 		
+		Here, $Y \cdot u \mapsto \cdot \beta : \textrm{Item } w\ v$ represents
+		an Earley item $(Y \mapsto \alpha \cdot \beta , u)$ that was generated
+		when parsing input sequence $w$ with remainder $v$. Each item also 
+		carries with it a proof that it matches some rule in the grammar 
+		($\chi$), as well as a proof that the index $u$ fits somewhere in the 
+		entire sequence $w$ ($\psi$). These proofs are declared irrelevant so 
+		as to not 'get in the way' of proofs of equality and uniqueness later 
+		on.
+
+		We continue with defining the item sets:
+	
 		\begin{code}
 	
-			in-all : ∀ {j} -> (i : Item j) -> all-rules j ∋ i
+			data WSet : T * -> T * -> Set where
+			  start : {v : T *} ->
+			    (rs : Item v v * ) ->
+			    WSet v v
+			
+			  step : {a : T} {w v : T *} ->
+			    (ω : WSet w (a ∷ v)) ->
+			    (rs : Item w v * ) ->
+			    WSet w v
 	
 		\end{code}
-	
+		
+		These are essentially lists of item sets (although each item set has a 
+		slightly different type due to the definition of the items), with each 
+		item set being a list of items. These sets will then be constructed in 
+		sequence in the same way that is indicated by the Earley porpositions.
+		
+		In our implementation, the predict and complete steps are run in unison
+		and only when they are completed is the scanner step run on all of the 
+		generated items. This is possible because the predict and complete 
+		steps only depend on items in the current and (for complete) previous 
+		sets, whereas the scanning step depends only on items in the current 
+		set, but generates items in the next one. This means that the items 
+		generated from the scanning step from the current set are irrelevant 
+		for the predict and complete steps in the current set.
+
+		The scanning step is very simple:
+		
 		\begin{code}
 	
-			step-w : ∀ {n a v} ->
-			  WSet n (a ∷ v) ->
-			  WSet (suc n) v
-			step-w {a = a} {v = v} w = scanner-w a v (pred-comp-w w)
+			scanner₀ : ∀ {w v} ->
+			  (a : T) ->
+			  Item w (a ∷ v)* ->
+			  Item w v *
+			scanner₀ a ε = ε
+			scanner₀ a ((X ∘ u ↦ α ∘ ε) ∷ rs) = scanner₀ a rs
+			scanner₀ a ((X ∘ u ↦ α ∘ l Y ∷ β) ∷ rs) = scanner₀ a rs
+			scanner₀ a ((X ∘ u ↦ α ∘ r b ∷ β [ χ ∘ ψ ]) ∷ rs) with decidₜ a b
+			... | no x = scanner₀ a rs
+			... | yes refl = 
+			  (X ∘ u ↦ α ←∷ r a ∘ β [ v-step χ ∘ ψ ]) ∷ (scanner₀ a rs)
+			
+			scanner : {w v : T *} ->
+			  (a : T) ->
+			  WSet w (a ∷ v) ->
+			  WSet w v
+			scanner a ω = step ω (scanner₀ a (Sₙ ω))
+		
+		\end{code}
+		
+		Here, \codett{scanner₀} filters through a list of items for items
+		that can be scanned, and creates a list of the appropriate new itmes
+		for those that can. \codett{scanner} then packages this appropriately
+		in a \codett{WSet}. \codett{Sₙ} returns the outermost set from a
+		\codett{WSet}.
+		
+		The complete and predict stages are implemented similarly, and their 
+		implementations have been omitted here:
+		
+		\begin{code}
+			
+			complete : ∀ {v w} -> (i : Item w v) -> Item.β i ≡ ε ->
+			  WSet w v -> Item w v *
+		
+			predict : ∀ {v w Y β} -> (i : Item w v) -> Item.β i ≡ l Y ∷ β ->
+			  WSet w v -> Item w v *
+
+		\end{code}
+		
+ 		The complete and predict stages do, however work together and they are
+ 		therefore, unlike the scannig step, from now on merged into a single
+ 		action:
+ 		
+		\begin{code}
+			
+			pred-comp₀ : ∀ {v w} ->
+			  (i : Item w v) ->
+			  (ω : WSet w v) ->
+			  Σ {Item w v *} λ as -> Unique as
+			pred-comp₀ i@(X ∘ u ↦ α ∘ ε) w = deduplicate (complete i refl w)
+			pred-comp₀ i@(X ∘ u ↦ α ∘ r a ∷ β) w = σ ε u-ε
+			pred-comp₀ i@(X ∘ u ↦ α ∘ l Y ∷ β) w = deduplicate (predict i refl w)
+			
+			pred-comp₁ : {w n : T *} -> (ω : WSet w n) ->
+			  (ss : Item w n *) -> (rs : Item w n *) -> Item w n *
+		
+		\end{code}
+			
+		
+		\begin{code}
+			
+			pred-comp-w₂ : {w n : T *} ->
+			  (ω : WSet w n) ->
+			  (ss : Item w n *) ->
+			  (rs : Item w n *) ->
+			  (m : ℕ) ->
+			  (p : suc (length (Σ.proj₁ (all-rules {w} {n}) \\ ss)) ≤ m) ->
+			  Unique (rs ++ ss) ->
+			  WSet w n
+			pred-comp-w₂ {n} ω ss rs zero () q
+			pred-comp-w₂ {n} ω ss ε (suc m) p q = Wₙ ω ss
+			pred-comp-w₂ {n} ω ss rs@(r₁ ∷ _) (suc m) p q =
+			  let x₁ = pred-comp-w₁ ω ss rs in
+			  let x₂ = x₁ \\ (rs ++ ss) in
+			  let p₁ = wf-pcw₃ (Σ.proj₀ all-rules) p q in
+			  let p₂ = wf-pcw₂ x₁ (rs ++ ss) q in
+			  pred-comp-w₂ ω (rs ++ ss) x₂ m p₁ p₂
+
+			in-all : ∀ {j} -> (i : Item j) -> all-rules j ∋ i
+			
+			pred-comp-w : ∀ {w v} -> WSet w v -> WSet w v
+			
+			step-w : ∀ {w a v} ->
+			  WSet w (a ∷ v) ->
+			  WSet w v
+			step-w {w} {a} {v} ω = scanner-w a (pred-comp-w ω)
+			
+			parse₀ : ∀ {w v} ->
+			   WSet w v ->
+			   WSet w ε
+			parse₀ {v = ε} w = pred-comp-w w
+			parse₀ {v = x ∷ v} w = parse₀ (step-w w)
+			
+			parse : ∀ w -> WSet w ε
+			parse w =
+			  let x₁ = lookup (CFG.start G) (CFG.rules G) in
+			  parse₀ (start (gen-initials w x₁))
 		
 		\end{code}
