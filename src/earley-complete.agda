@@ -22,16 +22,16 @@ module parser-sound (G : CFG) where
   eq-prop : {a b : T *} (P : Item a b -> Set) (i : Item b b) -> a ≡ b -> Set
   eq-prop P i refl = P i
 
-  Complete₀ : ∀ {t v} -> WSet t v -> Set
-  Complete₀ {t} {v} ω = ∀ {u Y α β} ->
+  Complete₀ : ∀ {t v} -> Item t v * -> Set
+  Complete₀ {t} {v} rs = ∀ {u Y α β} ->
     (i : Item t v) ->
     (g : G ∙ t ⊢ u / v ⟶* Y / α ∙ β) ->
     i ≋ g ->
-    i ∈ Sₙ ω
+    i ∈ rs
 
   mutual
     Complete : ∀ {v w} -> WSet w v -> Set
-    Complete ω = Complete₀ ω × Complete* ω
+    Complete ω = Complete₀ (Sₙ ω) × Complete* ω
   
     Complete* : ∀ {v w} -> WSet w v -> Set
     Complete* (start rs) = ⊤
