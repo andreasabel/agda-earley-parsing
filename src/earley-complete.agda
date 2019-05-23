@@ -115,7 +115,7 @@ module parser-sound (G : CFG) where
     a ≡ a₀
   test₀ p g = test₁ p (suff-g₂ g)
     
-  test : ∀ {a t v} ->
+  complete-ind : ∀ {a t v} ->
     {P : Item t v -> Set} ->
     (Σ λ u -> u ++ (a ∷ v) ≡ t) ∣ v ≡ t ->
 
@@ -153,12 +153,19 @@ module parser-sound (G : CFG) where
       i ≋ g ->
       P i
     )
-  test s f ini h c (initial x) i refl = ini refl x i refl
-  test {a} s f ini h c (scanner g) i p = case test₀ s g of λ {refl -> f g i p}
-  test s f ini h c (predict x g) i@(X ∘ u ↦ α ∘ β [ χ ∘ ψ ]) refl =
-    h x (_ ∘ _ ↦ _ ∘ _ [ in-g g ∘ suff-g₁ g ]) i g refl (test s f ini h c g _ refl) refl
-  test s f ini h c (complet g g₁) i p =
-    c (_ ∘ _ ↦ _ ∘ _ [ in-g g₁ ∘ suff-g₂ g ]) i g g₁ refl (test s f ini h c g₁ _ refl) p
+  complete-ind s f ini h c (initial x) i refl =
+    ini refl x i refl
+
+  complete-ind {a} s f ini h c (scanner g) i p =
+    case test₀ s g of λ {refl -> f g i p}
+
+  complete-ind s f ini h c (predict x g) i p =
+    let x₁ = complete-ind s f ini h c g _ refl in
+    h x (_ ∘ _ ↦ _ ∘ _ [ in-g g ∘ suff-g₁ g ]) i g refl x₁ p
+
+  complete-ind s f ini h c (complet g g₁) i p =
+    let x₁ = complete-ind s f ini h c g₁ _ refl in
+    c (_ ∘ _ ↦ _ ∘ _ [ in-g g₁ ∘ suff-g₂ g ]) i g g₁ refl x₁ p
 
 --  complete-compl₂ : ∀ {t u v w X Y β γ} -> ∀ α .χ .ψ .χ₁ .ψ₁ ->
 --    (ω : WSet t w) ->
@@ -422,7 +429,7 @@ module parser-sound (G : CFG) where
     (i : Item t v) ->
     i ≋ g -> i ∈ Sₙ (pred-comp₂ ω ss rs m p q)
   complete-pred-comp₂ {a} {t} {v} {ss} {rs} {m} {p} {q} h ω c nx nx₂ s u g i e =
-    test {P = λ i -> i ∈ Sₙ (pred-comp₂ ω ss rs m p q)}
+    complete-ind {P = λ i -> i ∈ Sₙ (pred-comp₂ ω ss rs m p q)}
       h
       s
       u 
