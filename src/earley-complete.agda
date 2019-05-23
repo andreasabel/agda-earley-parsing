@@ -45,13 +45,20 @@ module parser-sound (G : CFG) where
     j ≋ scanner g ->
       j ∈ scanr₀ a rs
   complete-scanr₀ a ε i j g refl () refl
-  complete-scanr₀ a ((X ∘ u ↦ α ∘ ε) ∷ rs)       i j g refl (in-tail p) refl = complete-scanr₀ a rs i j g refl p refl
-  complete-scanr₀ a ((X ∘ u ↦ α ∘ l Y ∷ β) ∷ rs) i j g refl (in-tail p) refl = complete-scanr₀ a rs i j g refl p refl
-  complete-scanr₀ a ((X ∘ u ↦ α ∘ r b ∷ β) ∷ rs) i j g refl p           refl with decidₜ a b
-  complete-scanr₀ a ((X ∘ u ↦ α ∘ r b ∷ β) ∷ rs) i j g refl in-head     refl | yes refl = in-head
-  complete-scanr₀ a ((X ∘ u ↦ α ∘ r b ∷ β) ∷ rs) i j g refl (in-tail p) refl | yes refl = in-tail (complete-scanr₀ a rs i j g refl p refl)
-  complete-scanr₀ a ((X ∘ u ↦ α ∘ r b ∷ β) ∷ rs) i j g refl in-head     refl | no x = void (x refl)
-  complete-scanr₀ a ((X ∘ u ↦ α ∘ r b ∷ β) ∷ rs) i j g refl (in-tail p) refl | no x = complete-scanr₀ a rs i j g refl p refl
+
+  complete-scanr₀ a ((X ∘ u ↦ α ∘ ε) ∷ rs)       i j g refl (in-tail p) refl =
+    complete-scanr₀ a rs i j g refl p refl
+
+  complete-scanr₀ a ((X ∘ u ↦ α ∘ l Y ∷ β) ∷ rs) i j g refl (in-tail p) refl =
+    complete-scanr₀ a rs i j g refl p refl
+
+  complete-scanr₀ a ((X ∘ u ↦ α ∘ r b ∷ β) ∷ rs) i j g refl in-head     refl with decidₜ a b
+  ... | yes refl = in-head
+  ... | no x     = void (x refl)
+  
+  complete-scanr₀ a ((X ∘ u ↦ α ∘ r b ∷ β) ∷ rs) i j g refl (in-tail p) refl with decidₜ a b
+  ... | yes refl = in-tail (complete-scanr₀ a rs i j g refl p refl)
+  ... | no x     = complete-scanr₀ a rs i j g refl p refl
 
   complete-scanr : ∀ {t u v X α β} -> ∀ a ->
     (ω : WSet t (a ∷ v)) ->
