@@ -7,13 +7,11 @@
 	itself. Here, we will give a quick introduction to programs and proofs in
 	Agda. It is not necessary to be experienced with dependent types, but some
 	knowledge of functional programming is useful.
-	
+
 	\begin{code}
-	
 		data ℕ : Set where
 		  zero : ℕ
 		  suc : ℕ -> ℕ
-
 	\end{code}
 
 	The keyword \codett{data} here marks the start of the definition of a new
@@ -22,15 +20,13 @@
 	type of small types. This data type has two constructors, \codett{zero}
 	representing zero from the natural numbers, and \codett{suc} the successor
 	function. Let's take a look at a function definition using this data type:
-	
-	\begin{code}
 
+	\begin{code}
 		_+_ : (a b : ℕ) -> ℕ
 		zero + b = b
 		suc a + b = suc (a + b)
-	
 	\end{code}
-	
+
 	In Agda arbitrary mix-fix operators can be introduced using \codett{\_} to
 	denote the arguments of the mix-fix operator. Here, our operator
 	\codett{\_+\_} takes two natural numbers and returns a natural number
@@ -41,15 +37,13 @@
 	the second argument.
 
 	Agda's dependent types also allow us to define more interesting data types:
-	
+
 	\begin{code}
-		
 		data _≤_ : ℕ -> ℕ -> Set where
 		  ≤₀ : {n : ℕ} -> zero ≤ n
 		  ≤ₛ : {m n : ℕ} -> m ≤ n -> suc m ≤ suc n
-
 	\end{code}
-	
+
 	Here, the data type \codett{\_≤\_} is parameterized on two natural numbers,
 	with constructors \codett{≤₀} and \codett{≤ₛ}. Interestingly, the types of
 	the constructors are not fully general, and as such constrain the
@@ -64,22 +58,20 @@
 	Finally, let's take a look at these definitions:
 
 	\begin{code}
-
 		data _* (T : Set) : Set where
 		  ε : T *
 		  _∷_ : T -> T * -> T *
-		
+
 		data _≡_ {T : Set} (t : T) : T -> Set where
 		  refl : t ≡ t
-		
+
 		_++_ : {T : Set} -> T * -> T * -> T *
 		ε ++ b = b
 		(x ∷ a) ++ b = x ∷ (a ++ b)
-		
+
 		assoc-++ : ∀ {T} -> (as bs cs : T *) -> (as ++ bs) ++ cs ≡ as ++ (bs ++ cs)
 		assoc-++ ε bs cs = refl
 		assoc-++ (x ∷ as) bs cs = app (x ∷_) (assoc-++ as bs cs)
-
 	\end{code}
 
 	The type \codett{\_*} defines simple lists over a data type. The type

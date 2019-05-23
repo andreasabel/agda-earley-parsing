@@ -8,9 +8,8 @@
 	the sequence conforms (resulting in a \emph{parse tree}). For our
 	purposes, the Context-free grammars describe the structures we are
 	interested in:
-	
-	\begin{code}
 
+	\begin{code}
 		module grammar (N T : Set) where
 
 		record CFG : Set where
@@ -19,7 +18,6 @@
 		    start : N
 		    rules : (N × (N ∣ T)* )*
     		valid : (X : N) -> Σ λ α -> (X , α) ∈ rules
-
 	\end{code}
 
 	Here, type arguments \codett{N} and \codett{T} represent non-terminal and
@@ -45,24 +43,22 @@
 			 empty & concat & term & nonterm
 		\end{tabular}
 	\end{table}
-	
+
 	This may be expressed in Agda using the following data type:
-	
+
 	\begin{code}
-	
 		data _⊢_∈_ (G : CFG) :  T * -> (N ∣ T) * -> Set where
 		  empty :
 		    G ⊢ ε ∈ ε
-		
+
 		  concat : {u v : T *} {A : N} {α : (N ∣ T) *} ->
 		    G ⊢ u ∈ l A ∷ ε -> G ⊢ v ∈ α -> G ⊢ u ++ v ∈ l A ∷ α
-		
+
 		  term : {u : T *} {a : T} {α : (N ∣ T) *} ->
 		    G ⊢ u ∈ α -> G ⊢ a ∷ u ∈ r a ∷ α
-		
+
 		  nonterm : {A : N} {α : (N ∣ T) *} {u : T *} ->
 		    (A , α) ∈ CFG.rules G -> G ⊢ u ∈ α -> G ⊢ u ∈ l A ∷ ε
-
 	\end{code}
 
 	Here, a judgment of the form \codett{G ⊢ u ∈ α} would mean that, given a
@@ -73,28 +69,26 @@
 	that the sequence \codett{aa} does indeed conform to the structure
 	\emph{"sequences that are equal to \codett{aa}"}.
 
-	Another possible definition for conformance could be: 
+	Another possible definition for conformance could be:
 
 	\begin{code}
-	
 		data _⊢_/_∈_ (G : CFG) : T * -> T * -> (N ∣ T)* -> Set where
 		  empt : {w : T *} ->
 		    G ⊢ w / w ∈ ε
-		
+
 		  conc : {u v w : T *} {X : N} {α : (N ∣ T) *} ->
 		    G ⊢ u / v ∈ l X ∷ ε ->
 		    G ⊢ v / w ∈ α ->
 		      G ⊢ u / w ∈ l X ∷ α
-		
+
 		  term : {a : T} {u v : T *} {α : (N ∣ T) *} ->
 		    G ⊢ u / v ∈ α ->
 		      G ⊢ a ∷ u / v ∈ r a ∷ α
-		
+
 		  nont : {u v : T *} {X : N} {α : (N ∣ T) *} ->
 		    CFG.rules G ∋ (X , α) ->
 		    G ⊢ u / v ∈ α ->
 		    G ⊢ u / v ∈ l X ∷ ε
-
 	\end{code}
 
 	Here, a judgment of the form \codett{G ⊢ v / w ∈ α} would mean that, given
@@ -110,12 +104,11 @@
 	This second data type can be constructed if the first one can:
 
 	\begin{code}
-	
 		s : ∀ {u v w α G} ->
 		  G ⊢ u / v ∈ α ->
 		  G ⊢ u ++ w / v ++ w ∈ α
 		s = {! ... !}
-		
+
 		sound₀ :  ∀ {G u α} ->
 		  G ⊢ u ∈ α ->
 		  G ⊢ u / ε ∈ α
@@ -123,13 +116,12 @@
 		sound₀ (concat a b) = conc (s (sound₀ a)) (sound₀ b)
 		sound₀ (term a) = term (sound₀ a)
 		sound₀ (nonterm x a) = nont x (sound₀ a)
-
 	\end{code}
 
-	This proof is fairly simple: constructors \codett{empty}, \codett{term}, 
+	This proof is fairly simple: constructors \codett{empty}, \codett{term},
 	and \codett{nonterm} match perfectly with their counterparts \codett{empt},
-	\codett{term}, and \codett{nont}. \codett{concat} and \codett{conc} are 
-	also almost identical, but require that we introduce some string 
+	\codett{term}, and \codett{nont}. \codett{concat} and \codett{conc} are
+	also almost identical, but require that we introduce some string
 	concatenation to the first argument.
 
 	One problem with these data types is that it is possible to construct
@@ -137,45 +129,41 @@
 	conc and empt rules:
 
 	\begin{code}
-
 		same-but-different : ∀ {u v X G} ->
 		  G ⊢ u / v ∈ l X ∷ ε ->
 		  G ⊢ u / v ∈ l X ∷ ε
 		same-but-different g = conc g empt
-
 	\end{code}
 
-	This rule could be applied to the rule any number of times, and as such 
-	judgments may not be equal even if they represent the same derivation of 
-	the same rule. This will make it harder for us to reason about ambiguous 
-	derivations, where the same structure can be derived from a sequence in 
-	many different distinct ways. This problem is not present in the following 
+	This rule could be applied to the rule any number of times, and as such
+	judgments may not be equal even if they represent the same derivation of
+	the same rule. This will make it harder for us to reason about ambiguous
+	derivations, where the same structure can be derived from a sequence in
+	many different distinct ways. This problem is not present in the following
 	data structure.
 
 	\begin{code}
-
 		data _⊢_&_∈_ (G : CFG) : T * -> T * -> (N ∣ T)* -> Set where
 		  empt : {w : T *} ->
 		    G ⊢ w & w ∈ ε
-		
+
 		  conc : {u v w : T *} {X : N} {α β : (N ∣ T) *} ->
 		    (X , α) ∈ CFG.rules G ->
 		    G ⊢ u & v ∈ α ->
 		    G ⊢ v & w ∈ β ->
 		      G ⊢ u & w ∈ l X ∷ β
-		
+
 		  term : {a : T} {u v : T *} {α : (N ∣ T) *} ->
 		    G ⊢ u & v ∈ α ->
 		      G ⊢ a ∷ u & v ∈ r a ∷ α
-
 	\end{code}
 
-	This data structure merges the concatenation and nonterminal constructors, 
-	so that concatenation can only be performed when introducing a new 
-	non-terminal. This ensures that each constructor makes progress and 
-	therefore prevents the problem above. This data structure is both sound and 
+	This data structure merges the concatenation and nonterminal constructors,
+	so that concatenation can only be performed when introducing a new
+	non-terminal. This ensures that each constructor makes progress and
+	therefore prevents the problem above. This data structure is both sound and
 	complete with respect to the previous definitions.
-	
+
 	\begin{code}
-	
+
 	\end{code}

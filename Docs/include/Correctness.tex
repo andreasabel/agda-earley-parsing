@@ -25,9 +25,8 @@
 			H : ∀ {v w} {ω : WSet w v} -> Sound ω -> (∀ {i} -> i ∈ Sₙ ω -> Valid i)
 			H {ω = start rs} s = s
 			H {ω = step ω rs} s = snd s
-
 		\end{code}
-		
+
 		An item is \codett{Valid} if it can be derived using the Earley rules,
 		and a set of item sets is \codett{Sound} if all items in it are valid.
 		This definition of soundness is both simple and intuitive. Proving that
@@ -106,10 +105,10 @@
 
 			sound-compl₁ i refl refl ε v f ()
 
-			sound-compl₁ i refl refl ((Y ∘ u₁ ↦ α₁ ∘ ε) ∷ rs) v f q = 
+			sound-compl₁ i refl refl ((Y ∘ u₁ ↦ α₁ ∘ ε) ∷ rs) v f q =
 			  sound-compl₁ i refl refl rs v (f ∘ in-tail) q
 
-			sound-compl₁ i refl refl ((Y ∘ u₁ ↦ α₁ ∘ r a ∷ β) ∷ rs) v f q = 
+			sound-compl₁ i refl refl ((Y ∘ u₁ ↦ α₁ ∘ r a ∷ β) ∷ rs) v f q =
 			  sound-compl₁ i refl refl rs v (f ∘ in-tail) q
 
 			sound-compl₁ i refl refl ((Y ∘ u₁ ↦ α₁ ∘ l Z ∷ β) ∷ rs) v f q with decidₙ X Z
@@ -117,22 +116,20 @@
 			... | yes refl with q = complet (f in-head) v
 			...            | in-head     = complet (f in-head) v
 			...            | (in-tail q) = sound-compl₁ i refl refl rs v (f ∘ in-tail) q
-
 		\end{code}
-		
+
 		Here, we show, given a valid item that can be completed ($\beta =
 		\epsilon$), and an item set from which matching completion items can be 
 		found, that \codett{compl₁} only generates valid items if all input 
 		items are valid. Like with the scanning step, we only need to focus on 
 		the cases where items are actually generated, and when they are, if the 
 		current one is the one for which a proof is sought. The generated items
-		also match the \emph{complete} step of our Earley proposition 
+		also match the \emph{complete} step of our Earley proposition
 		perfectly, so the proof for the relevant item is also very simple.
 
 		The soundness proof for \codett{sound-compl₂} is then trivial:
-		
-		\begin{code}
 
+		\begin{code}
 			sound-compl₂ : ∀ {v w} ->
 			  (i : Item w v) ->
 			  (p : Item.β i ≡ ε) ->
@@ -140,15 +137,14 @@
 			  (∀ {j} -> j ∈ compl₂ i p ω -> Valid j)
 			sound-compl₂ i p v ω s q =
 			  sound-compl₁ i p refl (compl₀ ω) v (sound-compl₀ ω s) q
-
 		\end{code}
-		
+
 		As \codett{predict₁} works in very much the same way as
 		\codett{compl₂}, both their type proof structure are very similar (the
 		only difference being that \codett{compl₂} requires $\beta$ to start
 		with a non-terminal instead of being empty), and so the soundness proof
 		for \codett{predict₁} will not be discussed in further detail.
-		
+
 		Soundness of the merged step \codett{pred-comp} of the \codett{predict}
 		and \codett{compl} steps is also completely trivial, as there are no
 		modification to existing items nor generation of new ones except for
@@ -156,9 +152,8 @@
 		signatures are shown below:
 
 		\begin{code}
-
 			sound-pred-comp₀ : ∀ {v w} ->
-			  (i : Item w v) -> 
+			  (i : Item w v) ->
 			  (w : WSet w v) ->
 			  Valid i -> Sound w ->
 			  (∀ {j} -> j ∈ Σ.proj₁ (pred-comp₀ i w) -> Valid j)
