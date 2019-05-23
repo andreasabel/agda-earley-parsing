@@ -284,8 +284,8 @@
 
 		\end{code}
 		
- 		The complete and predict stages do, however work together and they are
- 		therefore, unlike the scannig step, from now on merged into a single
+ 		The complete and predict stages do, however, work together and they are
+ 		therefore, unlike the scanning step, from now on merged into a single
  		action:
  		
 		\begin{code}
@@ -294,15 +294,17 @@
 			  (i : Item w v) ->
 			  (ω : WSet w v) ->
 			  Σ {Item w v *} λ as -> Unique as
-			pred-comp₀ i@(X ∘ u ↦ α ∘ ε) w = deduplicate (complete i refl w)
-			pred-comp₀ i@(X ∘ u ↦ α ∘ r a ∷ β) w = σ ε u-ε
-			pred-comp₀ i@(X ∘ u ↦ α ∘ l Y ∷ β) w = deduplicate (predict i refl w)
 			
 			pred-comp₁ : {w n : T *} -> (ω : WSet w n) ->
 			  (ss : Item w n *) -> (rs : Item w n *) -> Item w n *
 		
 		\end{code}
-			
+		
+		This does not do much more than selecting the appropriate step based on
+		the item to be analysed, and mapping this over a list of items to be 
+		analysed. The result is also filtered so that all generated items are 
+		unique. This is then put when generating all the predicted and 
+		completed items for an item set:
 		
 		\begin{code}
 			
@@ -322,10 +324,62 @@
 			  let p₁ = wf-pcw₃ (Σ.proj₀ all-rules) p q in
 			  let p₂ = wf-pcw₂ x₁ (rs ++ ss) q in
 			  pred-comp-w₂ ω (rs ++ ss) x₂ m p₁ p₂
+		
+		\end{code}
 
-			in-all : ∀ {j} -> (i : Item j) -> all-rules j ∋ i
+		\codett{pred-comp-w₂} takes a \codett{WSet}, whose last item set is not
+		assumed to contain any items, a set of Items that have already been
+		predicted and completed on, and as such can be considered to be
+		'inert', as no new items can be generated in the current item set based
+		on these that have not already been generated, and a set of items that
+		have yet to be completed and predicted on. To help convince the
+		termination checker that this function is total, an upper bound on the
+		number of items that can still be generated, which decreases at
+		iteration, is also provided.
+
+		At each step, new items are generated based on the items in
+		\codett{rs}. The now analysed items in \codett{rs} are added to the set
+		of 'inert' items (\codett{ss}), and the newly generated items, with
+		deduplicates between them and the already inert items filtered out, are
+		considered the new set of items to be analysed. It is also necessary to
+		prove that the computation will eventually complete, which is done by
+		showing that there is an upper bound (\codett{length (Σ.proj₁
+		(all-rules {w} {n}) \\ ss)}) on the number of items not already in the
+		'inert' set, and that this always decreases. Because \codett{rs} must
+		contain at least one element, and the maximum number of items in an 
+		item set is bounded, this will always hold.
+		
+		That the maximum number of items in an item set is bounded is shown by 
+		constructing a function that returns all possible items in a given item 
+		set:
+		
+		\begin{code}
+
+			in-all : ∀ {w v} -> (i : Item w v) -> all-rules ∋ i
+		
+		\end{code}
+
+		\codett{all-rules} necessarily contains many more items than will ever 
+		be present in any actual item set in the parser, many of which will be 
+		un-sound. Finding the exact set of items for the items sets is, of 
+		course, the problem of parsing we are already trying to solve.
+		
+		Finally, if there are no items left in the set of items to be generated
+		based on, the process is complete and \codett{pred-comp-w₂} returns all
+		generated items. Given that \codett{rs} originally contained all items 
+		that could be created from scanning the previous token from the input 
+		sequence, the item set should now be complete.
+		
+		\begin{code}
 			
 			pred-comp-w : ∀ {w v} -> WSet w v -> WSet w v
+
+		\end{code}
+
+		At last, we put this together with the scanning step, and provide a 
+		function for parsing an input string:
+
+		\begin{code}
 			
 			step-w : ∀ {w a v} ->
 			  WSet w (a ∷ v) ->
