@@ -22,17 +22,17 @@
 
 	\end{code}
 
-	Here, type arguments \codett{N} and \codett{T} represent nonterminal and
+	Here, type arguments \codett{N} and \codett{T} represent non-terminal and
 	terminal symbols. Terminal symbols are used to represent instances of
-	concrete tokens whereas nonterminal symbols are used as labels for more
+	concrete tokens whereas non-terminal symbols are used as labels for more
 	complex structures. Two examples: a grammar \codett{ S ; (S , r s ∷ ε) ∷ ε
-	; \_ }, where \codett{S} is a nonterminal symbol and \codett{s} is a
+	; \_ }, where \codett{S} is a non-terminal symbol and \codett{s} is a
 	terminal symbol (and \codett{r} is the right side constructor for the
 	optional type \codett{|}), will have a single conforming string, consisting
 	of a single token \emph{'s'}. A grammar \codett{ S ; (S , r s ∷ l S ∷ ε) ∷
 	(S , ε) ∷ ε ; \_ } will have conforming strings that either are empty, or
 	start with the token \emph{'s'} followed by any sequence that conforms to
-	the \codett{S} nonterminal. The set of conforming sequences for this second
+	the \codett{S} non-terminal. The set of conforming sequences for this second
 	grammar is the set of (possibly empty) sequences only containing the token
 	\emph{'s'}.
 
@@ -66,9 +66,9 @@
 	\end{code}
 
 	Here, a judgment of the form \codett{G ⊢ u ∈ α} would mean that, given a
-	grammar \codett{G} which gives semantics to nonterminals, the sequence of
+	grammar \codett{G} which gives semantics to non-terminals, the sequence of
 	tokens \codett{u} conforms to the structure \codett{α}. That is, if
-	\codett{A} is a nonterminal and \codett{a} is a terminal symbol, any value
+	\codett{A} is a non-terminal and \codett{a} is a terminal symbol, any value
 	with the type \codett{G ⊢ l A ∷ ε ∈ a ∷ a ∷ ε} would constitute a proof
 	that the sequence \codett{aa} does indeed conform to the structure
 	\emph{"sequences that are equal to \codett{aa}"}.
@@ -172,7 +172,7 @@
 
 	This data structure merges the concatenation and nonterminal constructors, 
 	so that concatenation can only be performed when introducing a new 
-	nonterminal. This ensures that each constructor makes progress and 
+	non-terminal. This ensures that each constructor makes progress and 
 	therefore prevents the problem above. This data structure is both sound and 
 	complete with respect to the previous definitions.
 	

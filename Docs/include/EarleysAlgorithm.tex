@@ -3,10 +3,10 @@
 
 	The Earley parsing algorithm, named after its inventor Jay Earley, was
 	invented by Jay Earley in 1881~\cite{Earley}. It is a top-down parsing
-	algorithm, meaning that it starts with analysing the large-scale structure
+	algorithm, meaning that it starts with analyzing the large-scale structure
 	if its input and using that as guidance for what analysis is needed when
 	diving deeper into more fine-scale structure and eventually single tokens.
-	Eearley parsing is interesting in that it is able to perform well on
+	Earley parsing is interesting in that it is able to perform well on
 	several commonly used types of grammars, such as the LR(k) grammars, while
 	also being able to parse all context-free grammars. This section will first
 	give a high-level description of the algorithm, followed by a formalization
@@ -20,13 +20,13 @@
 		input sequence. It advances over the sets from left to right, with each 
 		step to the right representing the consumption, or \emph{`scanning`} of 
 		one token. For each set, all items in it are iterated over, and they 
-		are each checed if it and any item in the current or any previous set 
+		are each checked if it and any item in the current or any previous set 
 		together imply that the parsing can continue even further, resulting in 
 		a new item. All new items are added to the current set, and the process 
 		is then repeated until no new unique items can be formed.
 
 		The items are of the form $(X \mapsto \alpha \cdot \beta, i)$, where
-		$X$ is the nonterminal this item represents a partial parse of,
+		$X$ is the non-terminal this item represents a partial parse of,
 		$\alpha$ is the sequence of terminals and non-terminals that have
 		already been successfully parsed, $\beta$ is what remains to be parsed,
 		and $i$ is the index of the set where the parsing attempt of $X$ was
@@ -42,7 +42,7 @@
 			
 			\item
 				If $\beta$ is of the form $\epsilon$, meaning that this item
-				could accept the string of tokens satring at $i$ and ending at
+				could accept the string of tokens staring at $i$ and ending at
 				$j$, we must find out why the parsing of $X$ was attempted in
 				the first place. Any item $(Y \mapsto \alpha \cdot X\delta, k)$
 				in set $i$  could have predicted this item, and as such, we
@@ -62,7 +62,7 @@
 		inserted.  $S$ is the starting symbol, that is, the non-terminal which
 		we want to find out if the input sequence conforms to or not. $S_0$ is
 		a special marker that is only used for the initial item. When parsing
-		of the input sequence is complet, iff in the last set there is an item
+		of the input sequence is complete, if in the last set there is an item
 		$(S_0 \mapsto S \cdot \epsilon, 0)$ then the parser accepts, otherwise
 		the parser rejects the input.
 
@@ -72,7 +72,7 @@
 		be derived is several different ways (or even an unbounded number of 
 		ways), the different derivations will all share their common items, 
 		which gives the Earley parsing algorithm the ability to correctly 
-		analyse ambiguous grammars.
+		analyze ambiguous grammars.
 
 	\section{Formalization}
 		
@@ -115,7 +115,7 @@
 
 		Here, a value with type $G \cdot t \vdash u / v \rightarrow^* X /
 		\alpha \cdot \beta$ would correspond to an item $(X \mapsto \alpha
-		\cdot \beta, u)$ (using $u$ as a ramainder string rather than a
+		\cdot \beta, u)$ (using $u$ as a remainder string rather than a
 		consumed-index) in set $v$ that was generated while parsing the
 		sequence $t$ with grammar $G$. 
 		
@@ -157,7 +157,7 @@
 		Earley propositions. The function as shown here is not entirely 
 		complete: there are several instances of string concatenation that 
 		are not normalized away, but these are not directly relevant to the 
-		proof at hand. Completness follows in a similar fashion:
+		proof at hand. Completeness follows in a similar fashion:
 		
 		\begin{code}
 
@@ -180,7 +180,7 @@
 		complete, we expect the propositions we have given for Earley parsing
 		to be reasonable enough to be useful for proving the correctness of an 
 		implementation of the algorithm. The close similarities between the 
-		constructors for the Earley porpositions and the steps in the algorithm 
+		constructors for the Earley propositions and the steps in the algorithm 
 		itself will also make it easier to show these properties for an 
 		implementation.
 	
@@ -230,7 +230,7 @@
 		These are essentially lists of item sets (although each item set has a 
 		slightly different type due to the definition of the items), with each 
 		item set being a list of items. These sets will then be constructed in 
-		sequence in the same way that is indicated by the Earley porpositions.
+		sequence in the same way that is indicated by the Earley propositions.
 		
 		In our implementation, the predict and complete steps are run in unison
 		and only when they are completed is the scanner step run on all of the 
@@ -266,7 +266,7 @@
 		\end{code}
 		
 		Here, \codett{scanner₀} filters through a list of items for items
-		that can be scanned, and creates a list of the appropriate new itmes
+		that can be scanned, and creates a list of the appropriate new items
 		for those that can. \codett{scanner} then packages this appropriately
 		in a \codett{WSet}. \codett{Sₙ} returns the outermost set from a
 		\codett{WSet}.
@@ -301,8 +301,8 @@
 		\end{code}
 		
 		This does not do much more than selecting the appropriate step based on
-		the item to be analysed, and mapping this over a list of items to be 
-		analysed. The result is also filtered so that all generated items are 
+		the item to be analyzed, and mapping this over a list of items to be 
+		analyzed. The result is also filtered so that all generated items are 
 		unique. This is then put when generating all the predicted and 
 		completed items for an item set:
 		
@@ -338,10 +338,10 @@
 		iteration, is also provided.
 
 		At each step, new items are generated based on the items in
-		\codett{rs}. The now analysed items in \codett{rs} are added to the set
+		\codett{rs}. The now analyzed items in \codett{rs} are added to the set
 		of 'inert' items (\codett{ss}), and the newly generated items, with
-		deduplicates between them and the already inert items filtered out, are
-		considered the new set of items to be analysed. It is also necessary to
+		duplicates between them and the already inert items filtered out, are
+		considered the new set of items to be analyzed. It is also necessary to
 		prove that the computation will eventually complete, which is done by
 		showing that there is an upper bound (\codett{length (Σ.proj₁
 		(all-rules {w} {n}) \\ ss)}) on the number of items not already in the

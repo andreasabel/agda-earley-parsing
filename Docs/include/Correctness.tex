@@ -6,12 +6,12 @@
 	soundness of the generated item sets, and continue from there to their 
 	completeness. Finally backtracking from the item sets to create parse 
 	trees, and ambiguous parses, which are of particular interest for the 
-	Eearley parsing algorithm, are discussed.
+	Earley parsing algorithm, are discussed.
 
 	\section{Soundness}
 
 		The soundness proof for our implementation is straightforward 
-		througout. First, we provide a definition of sound items sets: 
+		throughout. First, we provide a definition of sound items sets: 
 
 		\begin{code}
 
@@ -33,7 +33,7 @@
 		This definition of soundness is both simple and intuitive. Proving that
 		the implementation always preserves these properties is also very
 		straightforward, as the algorithm never modifies items that are added
-		to an item set, and the implementatio generates new items in three
+		to an item set, and the implementation generates new items in three
 		different ways, matching the \emph{scan}, \emph{predict}, and
 		\emph{complete} steps in the algorithm also present in our Earley
 		propositions.
@@ -121,7 +121,7 @@
 		\end{code}
 		
 		Here, we show, given a valid item that can be completed ($\beta =
-		\epsilon$), and an item set from which matching comletion items can be 
+		\epsilon$), and an item set from which matching completion items can be 
 		found, that \codett{compl₁} only generates valid items if all input 
 		items are valid. Like with the scanning step, we only need to focus on 
 		the cases where items are actually generated, and when they are, if the 
@@ -146,7 +146,7 @@
 		As \codett{predict₁} works in very much the same way as
 		\codett{compl₂}, both their type proof structure are very similar (the
 		only difference being that \codett{compl₂} requires $\beta$ to start
-		with a nonterminal instead of being empty), and so the soundness proof
+		with a non-terminal instead of being empty), and so the soundness proof
 		for \codett{predict₁} will not be discussed in further detail.
 		
 		Soundness of the merged step \codett{pred-comp} of the \codett{predict}
