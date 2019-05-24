@@ -353,15 +353,13 @@ module parser-sound (G : CFG) where
     i ∈ Sₙ (pred-comp₂ ω ss rs m p q) ->
     j ≋ predict x g ->
       j ∈ Sₙ (pred-comp₂ ω ss rs m p q)
-  complete₁-pred-comp₂ ss rs            zero    () q ω           nx x i j g z₁ z₂ z₃
-  complete₁-pred-comp₂ ss ε             (suc m) p  q (start rs)  nx x i j g z₁ z₂ z₃ =
-    nx x i j g z₁ z₂ z₃ 
-  complete₁-pred-comp₂ ss ε             (suc m) p  q (step ω rs) nx x i j g z₁ z₂ z₃ =
-    nx x i j g z₁ z₂ z₃
-  complete₁-pred-comp₂ ss rs@(r₁ ∷ rs₀) (suc m) p  q ω           nx x i j g z₁ z₂ z₃ =
+  complete₁-pred-comp₂ ss rs            zero    () q ω           nx
+  complete₁-pred-comp₂ ss ε             (suc m) p  q (start rs)  nx = nx
+  complete₁-pred-comp₂ ss ε             (suc m) p  q (step ω rs) nx = nx
+  complete₁-pred-comp₂ ss rs@(r₁ ∷ rs₀) (suc m) p  q ω           nx =
     let p₁ = wf-pcw₃ (Σ.proj₀ all-rules) p q in
     let q₁ = wf-pcw₂ (pred-comp₁ ω ss rs) (rs ++ ss) q in
-    complete₁-pred-comp₂ (rs ++ ss) _ m p₁ q₁ ω (nx' ω nx) x i j g z₁ z₂ z₃
+    complete₁-pred-comp₂ (rs ++ ss) _ m p₁ q₁ ω (nx' ω nx)
 
   Nx₂ : ∀ {t v} -> Item t v * -> Item t v * -> Set
   Nx₂ {t} {v} ss rs =
@@ -397,15 +395,13 @@ module parser-sound (G : CFG) where
     j ≋ h -> j ∈ Sₙ (pred-comp₂ ω ss rs m p q) ->
     k ≋ complet g h ->
       k ∈ Sₙ (pred-comp₂ ω ss rs m p q)
-  complete₂-pred-comp₂ ss rs            zero    () q ω           c nx x i j g z₁ z₂ z₃
-  complete₂-pred-comp₂ ss ε             (suc m) p  q (start rs)  c nx x i j g z₁ z₂ z₃ =
-    nx x i j g z₁ z₂ z₃ 
-  complete₂-pred-comp₂ ss ε             (suc m) p  q (step ω rs) c nx x i j g z₁ z₂ z₃ =
-    nx x i j g z₁ z₂ z₃
-  complete₂-pred-comp₂ ss rs@(r₁ ∷ rs₀) (suc m) p  q ω           c nx x i j g z₁ z₂ z₃ =
+  complete₂-pred-comp₂ ss rs            zero    () q ω           c
+  complete₂-pred-comp₂ ss ε             (suc m) p  q (start rs)  c nx = nx
+  complete₂-pred-comp₂ ss ε             (suc m) p  q (step ω rs) c nx = nx
+  complete₂-pred-comp₂ ss rs@(r₁ ∷ rs₀) (suc m) p  q ω           c nx =
     let p₁ = wf-pcw₃ (Σ.proj₀ all-rules) p q in
     let q₁ = wf-pcw₂ (pred-comp₁ ω ss rs) (rs ++ ss) q in
-    complete₂-pred-comp₂ (rs ++ ss) _ m p₁ q₁ ω c (nx₂' ω c nx) x i j g z₁ z₂ z₃
+    complete₂-pred-comp₂ (rs ++ ss) _ m p₁ q₁ ω c (nx₂' ω c nx)
 
   complete-pred-comp₂ : ∀ {a t v ss rs m p q} ->
     (Σ λ u -> u ++ (a ∷ v) ≡ t) ∣ v ≡ t ->
