@@ -1,47 +1,69 @@
 % CREATED BY DAVID FRISK, 2016
 \chapter{Introduction}
 
+
+%	Parser generators are commonly used for parsers of programming languages,
+%	and several different generators exist today, such as Happy~\cite{Happy},
+%	Bison~\cite{Bison}, and Menhir~\cite{Menhir}. Parser generators are used
+%	for several reasons: Backus Naur Form (BNF) descriptions of grammars are
+%	usually more concise compared to other representations, such as hand
+%	written parsers. Generated parsers that are specialized for a language can
+%	also be faster compared to algorithms that parse any grammar and have to
+%	read and analyze the grammar of the target language during each parse.
+%	Parsers are often required to be fast, and they are the first step in what
+%	is usually many different passes of the entire compilation process. To this
+%	end, many parser generators generate parsers based on the LR(1) or LALR(1)
+%	parsing algorithms. These algorithms are designed mainly to be fast, but
+%	are unfortunately not able to parse all context-free grammars. Other
+%	algorithms, such as the Earley parsing algorithm~\cite{Earley}, are able to
+%	parse all context-free grammars, while maintaining an O(n) time complexity
+%	for many unambiguous grammars, such as all LR(k) grammars.
+%
+%	The BNF Converter (BNFC)~\cite{BNFC} is a parser and lexer generator
+%	written in Haskell, which uses a labeled BNF description of the target
+%	language to generate an abstract syntax tree (AST) representation, a
+%	parser, and a pretty-printer for the target language. BNFC supports
+%	multiple different back-end languages (that is, target languages for the
+%	generated parser itself), but none of these, nor other parts of BNFC have
+%	been formally verified. As with compilers, errors in parser generators can
+%	change the semantics of programs, yielding incorrect results.
+
+	Parsing is the problem of analyzing the structure of a sequence of
+	symbols, typically a string of characters, to determine if, and how, the
+	sequence conforms to a grammar - a description of acceptable structures.
+	Parsers are commonly used as parts of compilers to extract the structure of
+	source code as the first step of the compilation process, but are also
+	sometimes used to extract other types of structured data or to analyze
+	parts of natural language.
+
+	One class of grammars that are often used for descriptions of programming
+	languages are the \emph{context-free grammars}, for which several different
+	parsing algoritms exist, such as the CYK parsing algorithm, or Valiant's
+	algorithm. Others, such as \emph{LR, SLR, or LALR} parsers are designed to
+	parse the input sequence quickly, both asymptotically (as parsing of
+	context-free grammars generally has a time complexity of $O(n^3)$), and
+	practically (as it often is desirable for parsers, and complilers in
+	general (and indeed programs in general) to be fast), and restrict the
+	allowed grammars to a subset of the context-free grammars.
+
+	The Earley parsing algorithm~\cite{Earley} is a parsing algorithm capable
+	of parsing all context-free grammars. Unlike the CYK algorithm, which has a
+	best-case time complexity of $O(n^3)$, Earley's only has a time complexity
+	of $O(n^3)$ in the worst case, while having a linear complexity for many
+	grammars, including all grammars that LR, SLR, or LALR parsers accept. This
+	makes the Earley parsing algorithm interesting to analyze, being able to
+	parse more grammars than linear parsers, while being faster than algorithm
+	such as CYK or Valiant's.
+
 	Agda is a functional programming language with a strong type system that
 	supports dependent types. Dependent types allow expressing strong
 	invariants and properties of data structures and programs, and even
 	constructive proofs using the type system. These proofs enable programmers
 	to formally verify the correctness of programs and libraries. While the
-	theory underlying Agda's type system has been shown to be sound, neither
-	its parser, nor later stages of its compiler have been formally verified.
-	Errors in the implementations of these might change the semantics of
-	compiled programs and proofs, with severe consequences. % undermining their
-	usefulness.
-
-	Parser generators are commonly used for parsers of programming languages,
-	and several different generators exist today, such as Happy~\cite{Happy},
-	Bison~\cite{Bison}, and Menhir~\cite{Menhir}. Parser generators are used
-	for several reasons: Backus Naur Form (BNF) descriptions of grammars are
-	usually more concise compared to other representations, such as hand
-	written parsers. Generated parsers that are specialized for a language can
-	also be faster compared to algorithms that parse any grammar and have to
-	read and analyze the grammar of the target language during each parse.
-	Parsers are often required to be fast, and they are the first step in what
-	is usually many different passes of the entire compilation process. To this
-	end, many parser generators generate parsers based on the LR(1) or LALR(1)
-	parsing algorithms. These algorithms are designed mainly to be fast, but
-	are unfortunately not able to parse all context-free grammars. Other
-	algorithms, such as the Earley parsing algorithm~\cite{Earley}, are able to
-	parse all context-free grammars, while maintaining an O(n) time complexity
-	for many unambiguous grammars, such as all LR(k) grammars.
-
-	The BNF Converter (BNFC)~\cite{BNFC} is a parser and lexer generator
-	written in Haskell, which uses a labeled BNF description of the target
-	language to generate an abstract syntax tree (AST) representation, a
-	parser, and a pretty-printer for the target language. BNFC supports
-	multiple different back-end languages (that is, target languages for the
-	generated parser itself), but none of these, nor other parts of BNFC have
-	been formally verified. As with compilers, errors in parser generators can
-	change the semantics of programs, yielding incorrect results.
-
-	% A formally A fverified parser genrator could be used to generate parsers
-	% for several A fdifferent formally verified compilers
-
-	% Nice if BNFC was guarantied to generate correct parsers.
+	theory underlying Agda's type system has been shown to be sound~\cite{?},
+	neither its parser, nor later stages of its compiler have been formally
+	verified. Errors in the implementations of these might change the semantics
+	of compiled programs and proofs, with severe consequences.
 
 	Verified compilers have received significant attention in the research
 	community. CompCert~\cite{Leroy} is a formally verified compiler for a
@@ -49,10 +71,10 @@
 	assistant similar to Agda, and is accompanied by Coq-proofs that it
 	preserves the semantics of compiled programs. 
 
-	The aim of this thesis is to create a parser generator that can create a
-	parser for any context-free grammar, using (possibly among others) the
-	Earley parsing algorithm, and to formally verify, using Agda, that all
-	generated parsers are correct\footnote{\emph{Correct} meaning sound and
-	complete.}.
-
-	\section{Context}
+	In this thesis, we formalize and implement an Earley parser in Agda, and
+	verify the correctness of said parser. Additionally, we give readers an
+	introduction of Agda in chapter \ref{Agda}, as well as a more thourouh
+	explanation of parsing and context-free grammars in chapter \ref{Parsing}.
+	In chapter \ref{Earleys} the formalization and implementation of the Earley
+	parsing algorithm are given, and their correctness are proven in chapter
+	\ref{Correctness}.
