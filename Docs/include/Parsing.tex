@@ -38,10 +38,13 @@
 	necessary:
 
 	\begin{table}[h]
-		\centering
-		\begin{tabular}{cccc}
-			 empty & concat & term & nonterm
-		\end{tabular}
+	\centering
+	\begin{tabular}{cccc}
+			 \( \displaystyle \frac{\ }{\epsilon\in\epsilon} \) &
+			 \( \displaystyle \frac{u\in A\ \ v\in\alpha}{uv\in A\alpha} \) &
+			 \( \displaystyle \frac{u\in\alpha}{au\in a\alpha} \) &
+			 \( \displaystyle \frac{u\in\alpha}{u\in A}A \mapsto \alpha \)
+	\end{tabular}
 	\end{table}
 
 	This may be expressed in Agda using the following data type:
