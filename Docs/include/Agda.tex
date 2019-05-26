@@ -1,87 +1,164 @@
 % CREATED BY DAVID FRISK, 2016
-\chapter{Agda}
+\chapter{Agda} \label{Agda}
 
-	Agda is a functional programming language based on Martin-Lööf type theory
-	\cite{?}. Its dependent types allow expressing constructive proofs in the
-	language and ? allow creating proofs about functions in the language
-	itself. Here, we will give a quick introduction to programs and proofs in
-	Agda. It is not necessary to be experienced with dependent types, but some
-	knowledge of functional programming is useful.
+	Agda is a dependently typed functional programming language based on
+	Martin-Löf type theory \cite{?}. Dependently typed language allow creating 
+	types that are parameterized over some value, which makes it possible to 
+	create arbitrarily specific types. Types in Martin-Löf type theory can also
+	be used to represent propositions in constructive logic, with values of 
+	those types being proofs of the proposition. Agda, and other similar 
+	languages, can therefore be used as proof assistants, where type checking 
+	in the compiler is equivalent to mechanically verifying that the proof 
+	encoded in the program is correct.
 
-	\begin{code}
-		data ℕ : Set where
-		  zero : ℕ
-		  suc : ℕ -> ℕ
-	\end{code}
+	In this chapter we will give a quick introduction to programs and proofs in
+	Agda. It is not necessary to be experienced with programming with dependent
+	types, but some knowledge of functional programming is useful. 
+	
+	\section{Baby steps}
+	
+		We will start right off with some code in Agda:
+	
+		\begin{code}
+			data ℕ : Set where
+			  zero : ℕ
+			  suc : ℕ -> ℕ
+		\end{code}
+	
+		The keyword \codett{data} marks the start of the definition of a new
+		data type \codett{ℕ}. It is perfectly valid to use most of Unicode for
+		identifiers in Agda. \codett{ℕ} has the type \codett{Set}, which means
+		\codett{ℕ} is a normal type\footnote{\codett{Set} is the name of the
+		type of types, which in turn has type \codett{Set₁}, which has the type
+		\codett{Set₂}, and so on.}. This data type has two constructors:
+		\codett{zero} representing zero from the natural numbers, and
+		\codett{suc} the successor function.  Let's take a look at a function
+		definition using this data type:
+	
+		\begin{code}
+			_+_ : ℕ -> ℕ -> ℕ
+			zero + b = b
+			suc a + b = suc (a + b)
+		\end{code}
+	
+		In Agda arbitrary mix-fix operators can be introduced using \codett{\_}
+		to denote the arguments of the mix-fix operator. Here, our operator
+		\codett{\_+\_} takes two natural numbers (one on each side), and
+		returns a natural number. Next, we pattern-match on the first argument:
+		if it is zero, the result of the addition should be equal to the second
+		number. If it is the successor of another number \codett{a}, the sum is
+		the successor of the sum of \codett{a} and the second argument.
+	
+		\begin{code}
+			data _* (T : Set) : Set where
+			  ε : T *
+			  _∷_ : T -> T * -> T *
+		\end{code}
+	
+		The type \codett{\_*} defines lists of some type \codett{T}. The type
+		argument (\codett{T : Set}) to \codett{\_*} is placed before \codett{:}
+		to indicate that all constructors must use the same type argument (that
+		is, the constructors do not constrain this argument in any way), but we
+		could also have written \codett{data~\_*~:~Set~->Set~where}. Let's look
+		at a function making use of this type:
+	
+		\begin{code}
+			_++_ : {T : Set} -> T * -> T * -> T *
+			ε ++ b = b
+			(x ∷ a) ++ b = x ∷ (a ++ b)
+		\end{code}
+	
+		The function \codett{\_++\_} takes three arguments: a type \codett{T},
+		and two lists of type \codett{T}. It then returns a list of type
+		\codett{T}. The first argument is surrounded by curly brackets, which
+		means it is an implicit argument. When calling this function, it will
+		not be necessary to provide the type as an argument. Instead, the
+		compiler will try to figure out what it's value should be based on the
+		other arguments. Should the compiler be unable to figure this out, we
+		can provide implicit argument using curly brackets: \codett{\_++\_ {T =
+		ℕ} ε ε}. The definition of the function pattern-matches on the
+		constructors for \codett{T *}, and the result is the concatenation of
+		the arguments.
 
-	The keyword \codett{data} here marks the start of the definition of a new
-	data type \codett{Nat}. It is perfectly valid to use most of Unicode for
-	identifiers in Agda. \codett{Nat} has the type \codett{Set}, which is the
-	type of small types. This data type has two constructors, \codett{zero}
-	representing zero from the natural numbers, and \codett{suc} the successor
-	function. Let's take a look at a function definition using this data type:
+%	\section{Dependent data types}
+%	
 
-	\begin{code}
-		_+_ : (a b : ℕ) -> ℕ
-		zero + b = b
-		suc a + b = suc (a + b)
-	\end{code}
+	\section{Types as propositions}
 
-	In Agda arbitrary mix-fix operators can be introduced using \codett{\_} to
-	denote the arguments of the mix-fix operator. Here, our operator
-	\codett{\_+\_} takes two natural numbers and returns a natural number
-	(spoiler: we're defining addition over the natural numbers). Next, we
-	pattern-match on the first argument: if it is zero, the result of the
-	addition should be equal to the second number. If it is the successor of
-	another number \codett{a}, the sum is the successor of the sum of a and
-	the second argument.
-
-	Agda's dependent types also allow us to define more interesting data types:
-
-	\begin{code}
-		data _≤_ : ℕ -> ℕ -> Set where
-		  ≤₀ : {n : ℕ} -> zero ≤ n
-		  ≤ₛ : {m n : ℕ} -> m ≤ n -> suc m ≤ suc n
-	\end{code}
-
-	Here, the data type \codett{\_≤\_} is parameterized on two natural numbers,
-	with constructors \codett{≤₀} and \codett{≤ₛ}. Interestingly, the types of
-	the constructors are not fully general, and as such constrain the
-	constructible members of the type. For example, it is not possible to
-	construct a value of type \codett{suc zero ≤ zero}: \codett{≤₀} can not be
-	used as the first type arguments don't match, and neither can \codett{≤ₛ},
-	because the second type arguments don't match. In fact, as the name of the
-	data type suggests, it is equivalent to the proposition \emph{less than or
-	equal to}, as no value with type \codett{a ≤ b} can be constructed where
-	\codett{a} is greater than \codett{b}.
-
-	Finally, let's take a look at these definitions:
-
-	\begin{code}
-		data _* (T : Set) : Set where
-		  ε : T *
-		  _∷_ : T -> T * -> T *
-
-		data _≡_ {T : Set} (t : T) : T -> Set where
-		  refl : t ≡ t
-
-		_++_ : {T : Set} -> T * -> T * -> T *
-		ε ++ b = b
-		(x ∷ a) ++ b = x ∷ (a ++ b)
-
-		assoc-++ : ∀ {T} -> (as bs cs : T *) -> (as ++ bs) ++ cs ≡ as ++ (bs ++ cs)
-		assoc-++ ε bs cs = refl
-		assoc-++ (x ∷ as) bs cs = app (x ∷_) (assoc-++ as bs cs)
-	\end{code}
-
-	The type \codett{\_*} defines simple lists over a data type. The type
-	argument to \codett{\_*} is placed before \codett{:} to indicate that all
-	constructors must use the same type argument (that is, the constructors do
-	not constrain this argument in any way). \codett{\_≡\_} defines
-	propositional equality and should be fairly straightforward to understand,
-	and \codett{\_++\_} concatenates two lists. Finally we have a proof of
-	associativity for the \codett{\_++\_} operator. Since \codett{\_≡\_} takes
-	two values as arguments, it is perfectly valid to use \codett{\_++\_} as
-	part of the type definition.
-
-	\section{The Curry-Howard Isomorphism}
+		Agda's dependent types also allow us to define more interesting data
+		types:
+	
+		\begin{code}
+			data _≤_ : ℕ -> ℕ -> Set where
+			  ≤₀ : {n : ℕ} -> zero ≤ n
+			  ≤ₛ : {m n : ℕ} -> m ≤ n -> suc m ≤ suc n
+		\end{code}
+	
+		Here, like \codett{\_*}, the data type \codett{\_≤\_} takes arguments,
+		but instead of taking a type as its argument, \codett{\_≤\_} takes two
+		natural numbers. The first constructor, \codett{≤₀}, takes one
+		(implicit) natural number \codett{n}, and returns a value of the type
+		\codett{zero ≤ n}, which means that the first argument to the type must
+		always be \codett{zero} when \codett{≤₀} is used. \codett{≤ₛ} takes two
+		numbers (\codett{m n}), and a value of type \codett{m ≤ n}, and applies
+		the successor function to the type arguments.
+		
+		Interestingly, because types of the constructors are not fully general,
+		they constrain the constructible members of the type. For example, it
+		is not possible to construct a value of type \codett{suc zero ≤ zero}:
+		\codett{≤₀} can not be used as the first type arguments don't match
+		(\codett{≤₀} can only return a value where the first type argument is
+		\codett{zero}, but here we would need suc zero), and neither can
+		\codett{≤ₛ}, because the second type arguments don't match (no matter
+		the arguments, the second type argument of the result will be
+		\codett{suc} \emph{something}, which is not equal to zero). In fact, as
+		the name of the data type suggests, it is equivalent to the proposition
+		\emph{less than or equal to}, as no value with type \codett{a ≤ b} can
+		be constructed where \codett{a} is greater than \codett{b}.
+	
+	\section{Equality and normalization}
+	
+		Another interesting data type is propositional equality:
+	
+		\begin{code}
+			data _≡_ {T : Set} (t : T) : T -> Set where
+			  refl : t ≡ t
+		\end{code}
+	
+		The type \codett{\_≡\_} takes two arguments, a type \codett{T}, and two
+		values of that type (\codett{t} is the first, and the second is
+		unnamed).  Since the constructor can only construct values which have
+		the same value as both type arguments, \codett{\_≡\_} will only be
+		constructible for equal values. This might feel somewhat like cheating:
+		if this data type represents equality, but the arguments must be equal
+		for it to be constructed, how is this not a circular definition? This
+		works because of a simple judgmental equality built-in to the
+		compiler: if two terms can be normalized to exactly the same
+		representation, the compiler will consider them the same, and allow us
+		to construct propositional equality values with them as type arguments,
+		even though the exact terms might differ. Let's take a quick look at
+		how normalization works:
+	
+		\begin{code}
+			assoc-++ : ∀ {T} (as bs cs : T *) -> (as ++ bs) ++ cs ≡ as ++ (bs ++ cs)
+			assoc-++ ε bs cs = refl
+			assoc-++ (x ∷ as') bs cs = app (x ∷_) (assoc-++ as' bs cs)
+		\end{code}
+	
+	 	Here, we try to construct a proof of associativity for the
+	 	\codett{\_++\_} function. Neither of the two values given to
+	 	\codett{\_≡\_} normalize to anything else, because we do not know what
+	 	the lists \codett{as bs} and \codett{cs} look like, so we cannot know
+	 	what their concatenation is, besides it being their concatenation.
+	 	However when we pattern-match on \codett{as} this changes. In the first
+	 	case, with \codett{as}$=\epsilon$, when normalizing the term \codett{as
+	 	++ (bs ++ cs)}, the compiler will analyze the definition of
+	 	\codett{\_++\_}. \codett{\_++\_} does pattern matching on \codett{as},
+	 	but since we already know the value of as, the compiler normalizes this
+	 	application of \codett{\_++\_} to just \codett{bs ++ cs}, based on the
+	 	definition of \codett{\_++\_}, and the same happens for the left-hand
+	 	side of \codett{\_≡\_}, making both sides identical.  Similarly, for
+	 	the case when \codett{as} = \codett{x ∷ as'}, the type of the function
+	 	normalizes to \codett{x ∷ ((as' ++ bs) ++ cs) ≡ x ∷ (as' ++ (bs ++
+	 	cs))}, which we can prove by recursion (replacing \codett{as} with
+	 	\codett{as'}), followed by applying \codett{(x ∷\_)} to both sides.
