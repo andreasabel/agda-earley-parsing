@@ -2,30 +2,30 @@
 \chapter{Earley's Algorithm} \label{Earleys}
 
 	The Earley parsing algorithm, named after its inventor Jay Earley, was
-	invented by Jay Earley in 1881~\cite{Earley}. It is a top-down parsing
-	algorithm, meaning that it starts with analyzing the large-scale structure
-	if its input and using that as guidance for what analysis is needed when
-	diving deeper into more fine-scale structure and eventually single tokens.
-	Earley parsing is interesting in that it is able to perform well on
-	several commonly used types of grammars, such as the LR(k) grammars, while
-	also being able to parse all context-free grammars. This section will first
-	give a high-level description of the algorithm, followed by a formalization
-	of its mechanics, and finally give our implementation of the algorithm in
+	first described in 1968~\cite{Earley}. It is a top-down parsing algorithm,
+	meaning that it starts with analyzing the large-scale structure if its
+	input and using that as guidance for what analysis is needed when diving
+	deeper into more fine-scale structure and eventually single tokens.  Earley
+	parsing is interesting in that it is able to perform well on several
+	commonly used types of grammars, such as the LR(k) grammars, while also
+	being able to parse all context-free grammars. This section will first give
+	a high-level description of the algorithm, followed by a formalization of
+	its mechanics, and finally describe our implementation of the algorithm in
 	Agda.
 
 	\section{Description}
 
 		The Earley algorithm works by keeping track of a set of items
-		representing possible partial parses for each consumption state of the
-		input sequence. It advances over the sets from left to right, with each
-		step to the right representing the consumption, or \emph{`scanning`} of
-		one token. For each set, all items in it are iterated over, and they
-		are each checked if it and any item in the current or any previous set
+		representing possible partial parses for each position in the input
+		sequence. It advances over the sets from left to right, with each step
+		to the right representing the consumption, or \emph{`scanning`} of one
+		token. For each set, all items in it are iterated over, and they are
+		each checked if it and any item in the current or any previous set
 		together imply that the parsing can continue even further, resulting in
 		a new item. All new items are added to the current set, and the process
 		is then repeated until no new unique items can be formed.
 
-		The items are of the form $(X \mapsto \alpha \cdot \beta, i)$, where
+		The items are of the form $\earley{X}{\alpha}{\beta}{i}$, where
 		$X$ is the non-terminal this item represents a partial parse of,
 		$\alpha$ is the sequence of terminals and non-terminals that have
 		already been successfully parsed, $\beta$ is what remains to be parsed,
@@ -35,35 +35,38 @@
 
 		\begin{itemize}
 			\item
+
 				If $\beta$ is of the form $Y\delta$, meaning that for this item
 				to be completed, a $Y$ must now be parsed at this position, a
-				new item $(Y \mapsto \epsilon \cdot \gamma, j)$ is added to the
-				current set.
+				new item $\earley{Y}{\epsilon}{\gamma}{j}$, where $j$ is the
+				current position, is added to the current set.
 
 			\item
+
 				If $\beta$ is of the form $\epsilon$, meaning that this item
 				could accept the string of tokens staring at $i$ and ending at
-				$j$, we must find out why the parsing of $X$ was attempted in
-				the first place. Any item $(Y \mapsto \alpha \cdot X\delta, k)$
-				in set $i$  could have predicted this item, and as such, we
-				will add a new item $(Y \mapsto \alpha X \cdot \delta, k)$ for
-				each such item.
+				the current position, $j$, we must find out why the parsing of
+				$X$ was attempted in the first place. Any item $(Y \mapsto
+				\alpha \cdot X\delta, k)$ in set $i$  could have predicted this
+				item, and as such, we will add a new item $\earley{Y}{\alpha
+				X}{\delta}{k}$ for each such item.
 
 			\item
+
 				If $\beta$ is of the form $a\delta$, and the next token in the
 				input sequence is $a$, a new item
-				$(X \mapsto \alpha a \cdot \delta, i)$ is added to the next
+				$\earley{X}{\alpha a}{\delta}{i}$ is added to the next
 				set.
 
 		\end{itemize}
 
 		The algorithm is initialized with all sets empty except for the first
-		one, where a single item $(S_0 \mapsto \epsilon \cdot S, 0)$ is
+		one, where a single item $\earley{S_0}{\epsilon}{S}{0}$ is
 		inserted.  $S$ is the starting symbol, that is, the non-terminal which
 		we want to find out if the input sequence conforms to or not. $S_0$ is
 		a special marker that is only used for the initial item. When parsing
 		of the input sequence is complete, if in the last set there is an item
-		$(S_0 \mapsto S \cdot \epsilon, 0)$ then the parser accepts, otherwise
+		$\earley{S_0}{S}{\epsilon}{0}$ then the parser accepts, otherwise
 		the parser rejects the input.
 
 		Recreating the parse tree can be done via backtracking from the item
@@ -106,7 +109,9 @@
 			\end{tabular}
 		\end{table}
 
-		A similar proposition can be constructed in Agda:
+		These inference rules match closely with the descriptions of how new
+		items can be constructed, together with the initial item, and a similar
+		proposition can be constructed in Agda:
 
 		\begin{code}
 			data _∙_⊢_/_⟶*_/_∙_ (G : CFG) :
@@ -132,22 +137,22 @@
 		\end{code}
 
 		Here, a value with type $G \cdot t \vdash u / v \rightarrow^* X /
-		\alpha \cdot \beta$ would correspond to an item $(X \mapsto \alpha
-		\cdot \beta, u)$ (using $u$ as a remainder string rather than a
-		consumed-index) in set $v$ that was generated while parsing the
-		sequence $t$ with grammar $G$.
+		\alpha \cdot \beta$ would correspond to an item
+		$\earley{X}{\alpha}{\beta}{u}$ (but, importantly, the agda version uses
+		$u$ as a remainder of the input string rather than an index into it) in
+		set $v$ that was generated while parsing the sequence $t$ with grammar
+		$G$.
 
 		There are some differences between the propositions we first wrote for
 		Earley parsers and the data type given above. The addition of an
-		explicit grammar and sequence-to-be-parsed change little about the how
-		the constructors can be used, but make it easier to reason about
-		different grammars and ensure that the initial item will indeed only be
-		put in the initial item set. The initial item has also been changed
-		somewhat. Instead of introducing a special marker for the initial item,
-		all rules for the starting symbol are now allowed as initial items.
-		This also has little effect on the propositions, but introduces a
-		useful (and probably expected) invariant: $\alpha \concat \beta \in
-		\textrm{CFG.rules } G$.
+		explicit grammar and input sequence change little about the how the
+		constructors can be used, but make it easier to reason about different
+		grammars and ensure that the initial item will indeed only be put in
+		the initial item set. The initial item has also been changed somewhat.
+		Instead of introducing a special marker for the initial item, all rules
+		for the starting symbol are now allowed as initial items.  This also
+		has little effect on the propositions, but introduces a useful
+		invariant: $\alpha \concat \beta \in \textrm{CFG.rules } G$.
 
 		We also provide proofs that these propositions are sound and complete
 		with respect to the parsing propositions provided in chapter
@@ -171,9 +176,9 @@
 		Soundness is fairly straightforward. The \codett{in-g} function proves
 		the invariant $\alpha \concat \beta \in \textrm{CFG.rules } G$ for the
 		Earley propositions. The function as shown here is not entirely
-		complete: there are several instances of string concatenation that
-		are not normalized away, but these are not directly relevant to the
-		proof at hand. Completeness follows in a similar fashion:
+		complete: there are several instances of string concatenation that do
+		not disappear during normalization, but these are not directly relevant
+		to the proof at hand. Completeness follows in a similar fashion:
 
 		\begin{code}
 			complete : ∀ {t u v w X α β} {G : CFG} ->
@@ -200,8 +205,7 @@
 
 	\section{Implementation}
 
-		The implementation, like the proofs surrounding it, is written in cold
-		hard Agda
+		We start by creating a representation for the Earley items:
 
 		\begin{code}
 			record Item (w : T *) (v : T *) : Set where
@@ -214,27 +218,30 @@
 			    .{ψ} : (Σ λ t -> t ++ u ≡ w)        -- u is a suffix of w
 		\end{code}
 
-		Here, $Y \cdot u \mapsto \cdot \beta : \textrm{Item } w\ v$ represents
-		an Earley item $(Y \mapsto \alpha \cdot \beta , u)$ that was generated
-		when parsing input sequence $w$ with remainder $v$. Each item also
-		carries with it a proof that it matches some rule in the grammar
-		($\chi$), as well as a proof that the index $u$ fits somewhere in the
-		entire sequence $w$ ($\psi$). These proofs are declared irrelevant so
-		as to not 'get in the way' of proofs of equality and uniqueness later
-		on.
+		Here, $Y \cdot u \mapsto \alpha \cdot \beta : \textrm{Item } w\ v$
+		represents an Earley item $\earley{Y}{\alpha}{\beta}{u}$ that was
+		generated when parsing the input sequence $w$ up to, but not including
+		the remainder $v$. Each item also carries with it a proof that it
+		matches some rule in the grammar ($\chi$), as well as a proof that the
+		index $u$ fits somewhere in the entire sequence $w$ ($\psi$). These
+		proofs are declared irrelevant which means that they must be part of
+		every item, but are not considered part of the data type for e.g.
+		propositional equality, since we only care that the validity proofs
+		exist not that equal items must have equal validity proofs (although
+		they likely will).
 
 		We continue with defining the item sets:
 
 		\begin{code}
-			data WSet : T * -> T * -> Set where
+			data EState : T * -> T * -> Set where
 			  start : {v : T *} ->
 			    (rs : Item v v * ) ->
-			    WSet v v
+			    EState v v
 
 			  step : {a : T} {w v : T *} ->
-			    (ω : WSet w (a ∷ v)) ->
+			    (ω : EState w (a ∷ v)) ->
 			    (rs : Item w v * ) ->
-			    WSet w v
+			    EState w v
 		\end{code}
 
 		These are essentially lists of item sets (although each item set has a
@@ -242,7 +249,7 @@
 		item set being a list of items. These sets will then be constructed in
 		sequence in the same way that is indicated by the Earley propositions.
 
-		In our implementation, the predict and complete steps are run in unison
+		In our implementation, the predict and complete steps are run together
 		and only when they are completed is the scanner step run on all of the
 		generated items. This is possible because the predict and complete
 		steps only depend on items in the current and (for complete) previous
@@ -268,26 +275,27 @@
 
 			scanner : {w v : T *} ->
 			  (a : T) ->
-			  WSet w (a ∷ v) ->
-			  WSet w v
+			  EState w (a ∷ v) ->
+			  EState w v
 			scanner a ω = step ω (scanner₀ a (Sₙ ω))
 		\end{code}
 
-		Here, \codett{scanner₀} filters through a list of items for items
-		that can be scanned, and creates a list of the appropriate new items
-		for those that can. \codett{scanner} then packages this appropriately
-		in a \codett{WSet}. \codett{Sₙ} returns the outermost set from a
-		\codett{WSet}.
+		Here, \codett{scanner₀} filters through a set of items for items that
+		can be scanned, and creates a set of the appropriate new items for
+		those that can. \codett{scanner} then packages this appropriately in a
+		\codett{EState}. \codett{Sₙ} returns the outermost item set from a
+		\codett{EState}.
 
-		The complete and predict stages are implemented similarly, and their
-		implementations have been omitted here:
+		The complete and predict steps are implemented similarly to the
+		scanning step (although their results are not immediately packaged into
+		an EState), and their implementations have been omitted here:
 
 		\begin{code}
 			complete : ∀ {v w} -> (i : Item w v) -> Item.β i ≡ ε ->
-			  WSet w v -> Item w v *
+			  EState w v -> Item w v *
 
 			predict : ∀ {v w Y β} -> (i : Item w v) -> Item.β i ≡ l Y ∷ β ->
-			  WSet w v -> Item w v *
+			  EState w v -> Item w v *
 		\end{code}
 
  		The complete and predict stages do, however, work together and they are
@@ -297,10 +305,10 @@
 		\begin{code}
 			pred-comp₀ : ∀ {v w} ->
 			  (i : Item w v) ->
-			  (ω : WSet w v) ->
+			  (ω : EState w v) ->
 			  Σ {Item w v *} λ as -> Unique as
 
-			pred-comp₁ : {w n : T *} -> (ω : WSet w n) ->
+			pred-comp₁ : {w n : T *} -> (ω : EState w n) ->
 			  (ss : Item w n *) -> (rs : Item w n *) -> Item w n *
 		\end{code}
 
@@ -311,25 +319,25 @@
 		completed items for an item set:
 
 		\begin{code}
-			pred-comp-w₂ : {w n : T *} ->
-			  (ω : WSet w n) ->
+			pred-comp₂ : {w n : T *} ->
+			  (ω : EState w n) ->
 			  (ss : Item w n *) ->
 			  (rs : Item w n *) ->
 			  (m : ℕ) ->
-			  (p : suc (length (Σ.proj₁ (all-rules {w} {n}) \\ ss)) ≤ m) ->
+			  (p : suc (length (Σ.proj₁ (all-items {w} {n}) \\ ss)) ≤ m) ->
 			  Unique (rs ++ ss) ->
-			  WSet w n
-			pred-comp-w₂ {n} ω ss rs zero () q
-			pred-comp-w₂ {n} ω ss ε (suc m) p q = Wₙ ω ss
-			pred-comp-w₂ {n} ω ss rs@(r₁ ∷ _) (suc m) p q =
-			  let x₁ = pred-comp-w₁ ω ss rs in
+			  EState w n
+			pred-comp₂ {n} ω ss rs zero () q
+			pred-comp₂ {n} ω ss ε (suc m) p q = Wₙ ω ss
+			pred-comp₂ {n} ω ss rs@(r₁ ∷ _) (suc m) p q =
+			  let x₁ = pred-comp₁ ω ss rs in
 			  let x₂ = x₁ \\ (rs ++ ss) in
-			  let p₁ = wf-pcw₃ (Σ.proj₀ all-rules) p q in
+			  let p₁ = wf-pcw₃ (Σ.proj₀ all-items) p q in
 			  let p₂ = wf-pcw₂ x₁ (rs ++ ss) q in
-			  pred-comp-w₂ ω (rs ++ ss) x₂ m p₁ p₂
+			  pred-comp₂ ω (rs ++ ss) x₂ m p₁ p₂
 		\end{code}
 
-		\codett{pred-comp-w₂} takes a \codett{WSet}, whose last item set is not
+		\codett{pred-comp₂} takes a \codett{EState}, whose last item set is not
 		assumed to contain any items, a set of Items that have already been
 		predicted and completed on, and as such can be considered to be
 		'inert', as no new items can be generated in the current item set based
@@ -346,51 +354,54 @@
 		considered the new set of items to be analyzed. It is also necessary to
 		prove that the computation will eventually complete, which is done by
 		showing that there is an upper bound (\codett{length (Σ.proj₁
-		(all-rules {w} {n}) \\ ss)}) on the number of items not already in the
-		'inert' set, and that this always decreases. Because \codett{rs} must
-		contain at least one element, and the maximum number of items in an
-		item set is bounded, this will always hold.
+		(all-items {w} {n}) \textbackslash\textbackslash ss)}) on the number of
+		items not already in the 'inert' set, and that this always decreases.
+		Because \codett{rs} must contain at least one element, and the maximum
+		number of items in an item set is bounded, this will always hold.
 
 		That the maximum number of items in an item set is bounded is shown by
 		constructing a function that returns all possible items in a given item
 		set:
 
 		\begin{code}
-			in-all : ∀ {w v} -> (i : Item w v) -> all-rules ∋ i
+			in-all : ∀ {w v} -> (i : Item w v) -> all-items ∋ i
 		\end{code}
 
-		\codett{all-rules} necessarily contains many more items than will ever
+		\codett{all-items} necessarily contains many more items than will ever
 		be present in any actual item set in the parser, many of which will be
 		un-sound. Finding the exact set of items for the items sets is, of
 		course, the problem of parsing we are already trying to solve.
 
-		Finally, if there are no items left in the set of items to be generated
-		based on, the process is complete and \codett{pred-comp-w₂} returns all
-		generated items. Given that \codett{rs} originally contained all items
-		that could be created from scanning the previous token from the input
-		sequence, the item set should now be complete.
+		Finally, if there are no items left in \codett{rs} (the set of items to
+		be generated from), the process is complete and \codett{pred-comp₂}
+		returns all generated items. Given that \codett{rs} originally
+		contained all items that could be created from scanning the previous
+		token from the input sequence, the item set should now be complete, and
+		we can package it all up in an EState.
 
 		\begin{code}
-			pred-comp-w : ∀ {w v} -> WSet w v -> WSet w v
+			pred-comp : ∀ {w v} -> EState w v -> EState w v
 		\end{code}
 
 		At last, we put this together with the scanning step, and provide a
 		function for parsing an input string:
 
 		\begin{code}
-			step-w : ∀ {w a v} ->
-			  WSet w (a ∷ v) ->
-			  WSet w v
-			step-w {w} {a} {v} ω = scanner-w a (pred-comp-w ω)
+			step : ∀ {w a v} ->
+			  EState w (a ∷ v) ->
+			  EState w v
+			step {w} {a} {v} ω = scanner a (pred-comp ω)
 
 			parse₀ : ∀ {w v} ->
-			   WSet w v ->
-			   WSet w ε
-			parse₀ {v = ε} w = pred-comp-w w
-			parse₀ {v = x ∷ v} w = parse₀ (step-w w)
+			   EState w v ->
+			   EState w ε
+			parse₀ {v = ε} w = pred-comp w
+			parse₀ {v = x ∷ v} w = parse₀ (step w)
 
-			parse : ∀ w -> WSet w ε
+			parse : ∀ w -> EState w ε
 			parse w =
 			  let x₁ = lookup (CFG.start G) (CFG.rules G) in
 			  parse₀ (start (gen-initials w x₁))
 		\end{code}
+
+		This concludes our implementation of the Earley parsing algorithm.
