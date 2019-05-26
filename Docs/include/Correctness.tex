@@ -5,25 +5,19 @@
 	implementation discussed in chapter \ref{Earleys}. First, we discuss
 	soundness of the generated item sets, and continue from there to their
 	completeness. Finally backtracking from the item sets to create parse
-	trees, and ambiguous parses, which are of particular interest for the
-	Earley parsing algorithm, are discussed.
+	trees, and ambiguous parses are discussed.
 
 	\section{Soundness}
 
-		The soundness proof for our implementation is straightforward
-		throughout. First, we provide a definition of sound items sets:
+		First, we provide a definition of sound items sets:
 
 		\begin{code}
 			Valid : ∀ {w v} -> Item w v -> Set
 			Valid {w} {v} i = G ⊢ Item.u i / v ⟶* Item.Y i / Item.β i
 
-			Sound : ∀ {w v} -> WSet w v -> Set
+			Sound : ∀ {w v} -> ESet w v -> Set
 			Sound (start rs) = ∀ {i} -> i ∈ rs -> Valid i
 			Sound (step ω rs) = Sound ω × (∀ {i} -> i ∈ rs -> Valid i)
-
-			H : ∀ {v w} {ω : WSet w v} -> Sound ω -> (∀ {i} -> i ∈ Sₙ ω -> Valid i)
-			H {ω = start rs} s = s
-			H {ω = step ω rs} s = snd s
 		\end{code}
 
 		An item is \codett{Valid} if it can be derived using the Earley rules,
@@ -39,7 +33,7 @@
 		First, we will take a look at the scanning step. We will consider
 		\codett{scanr₀} to be sound if all its generated items are valid, given
 		valid input. This allows us to show that \codett{scanr} preserves
-		soundness for \codett{WSet}s:
+		soundness for \codett{ESet}s:
 
 		\begin{code}
 			sound-scanr₀ : ∀ {a v w} -> ∀ rs ->
@@ -60,7 +54,7 @@
 			...            | in-head    = scanner (f in-head)
 			...            | in-tail p₁ = sound-scanr₀ rs (f ∘ in-tail) p₁
 
-			sound-scanr : ∀ {a w v} -> (ω : WSet w (a ∷ v)) ->
+			sound-scanr : ∀ {a w v} -> (ω : ESet w (a ∷ v)) ->
 			  Sound ω -> Sound (scanr a ω)
 			sound-scanr (start rs) s = s , sound-scanr₀ rs s
 			sound-scanr (step w rs) (s , s₁) = s , s₁ , sound-scanr₀ rs s₁
@@ -68,12 +62,12 @@
 
 		The structure of the proof matches the structure of the original
 		definitions closely, due to the way normalizaitons are axiomatic to the
-		type system. If there is no input, there is no output, so nothing
-		needs to be shown. Even when there is, \codett{scanr₀} only generates
-		new items from items that expect a terminal, and only does so when that
-		terminal equals the next token in the input sequence. Finally, the
-		proof is structured so that an arbitrary generated item is chosen, and
-		that item should then be shown to be valid. The argument \codett{p}
+		type system. If there is no input, there is no output, so nothing needs
+		to be shown. When there is, \codett{scanr₀} only generates new items
+		from items that expect a terminal symbol, and only does so when that
+		terminal symbol equals the next token in the input sequence. Finally,
+		the proof is structured so that an arbitrary generated item is chosen,
+		and that item should then be shown to be valid. The argument \codett{p}
 		specifies for which of the generated items the proof is desired, and if
 		the one generated at this recursion level is not the correct one, we
 		must continue the proof search.
@@ -81,16 +75,17 @@
 		Next, we continue in a similar fashion for the complete step:
 
 		\begin{code}
-			sound-compl₀ : ∀ {u v w} (w : WSet w v) ->
+			sound-compl₀ : ∀ {u v w} (w : ESet w v) ->
 			  Sound w -> (∀ {i} -> i ∈ compl₀ {u} {v} w -> Valid i)
 			sound-compl₀ {u} {v} w s p           with eq-T* u v
-			sound-compl₀ {v} {v} w s p           | yes refl = H s p
+			sound-compl₀ {v} {v} (start rs) s p  | yes refl = s
+			sound-compl₀ {v} {v} (step w rs) s p | yes refl = snd s
 			sound-compl₀ {u} {v} (start rs) s () | no x
 			sound-compl₀ {u} {v} (step w rs) s p | no x = sound-compl₀ w (fst s) p
 		\end{code}
 
 		As \codett{sound-compl₀} is nothing more than a lookup function to find
-		the correct item set to use from a \codett{WSet}, its soundness is
+		the correct item set to use from a \codett{ESet}, its soundness is
 		trivial when the soundness of the original item set is given.
 		\codett{sound-compl₁} is more interesting:
 
@@ -113,7 +108,7 @@
 
 			sound-compl₁ i refl refl ((Y ∘ u₁ ↦ α₁ ∘ l Z ∷ β) ∷ rs) v f q with decidₙ X Z
 			... | no x = sound-compl₁ i refl refl rs v (f ∘ in-tail) q
-			... | yes refl with q = complet (f in-head) v
+			... | yes refl with q =
 			...            | in-head     = complet (f in-head) v
 			...            | (in-tail q) = sound-compl₁ i refl refl rs v (f ∘ in-tail) q
 		\end{code}
@@ -133,7 +128,7 @@
 			sound-compl₂ : ∀ {v w} ->
 			  (i : Item w v) ->
 			  (p : Item.β i ≡ ε) ->
-			  Valid i -> (ω : WSet w v) -> Sound ω ->
+			  Valid i -> (ω : ESet w v) -> Sound ω ->
 			  (∀ {j} -> j ∈ compl₂ i p ω -> Valid j)
 			sound-compl₂ i p v ω s q =
 			  sound-compl₁ i p refl (compl₀ ω) v (sound-compl₀ ω s) q
@@ -141,9 +136,10 @@
 
 		As \codett{predict₁} works in very much the same way as
 		\codett{compl₂}, both their type proof structure are very similar (the
-		only difference being that \codett{compl₂} requires $\beta$ to start
-		with a non-terminal instead of being empty), and so the soundness proof
-		for \codett{predict₁} will not be discussed in further detail.
+		only difference in their type being that \codett{compl₂} requires
+		$\beta$ to start with a non-terminal instead of being empty), and so
+		the soundness proof for \codett{predict₁} will not be discussed in
+		further detail.
 
 		Soundness of the merged step \codett{pred-comp} of the \codett{predict}
 		and \codett{compl} steps is also completely trivial, as there are no
@@ -152,22 +148,17 @@
 		signatures are shown below:
 
 		\begin{code}
-			sound-pred-comp₀ : ∀ {v w} ->
-			  (i : Item w v) ->
-			  (w : WSet w v) ->
-			  Valid i -> Sound w ->
-			  (∀ {j} -> j ∈ Σ.proj₁ (pred-comp₀ i w) -> Valid j)
-
-			sound-pred-comp₁ : ∀ {w v} (ω : WSet w v) -> ∀ ss rs ->
+			sound-pred-comp₁ : ∀ {w v} (ω : ESet w v) -> ∀ ss rs ->
 			  (∀ {i} -> i ∈ ss -> Valid i) ->
 			  (∀ {i} -> i ∈ rs -> Valid i) ->
 			  Sound ω -> (∀ {i} -> i ∈ pred-comp₁ ω ss rs -> Valid i)
 		\end{code}
 
-		\codett{sound-pred-comp₂} looks a bit more complex:
+		The definition of \codett{sound-pred-comp₂}, which does the iterative
+		refinement of items for each item set, looks a bit more complex:
 
 		\begin{code}
-			sound-pred-comp₂ : ∀ {w v} (ω : WSet w v) -> ∀ ss rs m p q ->
+			sound-pred-comp₂ : ∀ {w v} (ω : ESet w v) -> ∀ ss rs m p q ->
 			  (∀ {i} -> i ∈ ss -> Valid i) ->
 			  (∀ {i} -> i ∈ rs -> Valid i) ->
 			  Sound ω -> Sound (pred-comp₂ ω ss rs m p q)
@@ -189,16 +180,16 @@
 		the item sets after concatenation and de-duplication are indeed the
 		same items as they were before, and that all newly generated items are
 		\codett{Valid}. The final steps of the parser can be shown to preserve
-		sound in the same way:
+		soundness in the same way:
 
 		\begin{code}
-			sound-pred-comp : ∀ {w v} {ω : WSet w v} ->
+			sound-pred-comp : ∀ {w v} {ω : ESet w v} ->
 			  Sound ω -> Sound (pred-comp ω)
 
-			sound-step₀ : ∀ {w a v} {ω : WSet w (a ∷ v)} ->
+			sound-step₀ : ∀ {w a v} {ω : ESet w (a ∷ v)} ->
 			  Sound ω -> Sound (step₀ ω)
 
-			sound-parse₀ : ∀ {w v} -> {ω : WSet w v} ->
+			sound-parse₀ : ∀ {w v} -> {ω : ESet w v} ->
 			  Sound ω -> Sound (parse₀ ω)
 
 			sound-parse : ∀ w -> Sound (parse w)
@@ -213,7 +204,7 @@
 		'local' property, dealing only with individual items, completeness is
 		much more global in nature, dealing with the entire item sets. This
 		means all operations that could previously be glanced over will now
-		require much more extensive analysis.
+		require more extensive analysis.
 
 		We will begin with a definition of completeness for item sets:
 
@@ -238,27 +229,27 @@
 		any possible Earley state in the item set between the last element of
 		$t$ and the first of $u$ is present in the set. This is a 'shallow'
 		definition of completeness: only the topmost item set is considered,
-		and all prevous ones discarded. We also define two 'deeper' notions of
-		completeness for \codett{WSet}s:
+		with all prevous ones disregarded. We also define two 'deeper' notions of
+		completeness for \codett{ESet}s:
 
 		\begin{code}
 			mutual
-			  Complete : ∀ {v w} -> WSet w v -> Set
+			  Complete : ∀ {v w} -> ESet w v -> Set
 			  Complete ω = Complete₀ (Sₙ ω) × Complete* ω
 
-			  Complete* : ∀ {v w} -> WSet w v -> Set
+			  Complete* : ∀ {v w} -> ESet w v -> Set
 			  Complete* (start rs) = ⊤
 			  Complete* (step ω rs) = Complete ω
 		\end{code}
 
-		Here, the \codett{Complete*} property for a \codett{WSet} would mean
+		Here, the \codett{Complete*} property for a \codett{ESet} would mean
 		that all item sets, except for the very topmost one, are complete, and
-		\codett{Complete} is completeness for \codett{WSet}s: all prevous item
-		sets are complete, as is the topmost one.
+		\codett{Complete} represents completeness for \codett{ESet}s: all
+		prevous item sets are complete, as is the topmost one.
 
 		We start by taking a fairly high-level overview of the completeness
 		proof which we will do by induction on the Earley propositions. The
-		type for this induction is fairly lengthy, so we will break it up into
+		type for this function is fairly lengthy, so we will break it up into
 		several peices and discuss them separately:
 
 		\begin{code}
@@ -282,12 +273,12 @@
 
 		To begin with, the original input string $t$, and its current remainder
 		$v$ are given as implicit arguments, but together with these we also
-		provide a single token that will be used to name the last scanned
-		token, together with a proof that this actually was the previous token.
-		The requirement of this token as an argument restricts this proof to
-		only be valid for parsing alphabets that have at least one token, but
-		as token-free parsing is completely trivial we did not feel compelled
-		to remove this restriction. This previous token is used in the first
+		provide a single token that is used to name the last scanned token,
+		together with a proof that this actually was the previous token.  The
+		requirement of this token as an argument restricts this proof to only
+		be valid for parsing alphabets that have at least one token, but as
+		token-free parsing is completely trivial we did not feel compelled to
+		remove this restriction. This previous token is used in the first
 		function argument, which represents an assumption that the property
 		\codett{P} holds for all items that can be generated from the scanning
 		step. The second argument represents the same assumption, but for the
@@ -295,9 +286,10 @@
 		very first item set, which is why \codett{t ≡ v}. Here,
 		\codett{eq-prop} is only present because of the slight mismatch of
 		types between the initial items and \codett{P} caused by this equality
-		constraint. At this time, we do not need to bother with what specific
-		proposition we will use this function to prove, which is why it is 
-		parameterized on the proposition \codett{P}.
+		constraint, and can just be thought of as \codett{P i}. At this time,
+		we do not need to bother with what specific proposition we will use
+		this function to prove, which is why it is parameterized on the
+		proposition \codett{P}.
 
 		Continuing on, we have:
 
@@ -318,7 +310,7 @@
 			  ) ->
 		\end{code}
 
-		These arguments fill the same function as the previous two, but for 
+		These arguments fill a similar function as the previous two, but for 
 		items that can be generated via the predict and complete steps, 
 		repspectively. While their function as part of the induction step is 
 		equivalent to that of the two previous arguments, when making use of 
@@ -358,7 +350,7 @@
 
 		\begin{code}
 			complete₁-pred-comp₂ : ∀ {t v} -> ∀ ss rs m p q ->
-			  (ω : WSet t v) ->
+			  (ω : ESet t v) ->
 			  Nx ss rs ->
 			  ∀ {u X Y α β δ}
 			  (x : (Y , δ) ∈ CFG.rules G) ->
@@ -381,7 +373,7 @@
 
 		\begin{code}
 			complete₂-pred-comp₂ : ∀ {t v} -> ∀ ss rs m p q ->
-			  (ω : WSet t v) ->
+			  (ω : ESet t v) ->
 			  Complete* ω ->
 			  Nx₂ ss rs ->
 			  ∀ {u w X Y α β γ}
@@ -404,7 +396,7 @@
 
 		\begin{code}
 			complete-scanner : ∀ {t u v X α β} -> ∀ a ->
-			  (ω : WSet t (a ∷ v)) ->
+			  (ω : ESet t (a ∷ v)) ->
 			  Complete ω ->
 			  (i : Item t (a ∷ v)) ->
 			  (j : Item t v) ->
@@ -441,7 +433,7 @@
 %			  in-tail (complete-predict₀ ψ₀ _ _ g h refl refl rs (σ q₁ q₀))
 %
 %			complete-predict₁ : ∀ {t u v X Y α β δ} ->
-%			  (ω : WSet t v) ->
+%			  (ω : ESet t v) ->
 %			  (i j : Item t v) ->
 %			  (g : G ∙ t ⊢ u / v ⟶* X / α ∙ l Y ∷ β) ->
 %			  (x : CFG.rules G ∋ (Y , δ)) ->
@@ -460,7 +452,7 @@
 %			complete-deduplicate (x ∷ as) (in-tail p) | no x₁ = in-tail (complete-deduplicate as p)
 %
 %			complete₁-pred-comp₀ : ∀ {t u v X Y α β δ} ->
-%			  (ω : WSet t v) ->
+%			  (ω : ESet t v) ->
 %			  (x : (Y , δ) ∈ CFG.rules G) ->
 %			  (i j : Item t v) ->
 %			  (g : G ∙ t ⊢ u / v ⟶* X / α ∙ l Y ∷ β) ->
@@ -472,7 +464,7 @@
 %			  complete-deduplicate (predict₁ i refl ω) x₁
 %
 %			complete₂-pred-comp₀ : ∀ {t u v w X Y α β γ} ->
-%			  (ω : WSet t w) ->
+%			  (ω : ESet t w) ->
 %			  (i j : Item t w) ->
 %			  (g : G ∙ t ⊢ u / v ⟶* X / α ∙ l Y ∷ β) ->
 %			  (h : G ∙ t ⊢ v / w ⟶* Y / γ ∙ ε) ->
@@ -483,7 +475,7 @@
 %			  complete-deduplicate (complete₂ i refl ω) {!!}
 %
 %			complete₁-pred-comp₁ : ∀ {t u v X Y α β δ ss} -> ∀ rs ->
-%			  (ω : WSet t v)
+%			  (ω : ESet t v)
 %			  (x : (Y , δ) ∈ CFG.rules G) ->
 %			  (i j : Item t v) ->
 %			  (g : G ∙ t ⊢ u / v ⟶* X / α ∙ l Y ∷ β) ->
@@ -497,7 +489,7 @@
 %			  in-r (complete₁-pred-comp₁ rs ω x i j g o p q)
 %
 %			complete₁₀-pred-comp₂ : ∀ {t v ss rs m p q} ->
-%			  (ω : WSet t v) ->
+%			  (ω : ESet t v) ->
 %			  (i : Item t v) ->
 %			  i ∈ ss ->
 %			  i ∈ Sₙ (pred-comp₂ ω ss rs m p q)
@@ -508,7 +500,7 @@
 %			  complete₁₀-pred-comp₂ {m = m} ω i (in-r s)
 %
 %			complete₁₁-pred-comp₂ : ∀ {t v ss rs m p q} ->
-%			  (ω : WSet t v) ->
+%			  (ω : ESet t v) ->
 %			  (i : Item t v) ->
 %			  i ∈ rs ->
 %			  i ∈ Sₙ (pred-comp₂ ω ss rs m p q)
@@ -518,7 +510,7 @@
 %			  complete₁₀-pred-comp₂ {m = m} ω i (in-l s)
 %
 %			complete₁₂-pred-comp₂ : ∀ {t v ss rs m p q} ->
-%			  (ω : WSet t v) ->
+%			  (ω : ESet t v) ->
 %			  ∀ {u X Y α β δ} ->
 %			  (x : (Y , δ) ∈ CFG.rules G) ->
 %			  (i j : Item t v) ->
@@ -547,7 +539,7 @@
 %			  j ≋ predict x g ->
 %			    j ∈ (rs ++ ss)
 %
-%			nx' : ∀ {t v rs ss} (ω : WSet t v) ->
+%			nx' : ∀ {t v rs ss} (ω : ESet t v) ->
 %			  Nx ss rs ->
 %			  Nx (rs ++ ss) (pred-comp₁ ω ss rs \\ (rs ++ ss))
 %			nx' {rs = ε} {ss} ω nx x i j g z₁ z₂ z₃ = nx x i j g z₁ z₂ z₃
@@ -571,7 +563,7 @@
 %			  k ≋ complet g h ->
 %			    k ∈ (rs ++ ss)
 %
-%			nx₂' : ∀ {t v rs ss} (ω : WSet t v) ->
+%			nx₂' : ∀ {t v rs ss} (ω : ESet t v) ->
 %			  Complete* ω ->
 %			  Nx₂ ss rs ->
 %			  Nx₂ (rs ++ ss) (pred-comp₁ ω ss rs \\ (rs ++ ss))
@@ -586,7 +578,7 @@
 %
 %			complete-pred-comp₂ : ∀ {a t v ss rs m p q} ->
 %			  (Σ λ u -> u ++ (a ∷ v) ≡ t) ∣ v ≡ t ->
-%			  (ω : WSet t v) ->
+%			  (ω : ESet t v) ->
 %			  Complete* ω ->
 %			  Nx ss rs ->
 %			  Nx₂ ss rs ->
@@ -616,7 +608,7 @@
 %
 %			complete₀-pred-comp : ∀ {a t v} ->
 %			  (Σ λ u -> u ++ (a ∷ v) ≡ t) ∣ v ≡ t ->
-%			  (ω : WSet t v) ->
+%			  (ω : ESet t v) ->
 %			  Complete* ω ->
 %			  Nx ε (Σ.proj₁ (deduplicate (Sₙ ω))) ->
 %			  Nx₂ ε (Σ.proj₁ (deduplicate (Sₙ ω))) ->
@@ -644,7 +636,7 @@
 %			    g i p
 %
 %			complete₃-pred-comp₂ : ∀ {t v} -> ∀ ss rs m p q ->
-%			  (ω : WSet t v) ->
+%			  (ω : ESet t v) ->
 %			  Complete* ω ->
 %			  Complete* (pred-comp₂ ω ss rs m p q)
 %			complete₃-pred-comp₂ ss rs zero () q ω c
@@ -658,7 +650,7 @@
 %			  complete₃-pred-comp₂ (rs ++ ss) x₂ m p₁ q₁ ω c
 %
 %			complete₁-pred-comp : ∀ {t v} ->
-%			  (ω : WSet t v) ->
+%			  (ω : ESet t v) ->
 %			  Complete* ω ->
 %			  Complete* (pred-comp ω)
 %			complete₁-pred-comp ω =
@@ -667,7 +659,7 @@
 %			  complete₃-pred-comp₂ ε _ _ (≤ₛ (≤-self _)) x₂ ω
 %
 %			complete₂-pred-comp : ∀ {t v} ->
-%			  (ω : WSet t v) ->
+%			  (ω : ESet t v) ->
 %			  Complete* ω ->
 %			  (∀ {u X α β} ->
 %			    (g : G ∙ t ⊢ u / v ⟶* X / α ∙ β) ->
@@ -679,7 +671,7 @@
 %
 %			complete-pred-comp : ∀ {a t v} ->
 %			  (Σ λ u -> u ++ (a ∷ v) ≡ t) ∣ v ≡ t ->
-%			  (ω : WSet t v) ->
+%			  (ω : ESet t v) ->
 %			  Complete* ω ->
 %			  (∀ {u X α β} ->
 %			    (g : G ∙ t ⊢ u / a ∷ v ⟶* X / α ∙ r a ∷ β) ->
@@ -703,7 +695,7 @@
 %
 %			complete-step : ∀ {a₀ a t v} ->
 %			  (Σ λ u -> u ++ (a₀ ∷ a ∷ v) ≡ t) ∣ (a ∷ v) ≡ t ->
-%			  (ω : WSet t (a ∷ v)) ->
+%			  (ω : ESet t (a ∷ v)) ->
 %			  Complete* ω ->
 %			  (∀ {u X α β} ->
 %			    (g : G ∙ t ⊢ u / a₀ ∷ a ∷ v ⟶* X / α ∙ r a₀ ∷ β) ->
@@ -730,7 +722,7 @@
 %
 %			complete*-step : ∀ {a₀ a t v} ->
 %			  (Σ λ u -> u ++ (a₀ ∷ a ∷ v) ≡ t) ∣ (a ∷ v) ≡ t ->
-%			  (ω : WSet t (a ∷ v)) ->
+%			  (ω : ESet t (a ∷ v)) ->
 %			  Complete* ω ->
 %			  (∀ {u X α β} ->
 %			    (g : G ∙ t ⊢ u / a₀ ∷ a ∷ v ⟶* X / α ∙ r a₀ ∷ β) ->
@@ -749,7 +741,7 @@
 %
 %			complete-parse₀ : ∀ {a t v} ->
 %			  (Σ λ u -> u ++ (a ∷ v) ≡ t) ∣ v ≡ t ->
-%			  (ω : WSet t v) ->
+%			  (ω : ESet t v) ->
 %			  Complete* ω ->
 %			  (∀ {u X α β} ->
 %			    (g : G ∙ t ⊢ u / a ∷ v ⟶* X / α ∙ r a ∷ β) ->
