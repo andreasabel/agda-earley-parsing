@@ -1,13 +1,51 @@
 % CREATED BY DAVID FRISK, 2016
 \chapter{Parsing} \label{Parsing}
 
-	Parsing is the process of analyzing the structure of a sequence of elements
+	Parsing is the process of analyzing the structure of a sequence of symbols
 	(called \emph{tokens}). This may simply consist of determining
 	(\emph{recognizing}) whether a sequence conforms to a predefined structure
 	(a \emph{grammar}), or to also create a description (\emph{parsing}) of how
 	the sequence conforms (resulting in a \emph{parse tree}). For our
-	purposes, the Context-free grammars describe the structures we are
-	interested in:
+	purposes, the context-free grammars describe the structures we are
+	interested in.
+
+	The context-free grammars are a class of grammars that can be described by
+	a set of production, or rewrite, rules on the form $X \mapsto \alpha$,
+	where $X$ is a non-terminal symbol, and $\alpha$ is a list where each
+	element may be either a non-terminal or a terminal symbol. Terminal symbols
+	are used to represent instances of concrete tokens whereas non-terminal
+	symbols are used as labels for more complex structures. An example is most
+	likely necessary: consider a grammar with the rules $Z \mapsto Ya$ and $Y
+	\mapsto b$, where $Z$ and $Y$ are non-terminals, and a and b are terminals.
+	The sequence $ba$ conforms to the structure of $Z$ in the grammar,
+	because it can be rewritten to $aY$ according to the second rule ($Y
+	\mapsto b$), and then rewritten to $Z$ according to the first ($Z \mapsto
+	Ya$). Likewise, the rules can be used to produce all sequences that conform
+	to the grammar by going the other way: $Z$ can be rewritten to $Ya$, and 
+	the $Y$ in $Ya$ can be rewritten to $b$, producing $ba$.
+
+	Context-free grammars can also be significantly more complex than the
+	simple example given above. Consider the set of rules {$W \mapsto aWb$, $W
+	\mapsto \epsilon$}. In this grammar, $W$ could be rewritten to either
+	$aWb$, or $\epsilon$, the first of which could be rewritten again using the
+	rules for $W$, creating either $aaWbb$ or $ab$, the first of which again
+	could be rewritten. This means any sequence with any number of $a$s
+	followed by an equal number of $b$s conforms to the grammar. Now consider
+	another set of rules {$P \mapsto a$, $P \mapsto PP$}. The sequence $aaa$
+	conforms to $P$ in this grammar, but it can be rewritten in several ways:
+	we could form $PPa$ using rule 1 two times then $Pa$ using rule 2, and then
+	form $PP$ then $P$ using rules 1 and 2 again. But we could also have formed
+	$aPP$ using rule 1 twice, followed by rules 2, 1, and 2 again to get $P$. 
+	When this is possible, the grammar is said to be ambiguous.
+
+	A grammar is often associated with a 'starting symbol'. This can be 
+	considered the 'topmost' non-terminal symbol in the grammar, and a sequence 
+	is said to be 'in' the grammar if it conforms to the structure of the 
+	starting symbol. Non-terminal symbols are often (and always in this thesis) 
+	written with capital letters, whereas terminals are written in lowercase 
+	(but this does not mean parsers are only able to handle lowercase inputs).
+
+	Here is how we could encode a context-free grammar in Agda:
 
 	\begin{code}
 		module grammar (N T : Set) where
@@ -17,22 +55,16 @@
 		  field
 		    start : N
 		    rules : (N × (N ∣ T)* )*
-    		valid : (X : N) -> Σ λ α -> (X , α) ∈ rules
 	\end{code}
 
 	Here, type arguments \codett{N} and \codett{T} represent non-terminal and
-	terminal symbols. Terminal symbols are used to represent instances of
-	concrete tokens whereas non-terminal symbols are used as labels for more
-	complex structures. Two examples: a grammar \codett{ S ; (S , r s ∷ ε) ∷ ε
-	; \_ }, where \codett{S} is a non-terminal symbol and \codett{s} is a
-	terminal symbol (and \codett{r} is the right side constructor for the
-	optional type \codett{|}), will have a single conforming string, consisting
-	of a single token \emph{'s'}. A grammar \codett{ S ; (S , r s ∷ l S ∷ ε) ∷
-	(S , ε) ∷ ε ; \_ } will have conforming strings that either are empty, or
-	start with the token \emph{'s'} followed by any sequence that conforms to
-	the \codett{S} non-terminal. The set of conforming sequences for this second
-	grammar is the set of (possibly empty) sequences only containing the token
-	\emph{'s'}.
+	terminal symbols, and the record type has two fields: a starting symbol,
+	and a set of rules for the grammar.  An example: A grammar \codett{ S ; (S
+	, r s ∷ l S ∷ ε) ∷ (S , ε) ∷ ε ; \_ } will have conforming strings that
+	either are empty, or start with the token \emph{'s'} followed by any
+	sequence that conforms to the \codett{S} non-terminal. The set of
+	conforming sequences for this second grammar is the set of (possibly empty)
+	sequences only containing the token \emph{'s'}.
 
 	A formal definition of when a list of tokens conforms to a grammar is also
 	necessary:
@@ -64,13 +96,13 @@
 		    (A , α) ∈ CFG.rules G -> G ⊢ u ∈ α -> G ⊢ u ∈ l A ∷ ε
 	\end{code}
 
-	Here, a judgment of the form \codett{G ⊢ u ∈ α} would mean that, given a
-	grammar \codett{G} which gives semantics to non-terminals, the sequence of
-	tokens \codett{u} conforms to the structure \codett{α}. That is, if
-	\codett{A} is a non-terminal and \codett{a} is a terminal symbol, any value
-	with the type \codett{G ⊢ l A ∷ ε ∈ a ∷ a ∷ ε} would constitute a proof
-	that the sequence \codett{aa} does indeed conform to the structure
-	\emph{"sequences that are equal to \codett{aa}"}.
+	Here, a proposition of the form \codett{G ⊢ u ∈ α} would mean that, given a
+	grammar \codett{G}, the sequence of tokens \codett{u} conforms to the
+	structure \codett{α}. That is, if \codett{A} is a non-terminal with a
+	single rule $A \mapsto aa$ and \codett{a} is a terminal symbol, any value
+	with the type \codett{G ⊢ r A ∷ ε ∈ a ∷ a ∷ ε} would constitute a proof
+	that the sequence $aa$ conforms to the structure of $A$, which is just
+	\emph{"sequences that are equal to $aa$"}.
 
 	Another possible definition for conformance could be:
 
@@ -94,24 +126,19 @@
 		    G ⊢ u / v ∈ l X ∷ ε
 	\end{code}
 
-	Here, a judgment of the form \codett{G ⊢ v / w ∈ α} would mean that, given
-	a grammar \codett{G}, the sequence \codett{v} up to, but not including
-	\codett{w} conforms to the structure \codett{α}. This means \codett{w} will
-	always be a suffix of \codett{v}. This definition, while very similar to
-	the one above, has one advantage: the constructor \codett{conc} is not
-	reliant on the list concatenation operator \codett{++}, while its
-	counterpart \codett{concat} is. This can simplify proofs using this data
-	type, as they will not be dependent on the normalization of the \codett{++}
-	operator.
+	Here, a proposition of the form \codett{G ⊢ v / w ∈ α} would mean that,
+	given a grammar \codett{G}, the sequence \codett{v} up to, but not
+	including \codett{w} conforms to the structure \codett{α}. This means
+	\codett{w} will always be a suffix of \codett{v}. This definition, while
+	very similar to the one above, has one advantage: the constructor
+	\codett{conc} is not reliant on the list concatenation operator
+	\codett{++}, while its counterpart \codett{concat} is. This can simplify
+	proofs using this data type, as they will not be dependent on the
+	normalization of the \codett{++} operator.
 
 	This second data type can be constructed if the first one can:
 
 	\begin{code}
-		s : ∀ {u v w α G} ->
-		  G ⊢ u / v ∈ α ->
-		  G ⊢ u ++ w / v ++ w ∈ α
-		s = {! ... !}
-
 		sound₀ :  ∀ {G u α} ->
 		  G ⊢ u ∈ α ->
 		  G ⊢ u / ε ∈ α
@@ -119,6 +146,8 @@
 		sound₀ (concat a b) = conc (s (sound₀ a)) (sound₀ b)
 		sound₀ (term a) = term (sound₀ a)
 		sound₀ (nonterm x a) = nont x (sound₀ a)
+		  where
+		    s : ∀ {u v w α G} -> G ⊢ u / v ∈ α -> G ⊢ u ++ w / v ++ w ∈ α
 	\end{code}
 
 	This proof is fairly simple: constructors \codett{empty}, \codett{term},
@@ -138,9 +167,9 @@
 		same-but-different g = conc g empt
 	\end{code}
 
-	This rule could be applied to the rule any number of times, and as such
-	judgments may not be equal even if they represent the same derivation of
-	the same rule. This will make it harder for us to reason about ambiguous
+	This rule could be applied to the rule any number of times, and as such two
+	proofs may not be equal even if they represent the same derivation of the
+	same rule. This will make it harder for us to reason about ambiguous
 	derivations, where the same structure can be derived from a sequence in
 	many different distinct ways. This problem is not present in the following
 	data structure.
@@ -161,7 +190,7 @@
 		      G ⊢ a ∷ u & v ∈ r a ∷ α
 	\end{code}
 
-	This data structure merges the concatenation and nonterminal constructors,
+	This data structure merges the concatenation and non-terminal constructors,
 	so that concatenation can only be performed when introducing a new
 	non-terminal. This ensures that each constructor makes progress and
 	therefore prevents the problem above. This data structure is both sound and
