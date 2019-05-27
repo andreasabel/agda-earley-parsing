@@ -3,7 +3,7 @@
 \chapter{Agda} \label{Agda}
 
 	Agda is a dependently typed functional programming language based on
-	Martin-Löf type theory \cite{?}. Dependently typed language allow creating
+	Martin-Löf type theory \cite{?}. Dependently typed languages allow creating
 	types that are parameterized over some value, which makes it possible to
 	create arbitrarily specific types. Types in Martin-Löf type theory can also
 	be used to represent propositions in constructive logic, with values of
@@ -13,7 +13,7 @@
 	encoded in the program is correct.
 
 	In this chapter we will give a quick introduction to programs and proofs in
-	Agda. It is not necessary to be experienced with programming with dependent
+	Agda. It is not necessary to be experienced in programming with dependent
 	types, but some knowledge of functional programming is useful.
 
 	\section{Baby steps}
@@ -32,8 +32,8 @@
 		\codett{ℕ} is a normal type\footnote{\codett{Set} is the name of the
 		type of types, which in turn has type \codett{Set₁}, which has the type
 		\codett{Set₂}, and so on.}. This data type has two constructors:
-		\codett{zero} representing zero from the natural numbers, and
-		\codett{suc} the successor function.  Let's take a look at a function
+		\codett{zero} representing the natural number $0$, and
+		\codett{suc} the successor function.  Let us take a look at a function
 		definition using this data type:
 
 		\begin{code}
