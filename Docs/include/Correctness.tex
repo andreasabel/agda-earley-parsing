@@ -493,6 +493,9 @@
 			    i ∈ itemize w (lookup (CFG.start G) (CFG.rules G))
 		\end{code}
 
+		The \codett{step} function will then preserve completeness when
+		generating new item sets:
+
 		\begin{code}
 			complete-step : ∀ {a₀ a t v} ->
 			  (Σ λ u -> u ++ (a₀ ∷ a ∷ v) ≡ t) ∣ (a ∷ v) ≡ t ->
@@ -521,6 +524,9 @@
 			    x₁ = complete-pred-comp s ω c fx fx₂
 			  in complete-scanner a (pred-comp ω) x₁ i j g refl refl
 		\end{code}
+
+		This can then be used to show that any number of steps still preserve 
+		completeness:
 
 		\begin{code}
 			complete-parse₀ : ∀ {a t v} ->
@@ -557,7 +563,10 @@
 			        }
 			      })
 		\end{code}
-
+		
+		Supplying the proof that the initial states are complete we can finally
+		show completeness of the \codett{parse} function:
+		
 		\begin{code}
 			complete-parse : ∀ a₀ w ->
 			  Complete (parse w)
@@ -580,5 +589,25 @@
 			    (λ ())
 		\end{code}
 
+		We can here again see the argument \codett{a₀} which represents the
+		previous token in \codett{complete-ind} causing a requirement of
+		providing a token to the final completeness proof. Any token will work,
+		however, and so this only creates a requirement that at least one token
+		exists. Grammars over languages with no symbols can only accept or
+		reject the empty string (as no other input sequence could be
+		constructed) and as such they are not very interesting, and we do not
+		feel that this restriction is especially problematic. This concludes
+		the completeness proof for the implemented parser.
+
 	\section{Parse trees}
+		
+		The output of the of the implemented parser - an \codett{EState}
+		essentially being a set of set of Earley items - is decidedly not a
+		parse tree.  Parse tree are not generally useful when parsing
+		potentially ambiguous grammars, as the ambiguities can create an
+		exponential blowup in the number of nodes in the resulting parse tree,
+		or even create potentially infinite loops of ambiguities. Depending on
+		how the result will be used different structures might be appropriate
+		such as Sparse Packed Parse Forests~\cite{?}, or to simply always 
+		choose the first option when an ambiguity arises.
 
