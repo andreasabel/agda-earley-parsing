@@ -6,6 +6,11 @@
 \documentclass[12pt,a4paper,twoside]{report}
 \input{include/settings/Settings}
 
+\usepackage{latex/agda}
+
+\usepackage{newunicodechar}
+\newunicodechar{ℕ}{\ensuremath{\mathbb{N}}}
+
 \begin{document}
 
 % COVER PAGE, TITLE PAGE AND IMPRINT PAGE
@@ -46,6 +51,7 @@
 \input{include/Introduction}
 
 % THEORY
+\input{latex/Intro}
 \input{include/Agda}
 
 % METHODS

@@ -2,12 +2,17 @@
 
 #All targets
 DOCS = Proposal.pdf Plan.pdf Report.pdf
-SRCS = $(wildcard *.tex) lit.bib
+SRCS = $(wildcard *.tex) lit.bib $(wildcard include/*.tex) $(patsubst agda/%.lagda,latex/%.tex,$(AGDS))
 DOTS = $(patsubst %.dot,%.svg,$(wildcard figure/dots/*.dot))
 IMGS = $(patsubst %.svg,%.pdf,$(wildcard figure/*.svg) $(DOTS))
+AGDS = $(wildcard agda/*.lagda)
 
 #Fail silently
 MAKEFLAGS = --silent
+
+xelatex=xelatex -interaction=nonstopmode
+
+default: Report.pdf
 
 docs: $(DOTS) $(IMGS) $(DOCS) force
 
@@ -21,11 +26,25 @@ figure/%.pdf: figure/%.svg
 figure/dots/%.svg: figure/dots/%.dot
 	dot -Tsvg $^ > figure/dots/$*.svg
 
-%.pdf: $(SRCS)
-	- xelatex $*.tex
+Report.bbl : %.bbl : $(SRCS)
+	- $(xelatex) $*.tex
 	- bibtex $*
-	- xelatex $*.tex
-	- xelatex $*.tex
+
+Report.pdf : %.pdf : Report.bbl
+	- $(xelatex) $*.tex
+	- $(xelatex) $*.tex
+
+%.pdf: $(SRCS)
+	- $(xelatex) $*.tex
+	- bibtex $*
+	- $(xelatex) $*.tex
+	- $(xelatex) $*.tex
+
+agda/latex/%.tex : agda/%.lagda
+	agda --latex --latex-dir=agda/latex -i agda $<
+
+latex/%.tex : agda/latex/%.tex
+	sed -e 's/{code}/{agdacode}/g' < $< > $@
 
 #Remove all temporary files created by pdfLaTeX
 clean:
