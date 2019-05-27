@@ -21,7 +21,7 @@
 	because it can be rewritten to $aY$ according to the second rule ($Y
 	\mapsto b$), and then rewritten to $Z$ according to the first ($Z \mapsto
 	Ya$). Likewise, the rules can be used to produce all sequences that conform
-	to the grammar by going the other way: $Z$ can be rewritten to $Ya$, and 
+	to the grammar by going the other way: $Z$ can be rewritten to $Ya$, and
 	the $Y$ in $Ya$ can be rewritten to $b$, producing $ba$.
 
 	Context-free grammars can also be significantly more complex than the
@@ -35,14 +35,14 @@
 	conforms to $P$ in this grammar, but it can be rewritten in several ways:
 	we could form $PPa$ using rule 1 two times then $Pa$ using rule 2, and then
 	form $PP$ then $P$ using rules 1 and 2 again. But we could also have formed
-	$aPP$ using rule 1 twice, followed by rules 2, 1, and 2 again to get $P$. 
+	$aPP$ using rule 1 twice, followed by rules 2, 1, and 2 again to get $P$.
 	When this is possible, the grammar is said to be ambiguous.
 
-	A grammar is often associated with a 'starting symbol'. This can be 
-	considered the 'topmost' non-terminal symbol in the grammar, and a sequence 
-	is said to be 'in' the grammar if it conforms to the structure of the 
-	starting symbol. Non-terminal symbols are often (and always in this thesis) 
-	written with capital letters, whereas terminals are written in lowercase 
+	A grammar is often associated with a 'starting symbol'. This can be
+	considered the 'topmost' non-terminal symbol in the grammar, and a sequence
+	is said to be 'in' the grammar if it conforms to the structure of the
+	starting symbol. Non-terminal symbols are often (and always in this thesis)
+	written with capital letters, whereas terminals are written in lowercase
 	(but this does not mean parsers are only able to handle lowercase inputs).
 
 	Here is how we could encode a context-free grammar in Agda:

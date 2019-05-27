@@ -1,29 +1,29 @@
 % CREATED BY DAVID FRISK, 2016
 \chapter{Concluding Remarks}
 
-	In this thesis, we formalize the mechanics of an Earley parser, and we show 
-	them to be equivalent to several other formalizations of parsing. We 
-	discuss several different variants of parsing formalizations, and some 
+	In this thesis, we formalize the mechanics of an Earley parser, and we show
+	them to be equivalent to several other formalizations of parsing. We
+	discuss several different variants of parsing formalizations, and some
 	potential impacts on their use combined with Agda's type checker.
-	
+
 	We also provide an implementation of the Earley parser in Agda, and prove
 	its soundness and completeness with respect to the formalized mechanics,
-	and therefore also with respect to the parsing formalizations. The 
+	and therefore also with respect to the parsing formalizations. The
 	soundness proof is fairly straightforward, and follows the structure of the
-	algorithm implementation closely, while the completeness proof is somewhat 
-	more elaborate, especially when showing that all items derivable from the 
-	\codett{complete} step of the parsing are indeed derived. This is caused by 
-	a slight divergence between how the implementation handles potentially 
-	empty rules and how they are handled in the formalizations. One conclusion 
-	from this is the importance of how one defines data types used as 
-	propositions in Agda: a re-formulation of the definition of properties can 
+	algorithm implementation closely, while the completeness proof is somewhat
+	more elaborate, especially when showing that all items derivable from the
+	\codett{complete} step of the parsing are indeed derived. This is caused by
+	a slight divergence between how the implementation handles potentially
+	empty rules and how they are handled in the formalizations. One conclusion
+	from this is the importance of how one defines data types used as
+	propositions in Agda: a re-formulation of the definition of properties can
 	significantly change the complexity of proofs, even when the equivalence of
 	the new definition and the previous one is relatively easy to prove.
-	
-	Finally, we discuss the format of the output of the implemented parser, and 
-	argue that the completeness proof, together with the equivalence of the 
-	Earley formalization and one of the other parsing formalizations, is strong 
-	enough to show that the parser handles all ambiguities correctly, in that 
+
+	Finally, we discuss the format of the output of the implemented parser, and
+	argue that the completeness proof, together with the equivalence of the
+	Earley formalization and one of the other parsing formalizations, is strong
+	enough to show that the parser handles all ambiguities correctly, in that
 	all possible parse trees are efficiently extractable from its output.
 
 	For future work in this area, it might be interesting to look at

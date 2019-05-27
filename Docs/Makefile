@@ -13,7 +13,7 @@ docs: $(DOTS) $(IMGS) $(DOCS) force
 
 docs-dbg: $(DOTS) $(IMGS) $(DOCS)
 
-no-imgs: $(DOCS) 
+no-imgs: $(DOCS)
 
 figure/%.pdf: figure/%.svg
 	convert $^ $@
@@ -23,12 +23,12 @@ figure/dots/%.svg: figure/dots/%.dot
 
 %.pdf: $(SRCS)
 	- xelatex $*.tex
-	- bibtex $*  
+	- bibtex $*
 	- xelatex $*.tex
 	- xelatex $*.tex
 
 #Remove all temporary files created by pdfLaTeX
-clean: 
+clean:
 	- rm *.pdf 2> /dev/null
 	- rm *.lof *.lot *.out *.toc *.aux *.bbl *.blg *.log 2> /dev/null
 	- rm figure/*.pdf 2> /dev/null

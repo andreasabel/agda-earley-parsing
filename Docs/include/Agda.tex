@@ -1,30 +1,31 @@
 % CREATED BY DAVID FRISK, 2016
+
 \chapter{Agda} \label{Agda}
 
 	Agda is a dependently typed functional programming language based on
-	Martin-Löf type theory \cite{?}. Dependently typed language allow creating 
-	types that are parameterized over some value, which makes it possible to 
+	Martin-Löf type theory \cite{?}. Dependently typed language allow creating
+	types that are parameterized over some value, which makes it possible to
 	create arbitrarily specific types. Types in Martin-Löf type theory can also
-	be used to represent propositions in constructive logic, with values of 
-	those types being proofs of the proposition. Agda, and other similar 
-	languages, can therefore be used as proof assistants, where type checking 
-	in the compiler is equivalent to mechanically verifying that the proof 
+	be used to represent propositions in constructive logic, with values of
+	those types being proofs of the proposition. Agda, and other similar
+	languages, can therefore be used as proof assistants, where type checking
+	in the compiler is equivalent to mechanically verifying that the proof
 	encoded in the program is correct.
 
 	In this chapter we will give a quick introduction to programs and proofs in
 	Agda. It is not necessary to be experienced with programming with dependent
-	types, but some knowledge of functional programming is useful. 
-	
+	types, but some knowledge of functional programming is useful.
+
 	\section{Baby steps}
-	
+
 		We will start right off with some code in Agda:
-	
+
 		\begin{code}
 			data ℕ : Set where
 			  zero : ℕ
 			  suc : ℕ -> ℕ
 		\end{code}
-	
+
 		The keyword \codett{data} marks the start of the definition of a new
 		data type \codett{ℕ}. It is perfectly valid to use most of Unicode for
 		identifiers in Agda. \codett{ℕ} has the type \codett{Set}, which means
@@ -34,13 +35,13 @@
 		\codett{zero} representing zero from the natural numbers, and
 		\codett{suc} the successor function.  Let's take a look at a function
 		definition using this data type:
-	
+
 		\begin{code}
 			_+_ : ℕ -> ℕ -> ℕ
 			zero + b = b
 			suc a + b = suc (a + b)
 		\end{code}
-	
+
 		In Agda arbitrary mix-fix operators can be introduced using \codett{\_}
 		to denote the arguments of the mix-fix operator. Here, our operator
 		\codett{\_+\_} takes two natural numbers (one on each side), and
@@ -48,26 +49,26 @@
 		if it is zero, the result of the addition should be equal to the second
 		number. If it is the successor of another number \codett{a}, the sum is
 		the successor of the sum of \codett{a} and the second argument.
-	
+
 		\begin{code}
 			data _* (T : Set) : Set where
 			  ε : T *
 			  _∷_ : T -> T * -> T *
 		\end{code}
-	
+
 		The type \codett{\_*} defines lists of some type \codett{T}. The type
 		argument (\codett{T : Set}) to \codett{\_*} is placed before \codett{:}
 		to indicate that all constructors must use the same type argument (that
 		is, the constructors do not constrain this argument in any way), but we
 		could also have written \codett{data~\_*~:~Set~->Set~where}. Let's look
 		at a function making use of this type:
-	
+
 		\begin{code}
 			_++_ : {T : Set} -> T * -> T * -> T *
 			ε ++ b = b
 			(x ∷ a) ++ b = x ∷ (a ++ b)
 		\end{code}
-	
+
 		The function \codett{\_++\_} takes three arguments: a type \codett{T},
 		and two lists of type \codett{T}. It then returns a list of type
 		\codett{T}. The first argument is surrounded by curly brackets, which
@@ -81,19 +82,19 @@
 		the arguments.
 
 %	\section{Dependent data types}
-%	
+%
 
 	\section{Types as propositions}
 
 		Agda's dependent types also allow us to define more interesting data
 		types:
-	
+
 		\begin{code}
 			data _≤_ : ℕ -> ℕ -> Set where
 			  ≤₀ : {n : ℕ} -> zero ≤ n
 			  ≤ₛ : {m n : ℕ} -> m ≤ n -> suc m ≤ suc n
 		\end{code}
-	
+
 		Here, like \codett{\_*}, the data type \codett{\_≤\_} takes arguments,
 		but instead of taking a type as its argument, \codett{\_≤\_} takes two
 		natural numbers. The first constructor, \codett{≤₀}, takes one
@@ -102,7 +103,7 @@
 		always be \codett{zero} when \codett{≤₀} is used. \codett{≤ₛ} takes two
 		numbers (\codett{m n}), and a value of type \codett{m ≤ n}, and applies
 		the successor function to the type arguments.
-		
+
 		Interestingly, because types of the constructors are not fully general,
 		they constrain the constructible members of the type. For example, it
 		is not possible to construct a value of type \codett{suc zero ≤ zero}:
@@ -115,16 +116,16 @@
 		the name of the data type suggests, it is equivalent to the proposition
 		\emph{less than or equal to}, as no value with type \codett{a ≤ b} can
 		be constructed where \codett{a} is greater than \codett{b}.
-	
+
 	\section{Equality and normalization}
-	
+
 		Another interesting data type is propositional equality:
-	
+
 		\begin{code}
 			data _≡_ {T : Set} (t : T) : T -> Set where
 			  refl : t ≡ t
 		\end{code}
-	
+
 		The type \codett{\_≡\_} takes two arguments, a type \codett{T}, and two
 		values of that type (\codett{t} is the first, and the second is
 		unnamed).  Since the constructor can only construct values which have
@@ -138,13 +139,13 @@
 		to construct propositional equality values with them as type arguments,
 		even though the exact terms might differ. Let's take a quick look at
 		how normalization works:
-	
+
 		\begin{code}
 			assoc-++ : ∀ {T} (as bs cs : T *) -> (as ++ bs) ++ cs ≡ as ++ (bs ++ cs)
 			assoc-++ ε bs cs = refl
 			assoc-++ (x ∷ as') bs cs = app (x ∷_) (assoc-++ as' bs cs)
 		\end{code}
-	
+
 	 	Here, we try to construct a proof of associativity for the
 	 	\codett{\_++\_} function. Neither of the two values given to
 	 	\codett{\_≡\_} normalize to anything else, because we do not know what
