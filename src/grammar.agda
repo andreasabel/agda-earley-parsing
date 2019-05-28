@@ -118,6 +118,17 @@ in-g (scanner g) = in₂ (λ t -> (_ , t) ∈ _) (in₀ _ _ _) (in-g g)
 in-g (predict x g) = x
 in-g (complet g g₁) = in₂ (λ t -> (_ , t) ∈ _) (in₀ _ _ _) (in-g g)
 
+suff-g₃ : ∀ {G t u v X α β} ->
+  G ∙ t ⊢ u / v ⟶* X / α ∙ β ->
+    Σ λ s -> s ++ v ≡ u
+suff-g₃ (initial x) = σ ε refl
+suff-g₃ (scanner g) with suff-g₃ g
+suff-g₃ (scanner {a = a} g) | σ p₁ p₀ = σ (p₁ ←∷ a) (trans (sym (in₀ _ _ _)) (sym p₀))
+suff-g₃ (predict x g) = σ ε refl
+suff-g₃ (complet g g₁) with suff-g₃ g , suff-g₃ g₁
+suff-g₃ (complet g g₁) | σ p₁ p₀ , σ q₁ q₀ =
+  σ (p₁ ++ q₁) (trans (trans (assoc-++ p₁ _ _) (app (p₁ ++_) (sym q₀))) (sym p₀))
+
 suff-g₂ : ∀ {G t u v X α β} ->
   G ∙ t ⊢ u / v ⟶* X / α ∙ β ->
     Σ λ s -> s ++ v ≡ t
