@@ -23,21 +23,18 @@
 		token. For each set, all items in it are iterated over, and they are
 		each checked if it and any item in the current or any previous set
 		together imply that the parsing can continue even further, resulting in
-		a new item.
-                \todo{Rephrase.  This sentence has grammatical
-                  problems, and funny uses of ``it''.}
-                All new items are added to the current set, and the process
-		is then repeated until no new unique items can be formed.
+		a new item.  \todo{Rephrase.  This sentence has grammatical problems,
+		and funny uses of ``it''.} All new items are added to the current set,
+		and the process is then repeated until no new unique items can be
+		formed.
 
-		The items are of the form $\earley{X}{\alpha}{\beta}{i}$, where
-		$X$ is the non-terminal this item represents a partial
-                parse of,
-\todo{Problematic dangling proposition.}
-		$\alpha$ is the sequence of terminals and non-terminals that have
-		already been successfully parsed, $\beta$ is what remains to be parsed,
-		and $i$ is the index of the set where the parsing attempt of $X$ was
-		started. New items can be constructed from previous items in one of
-		three ways:
+		The items are of the form $\earley{X}{\alpha}{\beta}{i}$, where $X$ is
+		the non-terminal this item represents a partial parse of,
+		\todo{Problematic dangling proposition.} $\alpha$ is the sequence of
+		terminals and non-terminals that have already been successfully parsed,
+		$\beta$ is what remains to be parsed, and $i$ is the index of the set
+		where the parsing attempt of $X$ was started. New items can be
+		constructed from previous items in one of three ways:
 
 		\begin{itemize}
 			\item
@@ -60,32 +57,30 @@
 			\item
 
 				If $\beta$ is of the form $a\delta$, and the next token in the
-				input sequence is $a$, a new item
-				$\earley{X}{\alpha a}{\delta}{i}$ is added to the next
-				set.
+				input sequence is $a$, a new item $\earley{X}{\alpha
+				a}{\delta}{i}$ is added to the next set.
 
 		\end{itemize}
 
 		The algorithm is initialized with all sets empty except for the first
-		one, where a single item $\earley{S_0}{\epsilon}{S}{0}$ is
-		inserted.  $S$ is the starting symbol, that is, the non-terminal which
-		we want to find out if the input sequence conforms to or not. $S_0$ is
-		a special marker that is only used for the initial item. When parsing
-		of the input sequence is complete, if in the last set there is an item
-		$\earley{S_0}{S}{\epsilon}{0}$ then the parser accepts, otherwise
-		the parser rejects the input.
+		one, where a single item $\earley{S_0}{\epsilon}{S}{0}$ is inserted.
+		$S$ is the starting symbol, that is, the non-terminal which we want to
+		find out if the input sequence conforms to or not. $S_0$ is a special
+		marker that is only used for the initial item. When parsing of the
+		input sequence is complete, if in the last set there is an item
+		$\earley{S_0}{S}{\epsilon}{0}$ then the parser accepts, otherwise the
+		parser rejects the input.
 
 		Recreating the parse tree can be done via backtracking from the item
-		sets. The nifty thing about this algorithm is that
-                each item can only
+		sets. The nifty thing about this algorithm is that each item can only
 		exist once in each item set, if the grammar is ambiguous and items can
 		be derived is several different ways (or even an unbounded number of
 		ways), the different derivations will all share their common items,
 		which gives the Earley parsing algorithm the ability to correctly
 		analyze ambiguous grammars.
 
-\todo{I guess an example of an Earley parser run would be helpful in
-  this section. (And in your thesis defense!)}
+		\todo{I guess an example of an Earley parser run would be helpful in
+		this section. (And in your thesis defense!)}
 
 	\section{Formalization}
 
@@ -123,9 +118,9 @@
 		items can be constructed, together with the initial item, and a similar
 		proposition can be constructed in Agda:
 
-\todo{The letter $t$ could be taken for an element of $T$, a
-  terminal.  When possible, use $w$ instead.  In this case `input'
-  felt suitable.}
+		\todo{The letter $t$ could be taken for an element of $T$, a terminal.
+		When possible, use $w$ instead.  In this case `input' felt suitable.}
+
 		\begin{code}
 			data _∙_⊢_/_⟶*_/_∙_ (G : CFG) (input : T *) :
 			  (u v : T *) → N → (N ∣ T) * → (N ∣ T) * → Set where
@@ -148,23 +143,23 @@
 			    G ∙ input ⊢ v / w ⟶* Y / γ ∙ ε →
 			    G ∙ input ⊢ u / w ⟶* X / (α ←∷ l Y) ∙ β
 		\end{code}
-\todo{There is a notation involving ←∷ which has not been explained.
-I first thought it is a different judgement.
-Extra parentheses also do not hurt in parsing complicated judgements.}
 
-		Here, a value with type $G \cdot \mathit{input} \vdash u / v \rightarrow^* X /
-		\alpha \cdot \beta$ would correspond to an item
+		\todo{There is a notation involving ←∷ which has not been explained.  I
+		first thought it is a different judgement.  Extra parentheses also do
+		not hurt in parsing complicated judgements.}
+
+		Here, a value with type $G \cdot \mathit{input} \vdash u / v
+		\rightarrow^* X / \alpha \cdot \beta$ would correspond to an item
 		$\earley{X}{\alpha}{\beta}{u}$ (but, importantly, the Agda version uses
 		$u$ as a remainder of the input string rather than an index into it) in
-		set $v$ that was generated while parsing the sequence $\mathit{input}$ with grammar
-		$G$.
-\todo{This explanation is too brief/condensed.  Do a one-to-one
-  matching of the elements of the judgement
-  $\earley{X}{\alpha}{\beta}{i} \in \mathbb{S}_j$ and its
-  formalization in Agda.
-You should also explain the invariants of this judgement, like $u$ is
-a suffix of `input' and $v$ is a suffix of $u$.  The difference
-between $u$ and $v$ is what is parsed by $\alpha$. Any more?}
+		set $v$ that was generated while parsing the sequence $\mathit{input}$
+		with grammar $G$.  \todo{This explanation is too brief/condensed.  Do a
+		one-to-one matching of the elements of the judgement
+		$\earley{X}{\alpha}{\beta}{i} \in \mathbb{S}_j$ and its formalization
+		in Agda.  You should also explain the invariants of this judgement,
+		like $u$ is a suffix of `input' and $v$ is a suffix of $u$.  The
+		difference between $u$ and $v$ is what is parsed by $\alpha$. Any
+		more?}
 
 		There are some differences between the propositions we first wrote for
 		Earley parsers and the data type given above. The addition of an
@@ -178,7 +173,8 @@ between $u$ and $v$ is what is parsed by $\alpha$. Any more?}
 		invariant: $X \mapsto \alpha \concat \beta \in \textrm{CFG.rules } G$.
 
 		We also provide proofs that these propositions are sound and complete
-		with respect to the parsing propositions provided in Chapter~\ref{Parsing}:
+		with respect to the parsing propositions provided in
+		Chapter~\ref{Parsing}:
 
 		\begin{code}
 			sound : ∀ {G t u v w X α β} →
@@ -194,7 +190,8 @@ between $u$ and $v$ is what is parsed by $\alpha$. Any more?}
 			  let x₃ = conc x₂ x₁ b in
 			  sound g x₃
 		\end{code}
-\todo{Undefined notation \&.}
+
+		\todo{Undefined notation \&.}
 
 		Soundness is fairly straightforward. The \codett{in-g} function proves
 		the invariant $\alpha \concat \beta \in \textrm{CFG.rules } G$ for the
@@ -240,7 +237,8 @@ between $u$ and $v$ is what is parsed by $\alpha$. Any more?}
 			    .{χ} : CFG.rules G ∋ (Y , α ++ β)
 			    .{ψ} : (Σ λ t → t ++ u ≡ w)        -- u is a suffix of w
 		\end{code}
-\todo{Reason to leave out the invariant that $v$ is a suffix of $u$!?}
+
+		\todo{Reason to leave out the invariant that $v$ is a suffix of $u$!?}
 
 		Here, $Y \cdot u \mapsto \alpha \cdot \beta : \textrm{Item } w\ v$
 		represents an Earley item $\earley{Y}{\alpha}{\beta}{u}$ that was
@@ -303,7 +301,8 @@ between $u$ and $v$ is what is parsed by $\alpha$. Any more?}
 			  EState w v
 			scanner a ω = step ω (scanner₀ a (Sₙ ω))
 		\end{code}
-\todo{Explain the [bracket] notation.}
+
+		\todo{Explain the [bracket] notation.}
 
 		Here, \codett{scanner₀} filters through a set of items for items that
 		can be scanned, and creates a set of the appropriate new items for

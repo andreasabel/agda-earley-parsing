@@ -8,12 +8,11 @@ open import base
 
 	Parsing is the process of analyzing the structure of a sequence of symbols
 	(called \emph{tokens}). This may simply consist of determining
-	(\emph{recognizing}) \emph{whether} a sequence conforms to a predefined structure
-        \todo{Avoid parenthesization!}
-	(a \emph{grammar}), or to also create a description (\emph{parsing}) of \emph{how}
-	the sequence conforms (resulting in a \emph{parse tree}).  For our
-	purposes, the context-free grammars describe the structures we are
-	interested in.
+	(\emph{recognizing}) \emph{whether} a sequence conforms to a predefined
+	structure \todo{Avoid parenthesization!} (a \emph{grammar}), or to also
+	create a description (\emph{parsing}) of \emph{how} the sequence conforms
+	(resulting in a \emph{parse tree}).  For our purposes, the context-free
+	grammars describe the structures we are interested in.
 
 	The context-free grammars are a class of grammars that can be described by
 	a set of production, or rewrite, rules on the form $X \mapsto \alpha$,
@@ -25,15 +24,14 @@ open import base
 	capital letters, whereas terminals are written in lowercase (but this does
 	not mean parsers are only able to handle lowercase inputs).
 
-        At this point, an example is in order:
-        consider a grammar with the rules $Z \mapsto Ya$ and $Y
-	\mapsto b$, where $Z$ and $Y$ are non-terminals, and $a$ and $b$ are terminals.
-	The sequence $ba$ conforms to the structure of $Z$ in the grammar, because
-	it can be reduced to $aY$ according to the second rule ($Y \mapsto b$),
-	and then reduced to $Z$ according to the first ($Z \mapsto Ya$).
-	Likewise, the rules can be used to produce all sequences that conform to
-	the grammar by going the other way: $Z$ can produce $Ya$, and the $Y$ in
-	$Ya$ can produce $b$, giving us $ba$.
+	At this point, an example is in order: consider a grammar with the rules $Z
+	\mapsto Ya$ and $Y \mapsto b$, where $Z$ and $Y$ are non-terminals, and $a$
+	and $b$ are terminals.  The sequence $ba$ conforms to the structure of $Z$
+	in the grammar, because it can be reduced to $aY$ according to the second
+	rule ($Y \mapsto b$), and then reduced to $Z$ according to the first ($Z
+	\mapsto Ya$).  Likewise, the rules can be used to produce all sequences
+	that conform to the grammar by going the other way: $Z$ can produce $Ya$,
+	and the $Y$ in $Ya$ can produce $b$, giving us $ba$.
 
 	Context-free grammars can also be significantly more expressive than the
 	simple example given above. Consider the set of rules $\{W \mapsto aWb$, $W
@@ -49,9 +47,9 @@ open import base
 	$aPP$ using rule 1 twice, followed by rules 2, 1, and 2 again to get $P$.
 	When this is possible, the grammar is said to be \emph{ambiguous}.
 
-	A grammar is often given a \emph{starting symbol}. This can be considered the
-	`topmost' non-terminal symbol in the grammar, and a sequence is said to be
-	`in' the grammar if it conforms to the structure of the starting symbol.
+	A grammar is often given a \emph{starting symbol}. This can be considered
+	the `topmost' non-terminal symbol in the grammar, and a sequence is said to
+	be `in' the grammar if it conforms to the structure of the starting symbol.
 
 	Here is how we could encode a context-free grammar in Agda:
 
@@ -61,43 +59,40 @@ open import base
 		record CFG : Set where
 		  constructor _⟩_⟩_
 		  field
-		    start : N
-		    rules : (N × (N ∣ T)* )*
+		start : N
+		rules : (N × (N ∣ T)* )*
 	\end{code}
 
 	Here, type arguments \codett{N} and \codett{T} represent non-terminal and
 	terminal symbols, and the record type has two fields: a starting symbol,
 	and a set of rules for the grammar.  An example: A grammar \codett{ S ⟩ (S
-	, r s ∷ l S ∷ ε) ∷ (S , ε) ∷ ε ⟩ \_ }
-\todo{Explain \codett{l} and \codett{r}!}
-will have conforming strings that
-	either are empty, or start with the token \emph{'s'}
-\todo{Font mismatch \emph{s} vs. \codett{s} is very confusing here.
-  In general, make the fonts match, please!}
-\todo{Quotation is `single' or ``double'' in TeX! Opening quotes are
-  different than closing ones!}
-followed by any
-	sequence that conforms to the \codett{S} non-terminal. The set of
-	conforming sequences for this second grammar is the set of (possibly empty)
-	sequences only containing the token \emph{'s'}.
+	, r s ∷ l S ∷ ε) ∷ (S , ε) ∷ ε ⟩ \_ } \todo{Explain \codett{l} and
+	\codett{r}!} will have conforming strings that either are empty, or start
+	with the token \emph{'s'} \todo{Font mismatch \emph{s} vs. \codett{s} is
+	very confusing here.  In general, make the fonts match, please!}
+	\todo{Quotation is `single' or ``double'' in TeX! Opening quotes are
+	different than closing ones!} followed by any sequence that conforms to the
+	\codett{S} non-terminal. The set of conforming sequences for this second
+	grammar is the set of (possibly empty) sequences only containing the token
+	\emph{'s'}.
 
 	A formal definition of when a list of tokens conforms to a grammar is also
 	necessary. Here, we suggest for rules for when a sequence of symbols can be
 	rewritten to a list of terminal and non-terminal symbols:
-\todo{``Rewriting'' is used in the other direction in language theory,
-expanding non-terminals to sentential forms.  The other direction can
-be maybe called ``reduction'' in the sense of reduction taking place
-in a shift-reduce parser.  However, I would rather call this relation
-the language membership relation:  When is a word member of a language
-given by a sentential form?}
+	\todo{``Rewriting'' is used in the other direction in language theory,
+	expanding non-terminals to sentential forms.  The other direction can be
+	maybe called ``reduction'' in the sense of reduction taking place in a
+	shift-reduce parser.  However, I would rather call this relation the
+	language membership relation:  When is a word member of a language given by
+	a sentential form?}
 
-%% Simpler way to get this math display
-\[
-\frac{\ }{\epsilon\in\epsilon} \qquad
-\frac{u\in A \qquad v\in\alpha}{uv\in A\alpha} \qquad
-\frac{u\in\alpha}{au\in a\alpha} \qquad
-\frac{u\in\alpha}{u\in A}\ A \mapsto \alpha
-\]
+	%% Simpler way to get this math display
+	\[
+	\frac{\ }{\epsilon\in\epsilon} \qquad
+	\frac{u\in A \qquad v\in\alpha}{uv\in A\alpha} \qquad
+	\frac{u\in\alpha}{au\in a\alpha} \qquad
+	\frac{u\in\alpha}{u\in A}\ A \mapsto \alpha
+	\]
 
 	% \begin{table}[h]
 	% \centering
@@ -123,30 +118,29 @@ given by a sentential form?}
 		infixr 10 _⊢_∈_
 		data _⊢_∈_ (G : CFG) :  T * → (N ∣ T) * → Set where
 		  empty :
-		    G ⊢ ε ∈ ε
+		G ⊢ ε ∈ ε
 
 		  concat : {u v : T *} {A : N} {α : (N ∣ T) *} →
-		    G ⊢ u ∈ l A ∷ ε → G ⊢ v ∈ α → G ⊢ u ++ v ∈ l A ∷ α
+		G ⊢ u ∈ l A ∷ ε → G ⊢ v ∈ α → G ⊢ u ++ v ∈ l A ∷ α
 
 		  term : {u : T *} {a : T} {α : (N ∣ T) *} →
-		    G ⊢ u ∈ α → G ⊢ a ∷ u ∈ r a ∷ α
+		G ⊢ u ∈ α → G ⊢ a ∷ u ∈ r a ∷ α
 
 		  nonterm : {A : N} {α : (N ∣ T) *} {u : T *} →
-		    (A , α) ∈ CFG.rules G → G ⊢ u ∈ α → G ⊢ u ∈ l A ∷ ε
+		(A , α) ∈ CFG.rules G → G ⊢ u ∈ α → G ⊢ u ∈ l A ∷ ε
 	\end{code}
-\todo{The concat rule, as the conc rule below, have the problem of
-  being non-productive in the sense that concat can be chained
-  infinitely with $\alpha = \varepsilon$.
 
-This introduces needlessly ambiguity into the parse trees even for
-non-ambiguous grammars.
+	\todo{
 
-I think Nils Anders complained about this flaw following the mid-term
-evaluation.
+		The concat rule, as the conc rule below, have the problem of being
+		non-productive in the sense that concat can be chained infinitely with
+		$\alpha = \varepsilon$.  This introduces needlessly ambiguity into the
+		parse trees even for non-ambiguous grammars.  I think Nils Anders
+		complained about this flaw following the mid-term evaluation.  The
+		natural thing would be to fuse nonterm into concat, or have a separate
+		judgement for $u \in A$.
 
-The natural thing would be to fuse nonterm into concat, or have a
-separate judgement for $u \in A$.
-}
+	}
 
 	Here, a proposition of the form \codett{G ⊢ u ∈ α} would mean that, given a
 	grammar \codett{G}, the sequence of tokens \codett{u} conforms to the
@@ -162,21 +156,21 @@ separate judgement for $u \in A$.
 		infixl 10 _⊢_/_∈_
 		data _⊢_/_∈_ (G : CFG) : T * → T * → (N ∣ T)* → Set where
 		  empt : {w : T *} →
-		    G ⊢ w / w ∈ ε
+		G ⊢ w / w ∈ ε
 
 		  conc : {u v w : T *} {X : N} {α : (N ∣ T) *} →
-		    G ⊢ u / v ∈ l X ∷ ε →
-		    G ⊢ v / w ∈ α →
-		    G ⊢ u / w ∈ l X ∷ α
+		G ⊢ u / v ∈ l X ∷ ε →
+		G ⊢ v / w ∈ α →
+		G ⊢ u / w ∈ l X ∷ α
 
 		  term : {a : T} {u v : T *} {α : (N ∣ T) *} →
-		    G ⊢ u / v ∈ α →
-		    G ⊢ a ∷ u / v ∈ r a ∷ α
+		G ⊢ u / v ∈ α →
+		G ⊢ a ∷ u / v ∈ r a ∷ α
 
 		  nont : {u v : T *} {X : N} {α : (N ∣ T) *} →
-		    (X , α) ∈ CFG.rules G →
-		    G ⊢ u / v ∈ α →
-		    G ⊢ u / v ∈ l X ∷ ε
+		(X , α) ∈ CFG.rules G →
+		G ⊢ u / v ∈ α →
+		G ⊢ u / v ∈ l X ∷ ε
 	\end{code}
 
 	Here, a proposition of the form \codett{G ⊢ v / w ∈ α} would mean that,
@@ -199,16 +193,16 @@ separate judgement for $u \in A$.
 		sound₀ (nonterm x a) = nont x (sound₀ a)
 		sound₀ (concat {v = v} a b) = conc (s (sound₀ a)) (sound₀ b)
 		  where
-		    s : ∀ {u v w α G} →
-		      G ⊢ u / v ∈ α →
-		      G ⊢ u ++ w / v ++ w ∈ α
+		s : ∀ {u v w α G} →
+		  G ⊢ u / v ∈ α →
+		  G ⊢ u ++ w / v ++ w ∈ α
 	\end{code}
 	\AgdaHide{\begin{code}
-		    s empt = empt
-		    s (conc (conc a empt) a₁) = s (conc a a₁)
-		    s (conc (nont x a) a₁) = conc (nont x (s a)) (s a₁)
-		    s (term a) = term (s a)
-		    s (nont x a) = nont x (s a)
+		s empt = empt
+		s (conc (conc a empt) a₁) = s (conc a a₁)
+		s (conc (nont x a) a₁) = conc (nont x (s a)) (s a₁)
+		s (term a) = term (s a)
+		s (nont x a) = nont x (s a)
 	\end{code}}
 
 	This proof is fairly simple: constructors \codett{empty}, \codett{term},
@@ -234,8 +228,8 @@ separate judgement for $u \in A$.
 	\AgdaHide{
 	\begin{code}
 		  where
-		    p₁++q₁++v≡u =
-		      trans (trans (assoc-++ p₁ q₁ _) (sym (app (p₁ ++_) y₁))) (sym x₁)
+		p₁++q₁++v≡u =
+		  trans (trans (assoc-++ p₁ q₁ _) (sym (app (p₁ ++_) y₁))) (sym x₁)
 	\end{code}}
 
 	One problem with these data types is that it is possible to construct
@@ -260,20 +254,21 @@ separate judgement for $u \in A$.
 		infixl 10 _⊢_∥_∈_
 		data _⊢_∥_∈_ (G : CFG) : T * → T * → (N ∣ T)* → Set where
 		  empt : {w : T *} →
-		    G ⊢ w ∥ w ∈ ε
+		G ⊢ w ∥ w ∈ ε
 
 		  conc : {u v w : T *} {X : N} {α β : (N ∣ T) *} →
-		    (X , α) ∈ CFG.rules G →
-		    G ⊢ u ∥ v ∈ α →
-		    G ⊢ v ∥ w ∈ β →
-		      G ⊢ u ∥ w ∈ l X ∷ β
+		(X , α) ∈ CFG.rules G →
+		G ⊢ u ∥ v ∈ α →
+		G ⊢ v ∥ w ∈ β →
+		  G ⊢ u ∥ w ∈ l X ∷ β
 
 		  term : {a : T} {u v : T *} {α : (N ∣ T) *} →
-		    G ⊢ u ∥ v ∈ α →
-		      G ⊢ a ∷ u ∥ v ∈ r a ∷ α
+		G ⊢ u ∥ v ∈ α →
+		  G ⊢ a ∷ u ∥ v ∈ r a ∷ α
 	\end{code}
-\todo{Why did you even introduce the problematic definition in the
-  first place?}
+	
+	\todo{Why did you even introduce the problematic definition in the first
+	place?}
 
 	This data structure merges the concatenation and non-terminal constructors,
 	so that concatenation can only be performed when introducing a new

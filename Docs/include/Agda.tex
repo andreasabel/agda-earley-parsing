@@ -70,8 +70,8 @@
 		is, the constructors do not constrain this argument in any way), but we
 		could also have written \codett{data~\_*~:~Set~→~Set~where}. This type
 		also has two constructors, \codett{ε}, that represents empty lists, and
-		\codett{\_∷\_} for adding an element to the front of a list. Let us look
-		at a function making use of this type:
+		\codett{\_∷\_} for adding an element to the front of a list. Let us
+		look at a function making use of this type:
 
 		\begin{code}
 			_++_ : {T : Set} → T * → T * → T *
@@ -148,8 +148,7 @@
 		only be constructible for equal values. This might feel somewhat like
 		cheating: if this data type represents equality, but the arguments must
 		be equal for it to be constructed, surely this is a circular
-		definition! This works because of a simple judgmental
-                equality is built
+		definition! This works because a simple judgmental equality is built
 		into the compiler: if two terms can be normalized to exactly the same
 		representation, the compiler will consider them the same, and allow us
 		to construct propositional equality values with them as type arguments,
