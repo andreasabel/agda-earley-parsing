@@ -30,7 +30,7 @@ figure/%.pdf: figure/%.svg
 figure/dots/%.svg: figure/dots/%.dot
 	dot -Tsvg $^ > figure/dots/$*.svg
 
-Report.bbl : %.bbl : $(SRCS) agda/latex latex/agda.sty
+Report.bbl : %.bbl : agda/latex $(SRCS) latex/agda.sty
 	- $(xelatex) $*.tex
 	- bibtex $*
 
@@ -40,8 +40,6 @@ Report.pdf : %.pdf : Report.bbl
 
 agda/latex:
 	mkdir -p agda/latex
-
-latex:
 	mkdir -p latex
 
 latex/agda.sty : latex latex-agda.sty
