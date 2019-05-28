@@ -8,9 +8,10 @@ open import base
 
 	Parsing is the process of analyzing the structure of a sequence of symbols
 	(called \emph{tokens}). This may simply consist of determining
-	(\emph{recognizing}) whether a sequence conforms to a predefined structure
-	(a \emph{grammar}), or to also create a description (\emph{parsing}) of how
-	the sequence conforms (resulting in a \emph{parse tree}). For our
+	(\emph{recognizing}) \emph{whether} a sequence conforms to a predefined structure
+        \todo{Avoid parenthesization!}
+	(a \emph{grammar}), or to also create a description (\emph{parsing}) of \emph{how}
+	the sequence conforms (resulting in a \emph{parse tree}).  For our
 	purposes, the context-free grammars describe the structures we are
 	interested in.
 
@@ -19,19 +20,24 @@ open import base
 	where $X$ is a non-terminal symbol, and $\alpha$ is a list where each
 	element may be either a non-terminal or a terminal symbol. Terminal symbols
 	are used to represent instances of concrete tokens whereas non-terminal
-	symbols are used as labels for more complex structures. An example is most
-	likely necessary: consider a grammar with the rules $Z \mapsto Ya$ and $Y
-	\mapsto b$, where $Z$ and $Y$ are non-terminals, and a and b are terminals.
+	symbols are used as labels for more complex structures.
+	Non-terminal symbols are often (and always in this thesis) written with
+	capital letters, whereas terminals are written in lowercase (but this does
+	not mean parsers are only able to handle lowercase inputs).
+
+        At this point, an example is in order:
+        consider a grammar with the rules $Z \mapsto Ya$ and $Y
+	\mapsto b$, where $Z$ and $Y$ are non-terminals, and $a$ and $b$ are terminals.
 	The sequence $ba$ conforms to the structure of $Z$ in the grammar, because
-	it can be rewritten to $aY$ according to the second rule ($Y \mapsto b$),
-	and then rewritten to $Z$ according to the first ($Z \mapsto Ya$).
+	it can be reduced to $aY$ according to the second rule ($Y \mapsto b$),
+	and then reduced to $Z$ according to the first ($Z \mapsto Ya$).
 	Likewise, the rules can be used to produce all sequences that conform to
 	the grammar by going the other way: $Z$ can produce $Ya$, and the $Y$ in
 	$Ya$ can produce $b$, giving us $ba$.
 
 	Context-free grammars can also be significantly more expressive than the
-	simple example given above. Consider the set of rules {$W \mapsto aWb$, $W
-	\mapsto \epsilon$}. In this grammar, $W$ could be rewritten to either
+	simple example given above. Consider the set of rules $\{W \mapsto aWb$, $W
+	\mapsto \epsilon\}$. In this grammar, $W$ could be rewritten to either
 	$aWb$, or $\epsilon$, the first of which could be rewritten again using the
 	rules for $W$, creating either $aaWbb$ or $ab$, the first of which again
 	could be rewritten. This means any sequence with any number of $a$s
@@ -41,14 +47,11 @@ open import base
 	we could form $PPa$ using rule 1 two times then $Pa$ using rule 2, and then
 	form $PP$ then $P$ using rules 1 and 2 again. But we could also have formed
 	$aPP$ using rule 1 twice, followed by rules 2, 1, and 2 again to get $P$.
-	When this is possible, the grammar is said to be ambiguous.
+	When this is possible, the grammar is said to be \emph{ambiguous}.
 
-	A grammar is often given a 'starting symbol'. This can be considered the
-	'topmost' non-terminal symbol in the grammar, and a sequence is said to be
-	'in' the grammar if it conforms to the structure of the starting symbol.
-	Non-terminal symbols are often (and always in this thesis) written with
-	capital letters, whereas terminals are written in lowercase (but this does
-	not mean parsers are only able to handle lowercase inputs).
+	A grammar is often given a \emph{starting symbol}. This can be considered the
+	`topmost' non-terminal symbol in the grammar, and a sequence is said to be
+	`in' the grammar if it conforms to the structure of the starting symbol.
 
 	Here is how we could encode a context-free grammar in Agda:
 
@@ -65,25 +68,46 @@ open import base
 	Here, type arguments \codett{N} and \codett{T} represent non-terminal and
 	terminal symbols, and the record type has two fields: a starting symbol,
 	and a set of rules for the grammar.  An example: A grammar \codett{ S ⟩ (S
-	, r s ∷ l S ∷ ε) ∷ (S , ε) ∷ ε ⟩ \_ } will have conforming strings that
-	either are empty, or start with the token \emph{'s'} followed by any
+	, r s ∷ l S ∷ ε) ∷ (S , ε) ∷ ε ⟩ \_ }
+\todo{Explain \codett{l} and \codett{r}!}
+will have conforming strings that
+	either are empty, or start with the token \emph{'s'}
+\todo{Font mismatch \emph{s} vs. \codett{s} is very confusing here.
+  In general, make the fonts match, please!}
+\todo{Quotation is `single' or ``double'' in TeX! Opening quotes are
+  different than closing ones!}
+followed by any
 	sequence that conforms to the \codett{S} non-terminal. The set of
 	conforming sequences for this second grammar is the set of (possibly empty)
 	sequences only containing the token \emph{'s'}.
 
 	A formal definition of when a list of tokens conforms to a grammar is also
-	necessary. Here, we suggest for rules for when a sequence of symbols can be 
+	necessary. Here, we suggest for rules for when a sequence of symbols can be
 	rewritten to a list of terminal and non-terminal symbols:
+\todo{``Rewriting'' is used in the other direction in language theory,
+expanding non-terminals to sentential forms.  The other direction can
+be maybe called ``reduction'' in the sense of reduction taking place
+in a shift-reduce parser.  However, I would rather call this relation
+the language membership relation:  When is a word member of a language
+given by a sentential form?}
 
-	\begin{table}[h]
-	\centering
-	\begin{tabular}{cccc}
-			 \( \displaystyle \frac{\ }{\epsilon\in\epsilon} \) &
-			 \( \displaystyle \frac{u\in A\ \ v\in\alpha}{uv\in A\alpha} \) &
-			 \( \displaystyle \frac{u\in\alpha}{au\in a\alpha} \) &
-			 \( \displaystyle \frac{u\in\alpha}{u\in A}A \mapsto \alpha \)
-	\end{tabular}
-	\end{table}
+%% Simpler way to get this math display
+\[
+\frac{\ }{\epsilon\in\epsilon} \qquad
+\frac{u\in A \qquad v\in\alpha}{uv\in A\alpha} \qquad
+\frac{u\in\alpha}{au\in a\alpha} \qquad
+\frac{u\in\alpha}{u\in A}\ A \mapsto \alpha
+\]
+
+	% \begin{table}[h]
+	% \centering
+	% \begin{tabular}{cccc}
+	% 		 \( \displaystyle \frac{\ }{\epsilon\in\epsilon} \) &
+	% 		 \( \displaystyle \frac{u\in A\ \ v\in\alpha}{uv\in A\alpha} \) &
+	% 		 \( \displaystyle \frac{u\in\alpha}{au\in a\alpha} \) &
+	% 		 \( \displaystyle \frac{u\in\alpha}{u\in A}A \mapsto \alpha \)
+	% \end{tabular}
+	% \end{table}
 
 	The rules state that: Firstly, the empty string conforms to the empty
 	structure. Secondly, if a string $u$ conforms to the structure of a
@@ -110,6 +134,19 @@ open import base
 		  nonterm : {A : N} {α : (N ∣ T) *} {u : T *} →
 		    (A , α) ∈ CFG.rules G → G ⊢ u ∈ α → G ⊢ u ∈ l A ∷ ε
 	\end{code}
+\todo{The concat rule, as the conc rule below, have the problem of
+  being non-productive in the sense that concat can be chained
+  infinitely with $\alpha = \varepsilon$.
+
+This introduces needlessly ambiguity into the parse trees even for
+non-ambiguous grammars.
+
+I think Nils Anders complained about this flaw following the mid-term
+evaluation.
+
+The natural thing would be to fuse nonterm into concat, or have a
+separate judgement for $u \in A$.
+}
 
 	Here, a proposition of the form \codett{G ⊢ u ∈ α} would mean that, given a
 	grammar \codett{G}, the sequence of tokens \codett{u} conforms to the
@@ -130,11 +167,11 @@ open import base
 		  conc : {u v w : T *} {X : N} {α : (N ∣ T) *} →
 		    G ⊢ u / v ∈ l X ∷ ε →
 		    G ⊢ v / w ∈ α →
-		      G ⊢ u / w ∈ l X ∷ α
+		    G ⊢ u / w ∈ l X ∷ α
 
 		  term : {a : T} {u v : T *} {α : (N ∣ T) *} →
 		    G ⊢ u / v ∈ α →
-		      G ⊢ a ∷ u / v ∈ r a ∷ α
+		    G ⊢ a ∷ u / v ∈ r a ∷ α
 
 		  nont : {u v : T *} {X : N} {α : (N ∣ T) *} →
 		    (X , α) ∈ CFG.rules G →
@@ -197,7 +234,7 @@ open import base
 	\AgdaHide{
 	\begin{code}
 		  where
-		    p₁++q₁++v≡u = 
+		    p₁++q₁++v≡u =
 		      trans (trans (assoc-++ p₁ q₁ _) (sym (app (p₁ ++_) y₁))) (sym x₁)
 	\end{code}}
 
@@ -235,11 +272,13 @@ open import base
 		    G ⊢ u ∥ v ∈ α →
 		      G ⊢ a ∷ u ∥ v ∈ r a ∷ α
 	\end{code}
+\todo{Why did you even introduce the problematic definition in the
+  first place?}
 
 	This data structure merges the concatenation and non-terminal constructors,
 	so that concatenation can only be performed when introducing a new
 	non-terminal. This ensures that each constructor makes progress and
 	therefore prevents the problem above. This data structure is both sound and
-	complete with respect to the previous definitions, and the proofs for this 
-	generally follows the same structure as the proofs between the previous two 
+	complete with respect to the previous definitions, and the proofs for this
+	generally follows the same structure as the proofs between the previous two
 	types, and will therefore not be discussed in detail here.
