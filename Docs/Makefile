@@ -13,6 +13,9 @@ MAKEFLAGS = --silent
 
 xelatex=xelatex -interaction=nonstopmode
 
+# List of goals that should be executed even if there is a file/dir of the same name.
+.PHONY: default docs docs-dbg no-imgs agda latex clean force
+
 default: Report.pdf
 
 docs: $(DOTS) $(IMGS) $(DOCS) force
@@ -36,11 +39,10 @@ Report.pdf : %.pdf : agda latex Report.bbl
 	- $(xelatex) $*.tex
 
 agda:
-	mkdir agda
-	mkdir agda/latex
+	mkdir -p agda/latex
 
 latex:
-	mkdir latex
+	mkdir -p latex
 	cp latex-agda.sty latex/agda.sty
 
 %.pdf: $(SRCS)
