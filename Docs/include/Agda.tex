@@ -23,7 +23,7 @@
 		\begin{code}
 			data ℕ : Set where
 			  zero : ℕ
-			  suc : ℕ -> ℕ
+			  suc : ℕ → ℕ
 		\end{code}
 
 		The keyword \codett{data} marks the start of the definition of a new
@@ -45,7 +45,7 @@
 		definition using this data type:
 
 		\begin{code}
-			_+_ : ℕ -> ℕ -> ℕ
+			_+_ : ℕ → ℕ → ℕ
 			zero + b = b
 			suc a + b = suc (a + b)
 		\end{code}
@@ -61,20 +61,20 @@
 		\begin{code}
 			data _* (T : Set) : Set where
 			  ε : T *
-			  _∷_ : T -> T * -> T *
+			  _∷_ : T → T * → T *
 		\end{code}
 
 		The type \codett{\_*} defines lists of some type \codett{T}. The type
 		argument (\codett{T : Set}) to \codett{\_*} is placed before \codett{:}
 		to indicate that all constructors must use the same type argument (that
 		is, the constructors do not constrain this argument in any way), but we
-		could also have written \codett{data~\_*~:~Set~->~Set~where}. This type
+		could also have written \codett{data~\_*~:~Set~→~Set~where}. This type
 		also has two constructors, \codett{ε}, that represents empty lists, and
 		\codett{\_∷\_} for adding an element to the front of a list. Let's look
 		at a function making use of this type:
 
 		\begin{code}
-			_++_ : {T : Set} -> T * -> T * -> T *
+			_++_ : {T : Set} → T * → T * → T *
 			ε ++ b = b
 			(x ∷ a) ++ b = x ∷ (a ++ b)
 		\end{code}
@@ -100,9 +100,9 @@
 		types:
 
 		\begin{code}
-			data _≤_ : ℕ -> ℕ -> Set where
-			  ≤₀ : {n : ℕ} -> zero ≤ n
-			  ≤ₛ : {m n : ℕ} -> m ≤ n -> suc m ≤ suc n
+			data _≤_ : ℕ → ℕ → Set where
+			  ≤₀ : {n : ℕ} → zero ≤ n
+			  ≤ₛ : {m n : ℕ} → m ≤ n → suc m ≤ suc n
 		\end{code}
 
 		Here, like \codett{\_*}, the data type \codett{\_≤\_} takes arguments,
@@ -138,8 +138,8 @@
 		\end{code}
 		}
 		\begin{code}
-			data _≡_ {T : Set} : T -> T -> Set where
-			  refl : {t : T} -> t ≡ t
+			data _≡_ {T : Set} : T → T → Set where
+			  refl : {t : T} → t ≡ t
 		\end{code}
 
 		The type \codett{\_≡\_} takes two arguments, a type \codett{T}, and two
@@ -159,12 +159,12 @@
 
 		\AgdaHide{
 		\begin{code}
-			app : {T U : Set} {a b : T} (f : T -> U) -> a ≡ b -> f a ≡ f b
+			app : {T U : Set} {a b : T} (f : T → U) → a ≡ b → f a ≡ f b
 			app f refl = refl
 		\end{code}
 		}
 		\begin{code}
-			assoc-++ : ∀ {T} (as bs cs : T *) -> (as ++ bs) ++ cs ≡ as ++ (bs ++ cs)
+			assoc-++ : ∀ {T} (as bs cs : T *) → (as ++ bs) ++ cs ≡ as ++ (bs ++ cs)
 			assoc-++ ε bs cs = refl
 			assoc-++ (x ∷ as') bs cs = app (x ∷_) (assoc-++ as' bs cs)
 		\end{code}
