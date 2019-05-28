@@ -20,7 +20,6 @@
 
 		We will start right off with some code in Agda:
 
-                \agdaNat
 		\begin{code}
 			data ℕ : Set where
 			  zero : ℕ
@@ -37,7 +36,6 @@
 		\codett{suc} the successor function.  Let us take a look at a function
 		definition using this data type:
 
-                \agdaPlus
 		\begin{code}
 			_+_ : ℕ -> ℕ -> ℕ
 			zero + b = b
@@ -123,6 +121,11 @@
 
 		Another interesting data type is propositional equality:
 
+		\AgdaHide{
+		\begin{code}
+			infix 0 _≡_
+		\end{code}
+		}
 		\begin{code}
 			data _≡_ {T : Set} (t : T) : T -> Set where
 			  refl : t ≡ t
@@ -142,6 +145,12 @@
 		even though the exact terms might differ. Let's take a quick look at
 		how normalization works:
 
+		\AgdaHide{
+		\begin{code}
+			app : {T U : Set} {a b : T} (f : T -> U) -> a ≡ b -> f a ≡ f b
+			app f refl = refl
+		\end{code}
+		}
 		\begin{code}
 			assoc-++ : ∀ {T} (as bs cs : T *) -> (as ++ bs) ++ cs ≡ as ++ (bs ++ cs)
 			assoc-++ ε bs cs = refl

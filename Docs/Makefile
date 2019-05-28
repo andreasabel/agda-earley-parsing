@@ -2,10 +2,11 @@
 
 #All targets
 DOCS = Proposal.pdf Plan.pdf Report.pdf
-SRCS = $(wildcard *.tex) lit.bib $(wildcard include/*.tex) $(patsubst agda/%.lagda,latex/%.tex,$(AGDS))
+SRCS = $(wildcard *.tex) lit.bib $(wildcard include/*.tex) $(LTXS) #$(patsubst agda/%.lagda,latex/%.tex,$(AGDS))
 DOTS = $(patsubst %.dot,%.svg,$(wildcard figure/dots/*.dot))
 IMGS = $(patsubst %.svg,%.pdf,$(wildcard figure/*.svg) $(DOTS))
 AGDS = $(wildcard agda/*.lagda)
+LTXS = $(patsubst include/%,latex/%,$(wildcard include/*.tex))
 
 #Fail silently
 MAKEFLAGS = --silent
@@ -30,9 +31,17 @@ Report.bbl : %.bbl : $(SRCS)
 	- $(xelatex) $*.tex
 	- bibtex $*
 
-Report.pdf : %.pdf : Report.bbl
+Report.pdf : %.pdf : agda latex Report.bbl
 	- $(xelatex) $*.tex
 	- $(xelatex) $*.tex
+
+agda:
+	mkdir agda
+	mkdir agda/latex
+
+latex:
+	mkdir latex
+	cp latex-agda.sty latex/agda.sty
 
 %.pdf: $(SRCS)
 	- $(xelatex) $*.tex
@@ -40,11 +49,12 @@ Report.pdf : %.pdf : Report.bbl
 	- $(xelatex) $*.tex
 	- $(xelatex) $*.tex
 
-agda/latex/%.tex : agda/%.lagda
-	agda --latex --latex-dir=agda/latex -i agda $<
+agda/latex/%.tex : include/%.tex
+	sed -e "s/\t//g" include/$*.tex > agda/$*.lagda
+	- agda --latex --latex-dir=agda/latex -i agda agda/$*.lagda
 
 latex/%.tex : agda/latex/%.tex
-	sed -e 's/{code}/{agdacode}/g' < $< > $@
+	- sed -e 's/{code}/{agdacode}/g' < $< > $@
 
 #Remove all temporary files created by pdfLaTeX
 clean:
@@ -52,5 +62,6 @@ clean:
 	- rm *.lof *.lot *.out *.toc *.aux *.bbl *.blg *.log 2> /dev/null
 	- rm figure/*.pdf 2> /dev/null
 	- rm figure/dots/*.pdf figure/dots/*.svg 2> /dev/null
+	- rm -R agda latex 2> /dev/null
 
 force:
