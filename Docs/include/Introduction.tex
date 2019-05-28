@@ -28,46 +28,6 @@
 %	been formally verified. As with compilers, errors in parser generators can
 %	change the semantics of programs, yielding incorrect results.
 
-	Parsing is the problem of analyzing the structure of a sequence of
-	symbols, typically a string of characters, to determine if, and how, the
-	sequence conforms to a grammar---a description of acceptable structures.
-	Parsers are commonly used as parts of compilers to extract the structure of
-	source code as the first step of the compilation process, but are also
-	sometimes used to extract other types of structured data or to analyze
-	parts of natural language.
-
-	One class of grammars that are often used for descriptions of programming
-	languages are the \emph{context-free grammars}, for which several different
-	parsing algoritms exist, such as the Cocke-Younger-Kasami (CYK) parsing algorithm, or Valiant's
-	algorithm. Others, such as \emph{LR},\footnote{LR stands for
-          \textbf{l}eft-to-right scanning, \textbf{r}ightmost
-          derivation.}
-        \emph{Simple LR} (SLR), or \emph{Look-ahead LR} (LALR) parsers are designed to
-	parse the input sequence quickly, both asymptotically (as parsing of
-\todo{Rewrite sentence. Avoid parenthesized remarks!
-        Double parenthesization is a no-go!}
-	context-free grammars generally has a time complexity of $O(n^3)$), and
-	practically (as it often is desirable for parsers, and compilers in
-	general (and indeed programs in general) to be fast), and restrict the
-	allowed grammars to a subset of the context-free
-        grammars.
-
-	Earley's parsing algorithm~\cite{Earley} (henceforth called
-        \emph{Earley})
-        is a parsing algorithm capable
-	of parsing all context-free grammars. Unlike the CYK algorithm, which has a
-	best-case time complexity of $O(n^3)$, Earley has time complexity
-	of $O(n^3)$ only in the worst case,\todo{Briefly characterize
-          the worst case.}
-        while having a linear complexity for many
-	grammars, including all grammars that LR, SLR, or LALR parsers accept. This
-	makes the Earley parsing algorithm interesting to analyze, being able to
-	parse more grammars than linear parsers,\todo{``Linear
-          parsers'' has not been defined/mentioned befor.}
-        while being faster than algorithm
-	such as CYK or Valiant's. \todo{Say something about
-          verification here for a smooth transition to the next topic: Agda.}
-
 	Agda is a functional programming language with a strong type system that
 	supports dependent types. Dependent types allow expressing strong
 	invariants and properties of data structures and programs, and even
@@ -84,13 +44,49 @@
 	assistant similar to Agda, and is accompanied by Coq-proofs that it
 	preserves the semantics of compiled programs.
 
+	++
+
+	Parsing is the problem of analyzing the structure of a sequence of
+	symbols, typically a string of characters, to determine if, and how, the
+	sequence conforms to a grammar---a description of acceptable structures.
+	Parsers are commonly used as parts of compilers to extract the structure of
+	source code as the first step of the compilation process, but are also
+	sometimes used to extract other types of structured data or to analyze
+	parts of natural language.
+
+	One class of grammars that are often used for descriptions of programming
+	languages are the \emph{context-free grammars}, for which several different
+	parsing algoritms exist, such as the Cocke-Younger-Kasami (CYK) parsing
+	algorithm, or Valiant's algorithm.
+	
+	Others, such as \emph{LR},\footnote{LR stands for \textbf{l}eft-to-right
+	scanning, \textbf{r}ightmost derivation.} \emph{Simple LR} (SLR), or
+	\emph{Look-ahead LR} (LALR) parsers, are designed to parse the input
+	sequence quickly. They are both asymptotically faster, having a linear time
+	complexity compared to the $O(n^3)$ complexity displayed by many others,
+	and practically being optimized to run efficiently on normal systems.
+	These parsers do, however, restrict the types of grammars that they are
+	able to parse to a subset of the context-free grammars.
+
+	Earley's parsing algorithm~\cite{Earley} (henceforth called \emph{Earley})
+	is a parsing algorithm capable of parsing all context-free grammars. Unlike
+	the CYK algorithm, which has a best-case time complexity of $O(n^3)$,
+	Earley has a time complexity of $O(n^3)$ only in the worst case, when
+	parsing highly ambiguous grammars, while having a linear complexity for
+	many grammars, including all grammars that LR, SLR, or LALR parsers accept.
+	This makes the Earley parsing algorithm interesting to analyze, being able
+	to parse more grammars than the LR family of parsers, while being faster
+	than algorithm such as CYK or Valiant's.
+
 	In this thesis, we formalize and implement an Earley parser in Agda, and
 	verify the correctness of said parser. Additionally, we give readers an
 	introduction of Agda in Chapter~\ref{Agda}, as well as a more thorough
 	explanation of parsing and context-free grammars in Chapter~\ref{Parsing}.
 	In Chapter~\ref{Earleys} the formalization and implementation of the Earley
-	parsing algorithm are described, and their correctness is
-        proven in Chapter~\ref{Correctness}.
+	parsing algorithm are described, and their correctness is proven in
+	Chapter~\ref{Correctness}. We discuss related work in
+	Chapter~\ref{Related}, and finally discuss our implementation and proofs in
+	Chapter\ref{Conclusion}.
 
 %%% Local Variables:
 %%% mode: latex
