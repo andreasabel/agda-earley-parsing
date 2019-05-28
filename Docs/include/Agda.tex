@@ -166,7 +166,7 @@
 		\begin{code}
 			assoc-++ : ∀ {T} (as bs cs : T *) → (as ++ bs) ++ cs ≡ as ++ (bs ++ cs)
 			assoc-++ ε          bs cs = refl
-			assoc-++ (x ∷ as')  bs cs = app (x ∷_) (assoc-++ as' bs cs)
+			assoc-++ (x ∷ as′)  bs cs = app (x ∷_) (assoc-++ as′ bs cs)
 		\end{code}
 
 	 	Here, we try to construct a proof of associativity for the
