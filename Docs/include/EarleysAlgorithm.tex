@@ -115,24 +115,24 @@
 
 		\begin{code}
 			data _∙_⊢_/_⟶*_/_∙_ (G : CFG) :
-			  (t u v : T *) -> N -> (N ∣ T) * -> (N ∣ T) * -> Set where
+			  (t u v : T *) → N → (N ∣ T) * → (N ∣ T) * → Set where
 
-			  initial : {u : T *} {α : (N ∣ T) *} ->
-			    CFG.rules G ∋ (CFG.start G , α) ->
+			  initial : {u : T *} {α : (N ∣ T) *} →
+			    CFG.rules G ∋ (CFG.start G , α) →
 			    G ∙ u ⊢ u / u ⟶* CFG.start G / ε ∙ α
 
-			  scanner : {t u v : T *} {a : T} {X : N} {α β : (N ∣ T) *} ->
-			    G ∙ t ⊢ u / a ∷ v ⟶* X / α ∙ r a ∷ β ->
+			  scanner : {t u v : T *} {a : T} {X : N} {α β : (N ∣ T) *} →
+			    G ∙ t ⊢ u / a ∷ v ⟶* X / α ∙ r a ∷ β →
 			      G ∙ t ⊢ u / v ⟶* X / α ←∷ r a ∙ β
 
-			  predict : {t u v : T *} {X Y : N} {α β δ : (N ∣ T) *} ->
-			    CFG.rules G ∋ (Y , δ) ->
-			    G ∙ t ⊢ u / v ⟶* X / α ∙ l Y ∷ β ->
+			  predict : {t u v : T *} {X Y : N} {α β δ : (N ∣ T) *} →
+			    CFG.rules G ∋ (Y , δ) →
+			    G ∙ t ⊢ u / v ⟶* X / α ∙ l Y ∷ β →
 			      G ∙ t ⊢ v / v ⟶* Y / ε ∙ δ
 
-			  complet : {t u v w : T *} {X Y : N} {α β γ : (N ∣ T) *} ->
-			    G ∙ t ⊢ u / v ⟶* X / α ∙ l Y ∷ β ->
-			    G ∙ t ⊢ v / w ⟶* Y / γ ∙ ε ->
+			  complet : {t u v w : T *} {X Y : N} {α β γ : (N ∣ T) *} →
+			    G ∙ t ⊢ u / v ⟶* X / α ∙ l Y ∷ β →
+			    G ∙ t ⊢ v / w ⟶* Y / γ ∙ ε →
 			      G ∙ t ⊢ u / w ⟶* X / α ←∷ l Y ∙ β
 		\end{code}
 
@@ -159,9 +159,9 @@
 		\ref{Parsing}:
 
 		\begin{code}
-			sound : ∀ {G t u v w X α β} ->
-			  G ∙ t ⊢ u / v ⟶* X / α ∙ β ->
-			    G ⊢ v & w ∈ β ->
+			sound : ∀ {G t u v w X α β} →
+			  G ∙ t ⊢ u / v ⟶* X / α ∙ β →
+			    G ⊢ v & w ∈ β →
 			    G ⊢ u & w ∈ α ++ β
 			sound (initial x) b = b
 			sound (scanner g) b = sound g (term b)
@@ -181,9 +181,9 @@
 		to the proof at hand. Completeness follows in a similar fashion:
 
 		\begin{code}
-			complete : ∀ {t u v w X α β} {G : CFG} ->
-			  G ∙ t ⊢ u / v ⟶* X / α ∙ β ->
-			  G ⊢ v & w ∈ β ->
+			complete : ∀ {t u v w X α β} {G : CFG} →
+			  G ∙ t ⊢ u / v ⟶* X / α ∙ β →
+			  G ⊢ v & w ∈ β →
 			    G ∙ t ⊢ u / w ⟶* X / α ++ β ∙ ε
 			complete a empt = a
 			complete a (conc x g g₁) =
@@ -215,7 +215,7 @@
 			    u : T *
 			    α β : (N ∣ T) *
 			    .{χ} : CFG.rules G ∋ (Y , α ++ β)
-			    .{ψ} : (Σ λ t -> t ++ u ≡ w)        -- u is a suffix of w
+			    .{ψ} : (Σ λ t → t ++ u ≡ w)        -- u is a suffix of w
 		\end{code}
 
 		Here, $Y \cdot u \mapsto \alpha \cdot \beta : \textrm{Item } w\ v$
@@ -233,14 +233,14 @@
 		We continue with defining the item sets:
 
 		\begin{code}
-			data EState : T * -> T * -> Set where
-			  start : {v : T *} ->
-			    (rs : Item v v * ) ->
+			data EState : T * → T * → Set where
+			  start : {v : T *} →
+			    (rs : Item v v * ) →
 			    EState v v
 
-			  step : {a : T} {w v : T *} ->
-			    (ω : EState w (a ∷ v)) ->
-			    (rs : Item w v * ) ->
+			  step : {a : T} {w v : T *} →
+			    (ω : EState w (a ∷ v)) →
+			    (rs : Item w v * ) →
 			    EState w v
 		\end{code}
 
@@ -261,9 +261,9 @@
 		The scanning step is very simple:
 
 		\begin{code}
-			scanner₀ : ∀ {w v} ->
-			  (a : T) ->
-			  Item w (a ∷ v)* ->
+			scanner₀ : ∀ {w v} →
+			  (a : T) →
+			  Item w (a ∷ v)* →
 			  Item w v *
 			scanner₀ a ε = ε
 			scanner₀ a ((X ∘ u ↦ α ∘ ε) ∷ rs) = scanner₀ a rs
@@ -273,9 +273,9 @@
 			... | yes refl =
 			  (X ∘ u ↦ α ←∷ r a ∘ β [ v-step χ ∘ ψ ]) ∷ (scanner₀ a rs)
 
-			scanner : {w v : T *} ->
-			  (a : T) ->
-			  EState w (a ∷ v) ->
+			scanner : {w v : T *} →
+			  (a : T) →
+			  EState w (a ∷ v) →
 			  EState w v
 			scanner a ω = step ω (scanner₀ a (Sₙ ω))
 		\end{code}
@@ -291,11 +291,11 @@
 		an EState), and their implementations have been omitted here:
 
 		\begin{code}
-			complete : ∀ {v w} -> (i : Item w v) -> Item.β i ≡ ε ->
-			  EState w v -> Item w v *
+			complete : ∀ {v w} → (i : Item w v) → Item.β i ≡ ε →
+			  EState w v → Item w v *
 
-			predict : ∀ {v w Y β} -> (i : Item w v) -> Item.β i ≡ l Y ∷ β ->
-			  EState w v -> Item w v *
+			predict : ∀ {v w Y β} → (i : Item w v) → Item.β i ≡ l Y ∷ β →
+			  EState w v → Item w v *
 		\end{code}
 
  		The complete and predict stages do, however, work together and they are
@@ -303,13 +303,13 @@
  		action:
 
 		\begin{code}
-			pred-comp₀ : ∀ {v w} ->
-			  (i : Item w v) ->
-			  (ω : EState w v) ->
-			  Σ {Item w v *} λ as -> Unique as
+			pred-comp₀ : ∀ {v w} →
+			  (i : Item w v) →
+			  (ω : EState w v) →
+			  Σ {Item w v *} λ as → Unique as
 
-			pred-comp₁ : {w n : T *} -> (ω : EState w n) ->
-			  (ss : Item w n *) -> (rs : Item w n *) -> Item w n *
+			pred-comp₁ : {w n : T *} → (ω : EState w n) →
+			  (ss : Item w n *) → (rs : Item w n *) → Item w n *
 		\end{code}
 
 		This does not do much more than selecting the appropriate step based on
@@ -319,13 +319,13 @@
 		completed items for an item set:
 
 		\begin{code}
-			pred-comp₂ : {w n : T *} ->
-			  (ω : EState w n) ->
-			  (ss : Item w n *) ->
-			  (rs : Item w n *) ->
-			  (m : ℕ) ->
-			  (p : suc (length (Σ.proj₁ (all-items {w} {n}) \\ ss)) ≤ m) ->
-			  Unique (rs ++ ss) ->
+			pred-comp₂ : {w n : T *} →
+			  (ω : EState w n) →
+			  (ss : Item w n *) →
+			  (rs : Item w n *) →
+			  (m : ℕ) →
+			  (p : suc (length (Σ.proj₁ (all-items {w} {n}) \\ ss)) ≤ m) →
+			  Unique (rs ++ ss) →
 			  EState w n
 			pred-comp₂ {n} ω ss rs zero () q
 			pred-comp₂ {n} ω ss ε (suc m) p q = Wₙ ω ss
@@ -364,7 +364,7 @@
 		set:
 
 		\begin{code}
-			in-all : ∀ {w v} -> (i : Item w v) -> all-items ∋ i
+			in-all : ∀ {w v} → (i : Item w v) → all-items ∋ i
 		\end{code}
 
 		\codett{all-items} necessarily contains many more items than will ever
@@ -380,25 +380,25 @@
 		we can package it all up in an EState.
 
 		\begin{code}
-			pred-comp : ∀ {w v} -> EState w v -> EState w v
+			pred-comp : ∀ {w v} → EState w v → EState w v
 		\end{code}
 
 		At last, we put this together with the scanning step, and provide a
 		function for parsing an input string:
 
 		\begin{code}
-			step : ∀ {w a v} ->
-			  EState w (a ∷ v) ->
+			step : ∀ {w a v} →
+			  EState w (a ∷ v) →
 			  EState w v
 			step {w} {a} {v} ω = scanner a (pred-comp ω)
 
-			parse₀ : ∀ {w v} ->
-			   EState w v ->
+			parse₀ : ∀ {w v} →
+			   EState w v →
 			   EState w ε
 			parse₀ {v = ε} w = pred-comp w
 			parse₀ {v = x ∷ v} w = parse₀ (step w)
 
-			parse : ∀ w -> EState w ε
+			parse : ∀ w → EState w ε
 			parse w =
 			  let x₁ = lookup (CFG.start G) (CFG.rules G) in
 			  parse₀ (start (gen-initials w x₁))

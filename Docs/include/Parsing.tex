@@ -97,18 +97,18 @@ open import base
 
 	\begin{code}
 		infixr 10 _⊢_∈_
-		data _⊢_∈_ (G : CFG) :  T * -> (N ∣ T) * -> Set where
+		data _⊢_∈_ (G : CFG) :  T * → (N ∣ T) * → Set where
 		  empty :
 		    G ⊢ ε ∈ ε
 
-		  concat : {u v : T *} {A : N} {α : (N ∣ T) *} ->
-		    G ⊢ u ∈ l A ∷ ε -> G ⊢ v ∈ α -> G ⊢ u ++ v ∈ l A ∷ α
+		  concat : {u v : T *} {A : N} {α : (N ∣ T) *} →
+		    G ⊢ u ∈ l A ∷ ε → G ⊢ v ∈ α → G ⊢ u ++ v ∈ l A ∷ α
 
-		  term : {u : T *} {a : T} {α : (N ∣ T) *} ->
-		    G ⊢ u ∈ α -> G ⊢ a ∷ u ∈ r a ∷ α
+		  term : {u : T *} {a : T} {α : (N ∣ T) *} →
+		    G ⊢ u ∈ α → G ⊢ a ∷ u ∈ r a ∷ α
 
-		  nonterm : {A : N} {α : (N ∣ T) *} {u : T *} ->
-		    (A , α) ∈ CFG.rules G -> G ⊢ u ∈ α -> G ⊢ u ∈ l A ∷ ε
+		  nonterm : {A : N} {α : (N ∣ T) *} {u : T *} →
+		    (A , α) ∈ CFG.rules G → G ⊢ u ∈ α → G ⊢ u ∈ l A ∷ ε
 	\end{code}
 
 	Here, a proposition of the form \codett{G ⊢ u ∈ α} would mean that, given a
@@ -123,22 +123,22 @@ open import base
 
 	\begin{code}
 		infixl 10 _⊢_/_∈_
-		data _⊢_/_∈_ (G : CFG) : T * -> T * -> (N ∣ T)* -> Set where
-		  empt : {w : T *} ->
+		data _⊢_/_∈_ (G : CFG) : T * → T * → (N ∣ T)* → Set where
+		  empt : {w : T *} →
 		    G ⊢ w / w ∈ ε
 
-		  conc : {u v w : T *} {X : N} {α : (N ∣ T) *} ->
-		    G ⊢ u / v ∈ l X ∷ ε ->
-		    G ⊢ v / w ∈ α ->
+		  conc : {u v w : T *} {X : N} {α : (N ∣ T) *} →
+		    G ⊢ u / v ∈ l X ∷ ε →
+		    G ⊢ v / w ∈ α →
 		      G ⊢ u / w ∈ l X ∷ α
 
-		  term : {a : T} {u v : T *} {α : (N ∣ T) *} ->
-		    G ⊢ u / v ∈ α ->
+		  term : {a : T} {u v : T *} {α : (N ∣ T) *} →
+		    G ⊢ u / v ∈ α →
 		      G ⊢ a ∷ u / v ∈ r a ∷ α
 
-		  nont : {u v : T *} {X : N} {α : (N ∣ T) *} ->
-		    (X , α) ∈ CFG.rules G ->
-		    G ⊢ u / v ∈ α ->
+		  nont : {u v : T *} {X : N} {α : (N ∣ T) *} →
+		    (X , α) ∈ CFG.rules G →
+		    G ⊢ u / v ∈ α →
 		    G ⊢ u / v ∈ l X ∷ ε
 	\end{code}
 
@@ -155,15 +155,15 @@ open import base
 	This second data type can be constructed if the first one can:
 
 	\begin{code}
-		sound₀ :  ∀ {G u α} -> G ⊢ u ∈ α -> G ⊢ u / ε ∈ α
+		sound₀ :  ∀ {G u α} → G ⊢ u ∈ α → G ⊢ u / ε ∈ α
 
 		sound₀ empty = empt
 		sound₀ (term a) = term (sound₀ a)
 		sound₀ (nonterm x a) = nont x (sound₀ a)
 		sound₀ (concat {v = v} a b) = conc (s (sound₀ a)) (sound₀ b)
 		  where
-		    s : ∀ {u v w α G} ->
-		      G ⊢ u / v ∈ α ->
+		    s : ∀ {u v w α G} →
+		      G ⊢ u / v ∈ α →
 		      G ⊢ u ++ w / v ++ w ∈ α
 	\end{code}
 	\AgdaHide{\begin{code}
@@ -182,8 +182,8 @@ open import base
 	way, and construct the first data type from the second:
 
 	\begin{code}
-		complete₀ : ∀ {u v α G} -> G ⊢ u / v ∈ α ->
-		  Σ λ t -> (G ⊢ t ∈ α) × (t ++ v ≡ u)
+		complete₀ : ∀ {u v α G} → G ⊢ u / v ∈ α →
+		  Σ λ t → (G ⊢ t ∈ α) × (t ++ v ≡ u)
 
 		complete₀ empt = σ ε (empty , refl)
 		complete₀ (term g) with complete₀ g
@@ -206,8 +206,8 @@ open import base
 	conc and empt rules:
 
 	\begin{code}
-		same-but-different : ∀ {u v X G} ->
-		  G ⊢ u / v ∈ l X ∷ ε ->
+		same-but-different : ∀ {u v X G} →
+		  G ⊢ u / v ∈ l X ∷ ε →
 		  G ⊢ u / v ∈ l X ∷ ε
 		same-but-different g = conc g empt
 	\end{code}
@@ -221,18 +221,18 @@ open import base
 
 	\begin{code}
 		infixl 10 _⊢_∥_∈_
-		data _⊢_∥_∈_ (G : CFG) : T * -> T * -> (N ∣ T)* -> Set where
-		  empt : {w : T *} ->
+		data _⊢_∥_∈_ (G : CFG) : T * → T * → (N ∣ T)* → Set where
+		  empt : {w : T *} →
 		    G ⊢ w ∥ w ∈ ε
 
-		  conc : {u v w : T *} {X : N} {α β : (N ∣ T) *} ->
-		    (X , α) ∈ CFG.rules G ->
-		    G ⊢ u ∥ v ∈ α ->
-		    G ⊢ v ∥ w ∈ β ->
+		  conc : {u v w : T *} {X : N} {α β : (N ∣ T) *} →
+		    (X , α) ∈ CFG.rules G →
+		    G ⊢ u ∥ v ∈ α →
+		    G ⊢ v ∥ w ∈ β →
 		      G ⊢ u ∥ w ∈ l X ∷ β
 
-		  term : {a : T} {u v : T *} {α : (N ∣ T) *} ->
-		    G ⊢ u ∥ v ∈ α ->
+		  term : {a : T} {u v : T *} {α : (N ∣ T) *} →
+		    G ⊢ u ∥ v ∈ α →
 		      G ⊢ a ∷ u ∥ v ∈ r a ∷ α
 	\end{code}
 
