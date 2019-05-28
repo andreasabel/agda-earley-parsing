@@ -14,7 +14,7 @@ module parser-sound (G : CFG) where
     -- Valid items, those that are Earley-derivable.
 
   Valid : ∀ {w v} -> Item w v -> Set
-  Valid {w} {v} i = G ⊢ Item.u i / v ⟶* Item.Y i / Item.β i
+  Valid {w} {v} i = G ∙ w ⊢ Item.u i / v ⟶* Item.Y i / Item.α i ∙ Item.β i
 
   -- Sound state sets (contain only valid items).
 

@@ -3,12 +3,13 @@ open import base
 module grammar (N T : Set) where
 
 record CFG : Set where
-  constructor _!_!_!_!_
+  constructor _⟩_⟩_
   field
     start : N
     rules : (N × (N ∣ T)* )*
     valid : (X : N) -> Σ λ α -> (X , α) ∈ rules
 
+infixr 10 _⊢_∈_
 data _⊢_∈_ (G : CFG) :  T * -> (N ∣ T) * -> Set where
   empty :
     G ⊢ ε ∈ ε
@@ -21,8 +22,8 @@ data _⊢_∈_ (G : CFG) :  T * -> (N ∣ T) * -> Set where
 
   nonterm : {A : N} {α : (N ∣ T) *} {u : T *} ->
     CFG.rules G ∋ (A , α) -> G ⊢ u ∈ α -> G ⊢ u ∈ l A ∷ ε
-infixr 10 _⊢_∈_
 
+infixl 10 _⊢_/_∈_
 data _⊢_/_∈_ (G : CFG) : T * -> T * -> (N ∣ T)* -> Set where
   empt : {w : T *} ->
     G ⊢ w / w ∈ ε
@@ -40,8 +41,6 @@ data _⊢_/_∈_ (G : CFG) : T * -> T * -> (N ∣ T)* -> Set where
     (X , α) ∈ CFG.rules G ->
     G ⊢ u / v ∈ α ->
     G ⊢ u / v ∈ l X ∷ ε
-
-infixl 10 _⊢_/_∈_
 
 sound₀ :  ∀ {G u α} ->
   G ⊢ u ∈ α ->
@@ -74,20 +73,20 @@ complete₀ (conc g g₁) | σ p₁ (x₀ , x₁) , σ q₁ (y₀ , y₁) =
   where
     p₁++q₁++v≡u = trans (trans (assoc-++ p₁ q₁ _) (sym (app (p₁ ++_) y₁))) (sym x₁)
   
-infixl 10 _⊢_&_∈_
-data _⊢_&_∈_ (G : CFG) : T * -> T * -> (N ∣ T)* -> Set where
+infixl 10 _⊢_∥_∈_
+data _⊢_∥_∈_ (G : CFG) : T * -> T * -> (N ∣ T)* -> Set where
   empt : {w : T *} ->
-    G ⊢ w & w ∈ ε
+    G ⊢ w ∥ w ∈ ε
 
   conc : {u v w : T *} {X : N} {α β : (N ∣ T) *} ->
     (X , α) ∈ CFG.rules G ->
-    G ⊢ u & v ∈ α ->
-    G ⊢ v & w ∈ β ->
-      G ⊢ u & w ∈ l X ∷ β
+    G ⊢ u ∥ v ∈ α ->
+    G ⊢ v ∥ w ∈ β ->
+      G ⊢ u ∥ w ∈ l X ∷ β
 
   term : {a : T} {u v : T *} {α : (N ∣ T) *} ->
-    G ⊢ u & v ∈ α ->
-      G ⊢ a ∷ u & v ∈ r a ∷ α
+    G ⊢ u ∥ v ∈ α ->
+      G ⊢ a ∷ u ∥ v ∈ r a ∷ α
 
 infixl 10 _∙_⊢_/_⟶*_/_∙_
 data _∙_⊢_/_⟶*_/_∙_ (G : CFG) :
@@ -110,7 +109,6 @@ data _∙_⊢_/_⟶*_/_∙_ (G : CFG) :
     G ∙ t ⊢ u / v ⟶* X / α ∙ l Y ∷ β ->
     G ∙ t ⊢ v / w ⟶* Y / γ ∙ ε ->
       G ∙ t ⊢ u / w ⟶* X / α ←∷ l Y ∙ β
-
 
 in-g : ∀ {G t u v X α β} ->
   G ∙ t ⊢ u / v ⟶* X / α ∙ β ->
@@ -139,20 +137,20 @@ suff-g₁ (complet g g₁) = suff-g₁ g
   
 sound₁ : ∀ {G t u v w X α β} ->
   G ∙ t ⊢ u / v ⟶* X / α ∙ β ->
-    G ⊢ v & w ∈ β ->
-    G ⊢ u & w ∈ α ++ β
+    G ⊢ v ∥ w ∈ β ->
+    G ⊢ u ∥ w ∈ α ++ β
 sound₁ (initial x) b = b
-sound₁ (scanner g) b = in₂ (λ t -> _ ⊢ _ & _ ∈ t) (in₀ _ _ _) (sound₁ g (term b))
+sound₁ (scanner g) b = in₂ (λ t -> _ ⊢ _ ∥ _ ∈ t) (in₀ _ _ _) (sound₁ g (term b))
 sound₁ (predict x g) b = b
 sound₁ (complet g g₁) b =
-  let x₁ = in₂ (λ t -> _ ⊢ _ & _ ∈ t) (++-ε _) (sound₁ g₁ empt) in
+  let x₁ = in₂ (λ t -> _ ⊢ _ ∥ _ ∈ t) (++-ε _) (sound₁ g₁ empt) in
   let x₂ = in₂ (λ t -> (_ , t) ∈ _) (++-ε _) (in-g g₁) in
   let x₃ = conc x₂ x₁ b in
-  in₂ (λ t -> _ ⊢ _ & _ ∈ t) (in₀ _ _ _) (sound₁ g x₃)
+  in₂ (λ t -> _ ⊢ _ ∥ _ ∈ t) (in₀ _ _ _) (sound₁ g x₃)
 
 complete₁ : ∀ {t u v w X α β} {G : CFG} ->
   G ∙ t ⊢ u / v ⟶* X / α ∙ β ->
-  G ⊢ v & w ∈ β ->
+  G ⊢ v ∥ w ∈ β ->
     G ∙ t ⊢ u / w ⟶* X / α ++ β ∙ ε
 complete₁ a empt = in₂ (λ t -> _ ∙ _ ⊢ _ / _ ⟶* _ / t ∙ ε) (sym (++-ε _)) a
 complete₁ a (conc x g g₁) =
