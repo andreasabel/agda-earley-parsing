@@ -9,12 +9,12 @@ AGDS = $(wildcard agda/*.lagda)
 LTXS = $(patsubst include/%,latex/%,$(wildcard include/*.tex))
 
 #Fail silently
-MAKEFLAGS = --silent
+#MAKEFLAGS = --silent
 
 xelatex=xelatex -interaction=nonstopmode
 
 # List of goals that should be executed even if there is a file/dir of the same name.
-.PHONY: default docs docs-dbg no-imgs agda latex clean force
+.PHONY: default docs docs-dbg no-imgs clean force
 
 default: Report.pdf
 
@@ -30,19 +30,21 @@ figure/%.pdf: figure/%.svg
 figure/dots/%.svg: figure/dots/%.dot
 	dot -Tsvg $^ > figure/dots/$*.svg
 
-Report.bbl : %.bbl : $(SRCS)
+Report.bbl : %.bbl : $(SRCS) agda/latex latex/agda.sty
 	- $(xelatex) $*.tex
 	- bibtex $*
 
-Report.pdf : %.pdf : agda latex Report.bbl
+Report.pdf : %.pdf : Report.bbl
 	- $(xelatex) $*.tex
 	- $(xelatex) $*.tex
 
-agda:
+agda/latex:
 	mkdir -p agda/latex
 
 latex:
 	mkdir -p latex
+
+latex/agda.sty : latex latex-agda.sty
 	cp latex-agda.sty latex/agda.sty
 
 %.pdf: $(SRCS)
@@ -51,12 +53,15 @@ latex:
 	- $(xelatex) $*.tex
 	- $(xelatex) $*.tex
 
-agda/latex/%.tex : include/%.tex
+agda/%.lagda : include/%.tex
 	sed -e "s/\t//g" include/$*.tex > agda/$*.lagda
+
+agda/latex/%.tex : agda/%.lagda
 	- agda --latex --latex-dir=agda/latex -i agda agda/$*.lagda
 
+
 latex/%.tex : agda/latex/%.tex
-	- sed -e 's/{code}/{agdacode}/g' < $< > $@
+	sed -e 's/{code}/{agdacode}/g' < $< > $@
 
 #Remove all temporary files created by pdfLaTeX
 clean:
