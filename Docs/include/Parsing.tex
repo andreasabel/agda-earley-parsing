@@ -1,4 +1,9 @@
 % CREATED BY DAVID FRISK, 2016
+\AgdaHide{
+\begin{code}
+open import base
+\end{code} }
+
 \chapter{Parsing} \label{Parsing}
 
 	Parsing is the process of analyzing the structure of a sequence of symbols
@@ -17,14 +22,14 @@
 	symbols are used as labels for more complex structures. An example is most
 	likely necessary: consider a grammar with the rules $Z \mapsto Ya$ and $Y
 	\mapsto b$, where $Z$ and $Y$ are non-terminals, and a and b are terminals.
-	The sequence $ba$ conforms to the structure of $Z$ in the grammar,
-	because it can be rewritten to $aY$ according to the second rule ($Y
-	\mapsto b$), and then rewritten to $Z$ according to the first ($Z \mapsto
-	Ya$). Likewise, the rules can be used to produce all sequences that conform
-	to the grammar by going the other way: $Z$ can be rewritten to $Ya$, and
-	the $Y$ in $Ya$ can be rewritten to $b$, producing $ba$.
+	The sequence $ba$ conforms to the structure of $Z$ in the grammar, because
+	it can be rewritten to $aY$ according to the second rule ($Y \mapsto b$),
+	and then rewritten to $Z$ according to the first ($Z \mapsto Ya$).
+	Likewise, the rules can be used to produce all sequences that conform to
+	the grammar by going the other way: $Z$ can produce $Ya$, and the $Y$ in
+	$Ya$ can produce $b$, giving us $ba$.
 
-	Context-free grammars can also be significantly more complex than the
+	Context-free grammars can also be significantly more expressive than the
 	simple example given above. Consider the set of rules {$W \mapsto aWb$, $W
 	\mapsto \epsilon$}. In this grammar, $W$ could be rewritten to either
 	$aWb$, or $\epsilon$, the first of which could be rewritten again using the
@@ -38,20 +43,20 @@
 	$aPP$ using rule 1 twice, followed by rules 2, 1, and 2 again to get $P$.
 	When this is possible, the grammar is said to be ambiguous.
 
-	A grammar is often associated with a 'starting symbol'. This can be
-	considered the 'topmost' non-terminal symbol in the grammar, and a sequence
-	is said to be 'in' the grammar if it conforms to the structure of the
-	starting symbol. Non-terminal symbols are often (and always in this thesis)
-	written with capital letters, whereas terminals are written in lowercase
-	(but this does not mean parsers are only able to handle lowercase inputs).
+	A grammar is often given a 'starting symbol'. This can be considered the
+	'topmost' non-terminal symbol in the grammar, and a sequence is said to be
+	'in' the grammar if it conforms to the structure of the starting symbol.
+	Non-terminal symbols are often (and always in this thesis) written with
+	capital letters, whereas terminals are written in lowercase (but this does
+	not mean parsers are only able to handle lowercase inputs).
 
 	Here is how we could encode a context-free grammar in Agda:
 
 	\begin{code}
-		module grammar (N T : Set) where
+		module Parsing (N T : Set) where
 
 		record CFG : Set where
-		  constructor _;_;_
+		  constructor _⟩_⟩_
 		  field
 		    start : N
 		    rules : (N × (N ∣ T)* )*
@@ -59,15 +64,16 @@
 
 	Here, type arguments \codett{N} and \codett{T} represent non-terminal and
 	terminal symbols, and the record type has two fields: a starting symbol,
-	and a set of rules for the grammar.  An example: A grammar \codett{ S ; (S
-	, r s ∷ l S ∷ ε) ∷ (S , ε) ∷ ε ; \_ } will have conforming strings that
+	and a set of rules for the grammar.  An example: A grammar \codett{ S ⟩ (S
+	, r s ∷ l S ∷ ε) ∷ (S , ε) ∷ ε ⟩ \_ } will have conforming strings that
 	either are empty, or start with the token \emph{'s'} followed by any
 	sequence that conforms to the \codett{S} non-terminal. The set of
 	conforming sequences for this second grammar is the set of (possibly empty)
 	sequences only containing the token \emph{'s'}.
 
 	A formal definition of when a list of tokens conforms to a grammar is also
-	necessary:
+	necessary. Here, we suggest for rules for when a sequence of symbols can be 
+	rewritten to a list of terminal and non-terminal symbols:
 
 	\begin{table}[h]
 	\centering
@@ -79,9 +85,18 @@
 	\end{tabular}
 	\end{table}
 
-	This may be expressed in Agda using the following data type:
+	The rules state that: Firstly, the empty string conforms to the empty
+	structure. Secondly, if a string $u$ conforms to the structure of a
+	nonterminal $A$, and $v$ to some sequence $\alpha$, then the concatenation
+	of $u$ and $v$ conforms to the sequence $A$ followed by $\alpha$. Thirdly,
+	if $u$ conforms to $\alpha$, prepending the terminal symbol $a$ to both is
+	also a valid rewrite rule. Finally, if there is a rule $A \mapsto \alpha$,
+	any string that conforms to $\alpha$ also conforms to the non-terminal $A$.
+
+	This set of rules can be expressed in Agda using the following data type:
 
 	\begin{code}
+		infixr 10 _⊢_∈_
 		data _⊢_∈_ (G : CFG) :  T * -> (N ∣ T) * -> Set where
 		  empty :
 		    G ⊢ ε ∈ ε
@@ -101,12 +116,13 @@
 	structure \codett{α}. That is, if \codett{A} is a non-terminal with a
 	single rule $A \mapsto aa$ and \codett{a} is a terminal symbol, any value
 	with the type \codett{G ⊢ r A ∷ ε ∈ a ∷ a ∷ ε} would constitute a proof
-	that the sequence $aa$ conforms to the structure of $A$, which is just
-	\emph{"sequences that are equal to $aa$"}.
+	that the sequence $aa$ conforms to the structure of $A$ (which is just
+	\emph{"sequences that are equal to $aa$"}).
 
 	Another possible definition for conformance could be:
 
 	\begin{code}
+		infixl 10 _⊢_/_∈_
 		data _⊢_/_∈_ (G : CFG) : T * -> T * -> (N ∣ T)* -> Set where
 		  empt : {w : T *} ->
 		    G ⊢ w / w ∈ ε
@@ -121,7 +137,7 @@
 		      G ⊢ a ∷ u / v ∈ r a ∷ α
 
 		  nont : {u v : T *} {X : N} {α : (N ∣ T) *} ->
-		    CFG.rules G ∋ (X , α) ->
+		    (X , α) ∈ CFG.rules G ->
 		    G ⊢ u / v ∈ α ->
 		    G ⊢ u / v ∈ l X ∷ ε
 	\end{code}
@@ -139,22 +155,51 @@
 	This second data type can be constructed if the first one can:
 
 	\begin{code}
-		sound₀ :  ∀ {G u α} ->
-		  G ⊢ u ∈ α ->
-		  G ⊢ u / ε ∈ α
+		sound₀ :  ∀ {G u α} -> G ⊢ u ∈ α -> G ⊢ u / ε ∈ α
+
 		sound₀ empty = empt
-		sound₀ (concat a b) = conc (s (sound₀ a)) (sound₀ b)
 		sound₀ (term a) = term (sound₀ a)
 		sound₀ (nonterm x a) = nont x (sound₀ a)
+		sound₀ (concat {v = v} a b) = conc (s (sound₀ a)) (sound₀ b)
 		  where
-		    s : ∀ {u v w α G} -> G ⊢ u / v ∈ α -> G ⊢ u ++ w / v ++ w ∈ α
+		    s : ∀ {u v w α G} ->
+		      G ⊢ u / v ∈ α ->
+		      G ⊢ u ++ w / v ++ w ∈ α
 	\end{code}
+	\AgdaHide{\begin{code}
+		    s empt = empt
+		    s (conc (conc a empt) a₁) = s (conc a a₁)
+		    s (conc (nont x a) a₁) = conc (nont x (s a)) (s a₁)
+		    s (term a) = term (s a)
+		    s (nont x a) = nont x (s a)
+	\end{code}}
 
 	This proof is fairly simple: constructors \codett{empty}, \codett{term},
 	and \codett{nonterm} match perfectly with their counterparts \codett{empt},
 	\codett{term}, and \codett{nont}. \codett{concat} and \codett{conc} are
 	also almost identical, but require that we introduce some string
-	concatenation to the first argument.
+	concatenation to the first argument. It is also possible to go the other
+	way, and construct the first data type from the second:
+
+	\begin{code}
+		complete₀ : ∀ {u v α G} -> G ⊢ u / v ∈ α ->
+		  Σ λ t -> (G ⊢ t ∈ α) × (t ++ v ≡ u)
+
+		complete₀ empt = σ ε (empty , refl)
+		complete₀ (term g) with complete₀ g
+		complete₀ (term g) | σ p₁ (x₀ , x₁) = σ (_ ∷ p₁) (term x₀ , (app (_ ∷_) x₁))
+		complete₀ (nont x g) with complete₀ g
+		complete₀ (nont x g) | σ p₁ (x₀ , x₁) = σ p₁ (nonterm x x₀ , x₁)
+		complete₀ (conc g g₁) with complete₀ g , complete₀ g₁
+		complete₀ (conc g g₁) | σ p₁ (x₀ , x₁) , σ q₁ (y₀ , y₁) =
+		  σ (p₁ ++ q₁) ((concat x₀ y₀) , p₁++q₁++v≡u)
+	\end{code}
+	\AgdaHide{
+	\begin{code}
+		  where
+		    p₁++q₁++v≡u = 
+		      trans (trans (assoc-++ p₁ q₁ _) (sym (app (p₁ ++_) y₁))) (sym x₁)
+	\end{code}}
 
 	One problem with these data types is that it is possible to construct
 	several different proofs for the same derivation of the same rule using the
@@ -175,6 +220,7 @@
 	data structure.
 
 	\begin{code}
+		infixl 10 _⊢_&_∈_
 		data _⊢_&_∈_ (G : CFG) : T * -> T * -> (N ∣ T)* -> Set where
 		  empt : {w : T *} ->
 		    G ⊢ w & w ∈ ε
@@ -194,8 +240,6 @@
 	so that concatenation can only be performed when introducing a new
 	non-terminal. This ensures that each constructor makes progress and
 	therefore prevents the problem above. This data structure is both sound and
-	complete with respect to the previous definitions.
-
-	\begin{code}
-
-	\end{code}
+	complete with respect to the previous definitions, and the proofs for this 
+	generally follows the same structure as the proofs between the previous two 
+	types, and will therefore not be discussed in detail here.
