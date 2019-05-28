@@ -61,7 +61,7 @@ agda/latex/%.tex : agda/%.lagda
 
 
 latex/%.tex : agda/latex/%.tex
-	sed -e 's/{code}/{agdacode}/g' < $< > $@
+	- sed -e 's/{code}/{agdacode}/g' < $< > $@
 
 #Remove all temporary files created by pdfLaTeX
 clean:
