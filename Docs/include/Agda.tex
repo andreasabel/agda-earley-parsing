@@ -37,7 +37,7 @@
 		two examples of terms with type \codett{ℕ}. \codett{ℕ} in turn has type
 		\codett{Set}, which is the name of the type of types.  \codett{Set} in
 		turn has has type \codett{Set₁} and this hierarchy continues on to
-		infinity, but we don't need to think about that too hard now.
+		infinity, but we do not need to think about that too hard now.
 		\codett{Set} is sometimes called the \emph{set of small types}, and
 		things in \codett{Set} \emph{small types}} type. This data type has two
 		constructors: \codett{zero} representing the natural number $0$, and
@@ -70,7 +70,7 @@
 		is, the constructors do not constrain this argument in any way), but we
 		could also have written \codett{data~\_*~:~Set~→~Set~where}. This type
 		also has two constructors, \codett{ε}, that represents empty lists, and
-		\codett{\_∷\_} for adding an element to the front of a list. Let's look
+		\codett{\_∷\_} for adding an element to the front of a list. Let us look
 		at a function making use of this type:
 
 		\begin{code}
@@ -84,7 +84,7 @@
 		\codett{T}. The first argument is surrounded by curly brackets, which
 		means it is an implicit argument. When calling this function, it will
 		not be necessary to provide the type as an argument. Instead, the
-		compiler will try to figure out what it's value should be based on the
+		compiler will try to figure out what its value should be based on the
 		functions other arguments. Should the compiler be unable to figure this
 		out, we can provide the implicit argument using curly brackets:
 		\codett{\_++\_ \{T = ℕ\} ε ε}. The definition of \codett{\_++\_}
@@ -117,11 +117,11 @@
 		Interestingly, because types of the constructors are not fully general,
 		they constrain the types that values have to have in order to be
 		constructible. For example, it is not possible to construct a value of
-		type \codett{suc zero ≤ zero}: The constructor \codett{≤₀} can not be
-		used as the first type arguments don't match (\codett{≤₀} can only
+		type \codett{suc zero ≤ zero}: The constructor \codett{≤₀} cannot be
+		used as the first type arguments do not match (\codett{≤₀} can only
 		return a value where the first type argument is \codett{zero}, but here
 		we would need suc zero), and neither can \codett{≤ₛ}, because the
-		second type arguments don't match (no matter the arguments, the second
+		second type arguments do not match (no matter the arguments, the second
 		type argument of the result will be \codett{suc} \emph{something},
 		which is not equal to zero). In fact, as the name of the data type
 		suggests, it is equivalent to the proposition \emph{less than or equal
@@ -148,14 +148,15 @@
 		only be constructible for equal values. This might feel somewhat like
 		cheating: if this data type represents equality, but the arguments must
 		be equal for it to be constructed, surely this is a circular
-		definition! This works because of a simple judgmental equality built-in
-		to the compiler: if two terms can be normalized to exactly the same
+		definition! This works because of a simple judgmental
+                equality is built
+		into the compiler: if two terms can be normalized to exactly the same
 		representation, the compiler will consider them the same, and allow us
 		to construct propositional equality values with them as type arguments,
 		even though the exact terms might differ. This propositional equality
 		can then be used to represent more complex equalities, and pattern
 		matching on \codett{refl} will convince the compiler that the terms ar
-		indeed equal. Let's take a quick look at how normalization works:
+		indeed equal. Let us take a quick look at how normalization works:
 
 		\AgdaHide{
 		\begin{code}
