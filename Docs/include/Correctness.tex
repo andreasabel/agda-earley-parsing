@@ -108,7 +108,7 @@
 
 			sound-compl₁ i refl refl ((Y ∘ u₁ ↦ α₁ ∘ l Z ∷ β) ∷ rs) v f q with decidₙ X Z
 			... | no x = sound-compl₁ i refl refl rs v (f ∘ in-tail) q
-			... | yes refl with q =
+			... | yes refl with q
 			...            | in-head     = complet (f in-head) v
 			...            | (in-tail q) = sound-compl₁ i refl refl rs v (f ∘ in-tail) q
 		\end{code}
@@ -211,7 +211,7 @@
 		\begin{code}
 			_≋_ : ∀ {t u v X α β} -> Item t v -> G ∙ t ⊢ u / v ⟶* X / α ∙ β -> Set
 			_≋_ {t} {u} {v} {X} {α} {β} i g =
-				(Item.Y i , Item.u i , Item.α i , Item.β i) ≡ (X , u , α , β)
+			  (Item.Y i , Item.u i , Item.α i , Item.β i) ≡ (X , u , α , β)
 
 			Complete₀ : ∀ {t v} -> Item t v * -> Set
 			Complete₀ {t} {v} rs = ∀ {u Y α β} ->

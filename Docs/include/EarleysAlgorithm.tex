@@ -1,4 +1,6 @@
 \AgdaHide{ \begin{code}
+{-# OPTIONS --irrelevant-projections #-}
+
 open import base
 
 module EarleysAlgorithm (N T : Set) (decidₙ : Dec N) (decidₜ : Dec T) where
