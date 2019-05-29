@@ -132,38 +132,38 @@ open import grammar-mini N T
 		\end{code}}
 		\begin{code}
 			data _∙_⊢_/_⟶*_/_∙_ (G : CFG) (input : T *) :
-			  (u v : T *) -> N -> (N ∣ T) * -> (N ∣ T) * -> Set where
+			  (u v : T *) → N → (N ∣ T) * → (N ∣ T) * → Set where
 
-			  initial : {α : (N ∣ T) *} ->
-			    (CFG.start G , α) ∈ CFG.rules G ->
+			  initial : {α : (N ∣ T) *} →
+			    (CFG.start G , α) ∈ CFG.rules G →
 			      G ∙ input ⊢ input / input ⟶* CFG.start G / ε ∙ α
 
-			  scanner : {u v : T *} {a : T} {X : N} {α β : (N ∣ T) *} ->
-			    G ∙ input ⊢ u / a ∷ v ⟶* X / α ∙ r a ∷ β ->
+			  scanner : {u v : T *} {a : T} {X : N} {α β : (N ∣ T) *} →
+			    G ∙ input ⊢ u / a ∷ v ⟶* X / α ∙ r a ∷ β →
 			      G ∙ input ⊢ u / v ⟶* X / α ←∷ r a ∙ β
 
-			  predict : {u v : T *} {X Y : N} {α β δ : (N ∣ T) *} ->
-			    CFG.rules G ∋ (Y , δ) ->
-			    G ∙ input ⊢ u / v ⟶* X / α ∙ l Y ∷ β ->
+			  predict : {u v : T *} {X Y : N} {α β δ : (N ∣ T) *} →
+			    CFG.rules G ∋ (Y , δ) →
+			    G ∙ input ⊢ u / v ⟶* X / α ∙ l Y ∷ β →
 			      G ∙ input ⊢ v / v ⟶* Y / ε ∙ δ
 
-			  complet : {u v w : T *} {X Y : N} {α β γ : (N ∣ T) *} ->
-			    G ∙ input ⊢ u / v ⟶* X / α ∙ l Y ∷ β ->
-			    G ∙ input ⊢ v / w ⟶* Y / γ ∙ ε ->
+			  complet : {u v w : T *} {X Y : N} {α β γ : (N ∣ T) *} →
+			    G ∙ input ⊢ u / v ⟶* X / α ∙ l Y ∷ β →
+			    G ∙ input ⊢ v / w ⟶* Y / γ ∙ ε →
 			      G ∙ input ⊢ u / w ⟶* X / α ←∷ l Y ∙ β
 		\end{code}
 		\AgdaHide{\begin{code}
-			in-g : ∀ {G t u v X α β} ->
-			  G ∙ t ⊢ u / v ⟶* X / α ∙ β ->
+			in-g : ∀ {G t u v X α β} →
+			  G ∙ t ⊢ u / v ⟶* X / α ∙ β →
 			    CFG.rules G ∋ (X , α ++ β)
 			in-g (initial x) = x
-			in-g (scanner g) = in₂ (λ t -> (_ , t) ∈ _) (in₀ _ _ _) (in-g g)
+			in-g (scanner g) = in₂ (λ t → (_ , t) ∈ _) (in₀ _ _ _) (in-g g)
 			in-g (predict x g) = x
-			in-g (complet g g₁) = in₂ (λ t -> (_ , t) ∈ _) (in₀ _ _ _) (in-g g)
+			in-g (complet g g₁) = in₂ (λ t → (_ , t) ∈ _) (in₀ _ _ _) (in-g g)
 
-			suff-g₃ : ∀ {G t u v X α β} ->
-			  G ∙ t ⊢ u / v ⟶* X / α ∙ β ->
-			    Σ λ s -> s ++ v ≡ u
+			suff-g₃ : ∀ {G t u v X α β} →
+			  G ∙ t ⊢ u / v ⟶* X / α ∙ β →
+			    Σ λ s → s ++ v ≡ u
 			suff-g₃ (initial x) = σ ε refl
 			suff-g₃ (scanner g) with suff-g₃ g
 			suff-g₃ (scanner {a = a} g) | σ p₁ p₀ = σ (p₁ ←∷ a) (trans (sym (in₀ _ _ _)) (sym p₀))
@@ -172,9 +172,9 @@ open import grammar-mini N T
 			suff-g₃ (complet g g₁) | σ p₁ p₀ , σ q₁ q₀ =
 			  σ (p₁ ++ q₁) (trans (trans (assoc-++ p₁ _ _) (app (p₁ ++_) (sym q₀))) (sym p₀))
 
-			suff-g₂ : ∀ {G t u v X α β} ->
-			  G ∙ t ⊢ u / v ⟶* X / α ∙ β ->
-			    Σ λ s -> s ++ v ≡ t
+			suff-g₂ : ∀ {G t u v X α β} →
+			  G ∙ t ⊢ u / v ⟶* X / α ∙ β →
+			    Σ λ s → s ++ v ≡ t
 			suff-g₂ (initial x) = σ ε refl
 			suff-g₂ (predict x g) = suff-g₂ g
 			suff-g₂ (complet g g₁) = suff-g₂ g₁
@@ -182,9 +182,9 @@ open import grammar-mini N T
 			suff-g₂ (scanner {a = a} g) | σ p₁ p₀ =
 			  σ (p₁ ←∷ a) let x₁ = in₀ a p₁ _ in trans (sym x₁) (sym p₀)
 
-			suff-g₁ : ∀ {G t u v X α β} ->
-			  G ∙ t ⊢ u / v ⟶* X / α ∙ β ->
-			    Σ λ s -> s ++ u ≡ t
+			suff-g₁ : ∀ {G t u v X α β} →
+			  G ∙ t ⊢ u / v ⟶* X / α ∙ β →
+			    Σ λ s → s ++ u ≡ t
 			suff-g₁ (initial x) = σ ε refl
 			suff-g₁ (scanner g) = suff-g₁ g
 			suff-g₁ (predict x g) = suff-g₂ g
@@ -226,18 +226,18 @@ open import grammar-mini N T
 		Chapter~\ref{Parsing}:
 
 		\begin{code}
-			sound₁ : ∀ {G t u v w X α β} ->
-			  G ∙ t ⊢ u / v ⟶* X / α ∙ β ->
-			    G ⊢ v ∥ w ∈ β ->
+			sound₁ : ∀ {G t u v w X α β} →
+			  G ∙ t ⊢ u / v ⟶* X / α ∙ β →
+			    G ⊢ v ∥ w ∈ β →
 			    G ⊢ u ∥ w ∈ α ++ β
 			sound₁ (initial x) b = b
-			sound₁ (scanner g) b = in₂ (λ t -> _ ⊢ _ ∥ _ ∈ t) (in₀ _ _ _) (sound₁ g (term b))
+			sound₁ (scanner g) b = in₂ (λ t → _ ⊢ _ ∥ _ ∈ t) (in₀ _ _ _) (sound₁ g (term b))
 			sound₁ (predict x g) b = b
 			sound₁ (complet g g₁) b =
-			  let x₁ = in₂ (λ t -> _ ⊢ _ ∥ _ ∈ t) (++-ε _) (sound₁ g₁ empt) in
-			  let x₂ = in₂ (λ t -> (_ , t) ∈ _) (++-ε _) (in-g g₁) in
+			  let x₁ = in₂ (λ t → _ ⊢ _ ∥ _ ∈ t) (++-ε _) (sound₁ g₁ empt) in
+			  let x₂ = in₂ (λ t → (_ , t) ∈ _) (++-ε _) (in-g g₁) in
 			  let x₃ = conc x₂ x₁ b in
-			  in₂ (λ t -> _ ⊢ _ ∥ _ ∈ t) (in₀ _ _ _) (sound₁ g x₃)
+			  in₂ (λ t → _ ⊢ _ ∥ _ ∈ t) (in₀ _ _ _) (sound₁ g x₃)
 		\end{code}
 
 		Soundness is fairly straightforward. The \codett{in-g} function proves
@@ -248,20 +248,20 @@ open import grammar-mini N T
 		to the proof at hand. Completeness follows in a similar fashion:
 
 		\begin{code}
-			complete₁ : ∀ {t u v w X α β} {G : CFG} ->
-			  G ∙ t ⊢ u / v ⟶* X / α ∙ β ->
-			  G ⊢ v ∥ w ∈ β ->
+			complete₁ : ∀ {t u v w X α β} {G : CFG} →
+			  G ∙ t ⊢ u / v ⟶* X / α ∙ β →
+			  G ⊢ v ∥ w ∈ β →
 			    G ∙ t ⊢ u / w ⟶* X / α ++ β ∙ ε
-			complete₁ a empt = in₂ (λ t -> _ ∙ _ ⊢ _ / _ ⟶* _ / t ∙ ε) (sym (++-ε _)) a
+			complete₁ a empt = in₂ (λ t → _ ∙ _ ⊢ _ / _ ⟶* _ / t ∙ ε) (sym (++-ε _)) a
 			complete₁ a (conc x g g₁) =
 			  let x₁ = predict x a in
 			  let x₂ = complete₁ x₁ g in
 			  let x₃ = complet a x₂ in
 			  let x₄ = complete₁ x₃ g₁ in
-			  in₂ (λ t -> _ ∙ _ ⊢ _ / _ ⟶* _ / t ∙ _) (sym (in₀ _ _ _)) x₄
+			  in₂ (λ t → _ ∙ _ ⊢ _ / _ ⟶* _ / t ∙ _) (sym (in₀ _ _ _)) x₄
 			complete₁ a (term g) =
 			  let x₁ = complete₁ (scanner a) g in
-			  in₂ (λ t -> _ ∙ _ ⊢ _ / _ ⟶* _ / t ∙ _) (sym (in₀ _ _ _)) x₁
+			  in₂ (λ t → _ ∙ _ ⊢ _ / _ ⟶* _ / t ∙ _) (sym (in₀ _ _ _)) x₁
 		\end{code}
 
 		Like with the soundness proof some parts related to string
@@ -278,13 +278,13 @@ open import grammar-mini N T
 			module parser (G : CFG) where
 			  open import count N T decidₙ decidₜ
 
-			  v-step : ∀ {Y α x β} ->
-			    CFG.rules G ∋ (Y , α ++ (x ∷ β)) -> CFG.rules G ∋ (Y , (α ←∷ x) ++ β)
+			  v-step : ∀ {Y α x β} →
+			    CFG.rules G ∋ (Y , α ++ (x ∷ β)) → CFG.rules G ∋ (Y , (α ←∷ x) ++ β)
 			  v-step {Y} {α} {x} {β} v =
 			    in₂ (λ x → CFG.rules G ∋ (Y , x)) (in₀ x α β) v
 
-			  v-unstep : ∀ {Y α x β} ->
-			    CFG.rules G ∋ (Y , (α ←∷ x) ++ β) -> CFG.rules G ∋ (Y , α ++ (x ∷ β))
+			  v-unstep : ∀ {Y α x β} →
+			    CFG.rules G ∋ (Y , (α ←∷ x) ++ β) → CFG.rules G ∋ (Y , α ++ (x ∷ β))
 			  v-unstep {Y} {α} {x} {β} v =
 			    in₂ (λ x → CFG.rules G ∋ (Y , x)) (sym (in₀ x α β)) v
 		\end{code}}
@@ -322,17 +322,17 @@ open import grammar-mini N T
 			  infixl 3 _∘_↦_∘_[_∘_]
 
 			  eq-α :
-			    (a b : (N ∣ T)*) ->
+			    (a b : (N ∣ T)*) →
 			    a ≡ b ??
 			  eq-α = eq-* (eq-∣ decidₙ decidₜ)
 
-			  eq-T* : (a b : T *) -> a ≡ b ??
+			  eq-T* : (a b : T *) → a ≡ b ??
 			  eq-T* = eq-* decidₜ
 
-			  eq-rule : (a b : N × (N ∣ T) *) -> a ≡ b ??
+			  eq-rule : (a b : N × (N ∣ T) *) → a ≡ b ??
 			  eq-rule = eq-× decidₙ eq-α
 
-			  eq-item : ∀ {w v} -> (a b : Item w v) -> a ≡ b ??
+			  eq-item : ∀ {w v} → (a b : Item w v) → a ≡ b ??
 			  eq-item (X ∘ i ↦ α ∘ β) (Y ∘ j ↦ γ ∘ δ) with eq-×₄ decidₙ eq-T* eq-α eq-α (X , i , α , β) (Y , j , γ , δ)
 			  eq-item (X ∘ i ↦ α ∘ β) (X ∘ i ↦ α ∘ β) | yes refl = yes refl
 			  eq-item (X ∘ i ↦ α ∘ β) (Y ∘ j ↦ γ ∘ δ) | no x = no λ {refl → x refl}
@@ -354,9 +354,9 @@ open import grammar-mini N T
 			      EState w v
 		\end{code}
 		\AgdaHide{\begin{code}
-			  V : {w v : T *} ->
-			    EState w v ->
-			    Σ λ t -> t ++ v ≡ w
+			  V : {w v : T *} →
+			    EState w v →
+			    Σ λ t → t ++ v ≡ w
 			  V {w} {w} (start rs) = σ ε refl
 			  V {w} {v} (step ω rs) with V ω
 			  V {w} {v} (step {a} ω rs) | σ p₁ p₀ =
@@ -364,17 +364,17 @@ open import grammar-mini N T
 
 			  -- Get the latest state.
 
-			  Sₙ : {w v : T *} ->
-			    EState w v ->
+			  Sₙ : {w v : T *} →
+			    EState w v →
 			    Item w v *
 			  Sₙ (start rs) = rs
 			  Sₙ (step w rs) = rs
 
 			  -- Replace the latest state.
 
-			  Wₙ : {w v : T *} ->
-			    (ω : EState w v) ->
-			    (rs : Item w v *) ->
+			  Wₙ : {w v : T *} →
+			    (ω : EState w v) →
+			    (rs : Item w v *) →
 			    EState w v
 			  Wₙ (start rs) rs₁ = start rs₁
 			  Wₙ (step w rs) rs₁ = step w rs₁
@@ -397,9 +397,9 @@ open import grammar-mini N T
 		The scanning step is very simple:
 
 		\begin{code}
-			  scanr₀ : ∀ {w v} ->
-			    (a : T) ->
-			    Item w (a ∷ v)* ->
+			  scanr₀ : ∀ {w v} →
+			    (a : T) →
+			    Item w (a ∷ v)* →
 			    Item w v *
 			  scanr₀ a ε = ε
 			  scanr₀ a ((X ∘ u ↦ α ∘ ε) ∷ rs) = scanr₀ a rs
@@ -408,9 +408,9 @@ open import grammar-mini N T
 			  ... | yes refl = (X ∘ u ↦ α ←∷ r a ∘ β [ v-step χ ∘ ψ ]) ∷ (scanr₀ a rs)
 			  ... | no x = scanr₀ a rs
 
-			  scanr : {w v : T *} ->
-			    (a : T) ->
-			    EState w (a ∷ v) ->
+			  scanr : {w v : T *} →
+			    (a : T) →
+			    EState w (a ∷ v) →
 			    EState w v
 			  scanr a ω = step ω (scanr₀ a (Sₙ ω))
 		\end{code}
@@ -427,17 +427,17 @@ open import grammar-mini N T
 		an EState), and their implementations have been omitted here:
 
 		\AgdaHide{\begin{code}
-			  compl₀ : ∀ {u v w} ->
-			    (ω : EState w v) ->
+			  compl₀ : ∀ {u v w} →
+			    (ω : EState w v) →
 			    Item w u *
 			  compl₀ {u} {v} w           with eq-T* u v
 			  compl₀ {u} {u} w           | yes refl = Sₙ w
 			  compl₀ {u} {v} (start rs)  | no x = ε
 			  compl₀ {u} {v} (step w rs) | no x = compl₀ w
 
-			  compl₁ : ∀ {u v w} ->
-			    (i : Item w v) -> Item.β i ≡ ε ->
-			    Item w u * -> Item w v *
+			  compl₁ : ∀ {u v w} →
+			    (i : Item w v) → Item.β i ≡ ε →
+			    Item w u * → Item w v *
 			  compl₁ i@(X ∘ u ↦ α ∘ ε) refl ε = ε
 			  compl₁ i@(X ∘ u ↦ α ∘ ε) refl ((Y ∘ u₁ ↦ α₁ ∘ ε) ∷ rs) = compl₁ i refl rs
 			  compl₁ i@(X ∘ u ↦ α ∘ ε) refl ((Y ∘ u₁ ↦ α₁ ∘ r a ∷ β) ∷ rs) = compl₁ i refl rs
@@ -450,17 +450,17 @@ open import grammar-mini N T
 
 		\end{code}}
 		\begin{code}
-			  compl : ∀ {v w} ->
-			    (i : Item w v) -> Item.β i ≡ ε ->
-			    EState w v -> Item w v *
+			  compl : ∀ {v w} →
+			    (i : Item w v) → Item.β i ≡ ε →
+			    EState w v → Item w v *
 		\end{code}
 		\AgdaHide{\begin{code}
 			  compl i p ω = compl₁ {u = Item.u i} i p (compl₀ ω)
 
-			  predict₀ : ∀ {v w Y β} ->
-			    (Σ λ t -> t ++ v ≡ w) ->
-			    (i : Item w v) -> Item.β i ≡ l Y ∷ β ->
-			    (Σ λ t -> (t ∈ CFG.rules G) × (fst t ≡ Y)) * ->
+			  predict₀ : ∀ {v w Y β} →
+			    (Σ λ t → t ++ v ≡ w) →
+			    (i : Item w v) → Item.β i ≡ l Y ∷ β →
+			    (Σ λ t → (t ∈ CFG.rules G) × (fst t ≡ Y)) * →
 			    Item w v *
 			  predict₀ ψ₁ i p ε = ε
 			  predict₀ {v} ψ₁ i@(X ∘ u ↦ α ∘ l Y ∷ β) refl (σ (Y , γ) (p , refl) ∷ ps) =
@@ -468,16 +468,16 @@ open import grammar-mini N T
 
 		\end{code}}
 		\begin{code}
-			  predic : ∀ {v w Y β} ->
-			    (i : Item w v) -> Item.β i ≡ l Y ∷ β ->
-			    EState w v ->
+			  predic : ∀ {v w Y β} →
+			    (i : Item w v) → Item.β i ≡ l Y ∷ β →
+			    EState w v →
 			    Item w v *
 		\end{code}
 		\AgdaHide{\begin{code}
 			  predic i@(X ∘ u ↦ α ∘ l Y ∷ β) refl ω =
 			    predict₀ (V ω) i refl (lookup Y (CFG.rules G))
 
-			  deduplicate : ∀ {w v} -> Item w v * -> Σ λ as -> Unique as
+			  deduplicate : ∀ {w v} → Item w v * → Σ λ as → Unique as
 			  deduplicate ε = σ ε u-ε
 			  deduplicate (x ∷ as) with elem eq-item x (Σ.proj₁ (deduplicate as))
 			  deduplicate (x ∷ as) | yes x₁ = deduplicate as
@@ -490,11 +490,11 @@ open import grammar-mini N T
 		action:
 
 		\begin{code}
-			  pred-comp₀ : ∀ {v w β} ->
-			    (i : Item w v) ->
-			    (β ≡ Item.β i) ->
-			    (ω : EState w v) ->
-			    Σ {Item w v *} λ as -> Unique as
+			  pred-comp₀ : ∀ {v w β} →
+			    (i : Item w v) →
+			    (β ≡ Item.β i) →
+			    (ω : EState w v) →
+			    Σ {Item w v *} λ as → Unique as
 			  pred-comp₀ i@(X ∘ u ↦ α ∘ ε) refl ω = deduplicate (compl i refl ω)
 			  pred-comp₀ i@(X ∘ u ↦ α ∘ r a ∷ β) refl ω = σ ε u-ε
 			  pred-comp₀ i@(X ∘ u ↦ α ∘ l Y ∷ β) refl ω with elem decidₙ Y (nullable G)
@@ -505,8 +505,8 @@ open import grammar-mini N T
 			    let x₂ = predic i refl ω in
 			    deduplicate (i₁ ∷ (Σ.proj₁ x₁ ++ x₂))
 
-			  pred-comp₁ : {w n : T *} -> (ω : EState w n) ->
-			    (ss : Item w n *) -> (rs : Item w n *) -> Item w n *
+			  pred-comp₁ : {w n : T *} → (ω : EState w n) →
+			    (ss : Item w n *) → (rs : Item w n *) → Item w n *
 		\end{code}
 		\AgdaHide{\begin{code}
 			  pred-comp₁ ω ss ε = ε
@@ -522,11 +522,11 @@ open import grammar-mini N T
 		completed items for an item set:
 
 		\AgdaHide{\begin{code}
-			  all-items₀ : ∀ {v w X u α β} -> ∀ χ ψ ->
-			    (i : Item w v) -> i ≡ (X ∘ u ↦ α ∘ β [ χ ∘ ψ ]) ->
-			    Σ {Item w v *} λ as ->
-			      ∀ {γ δ} -> ∀ χ .ψ -> (i : Item w v) -> i ≡ (X ∘ u ↦ γ ∘ δ [ χ ∘ ψ ]) -> (Σ λ t ->
-			        (t ++ δ ≡ β) × (α ++ t ≡ γ)) ->
+			  all-items₀ : ∀ {v w X u α β} → ∀ χ ψ →
+			    (i : Item w v) → i ≡ (X ∘ u ↦ α ∘ β [ χ ∘ ψ ]) →
+			    Σ {Item w v *} λ as →
+			      ∀ {γ δ} → ∀ χ .ψ → (i : Item w v) → i ≡ (X ∘ u ↦ γ ∘ δ [ χ ∘ ψ ]) → (Σ λ t →
+			        (t ++ δ ≡ β) × (α ++ t ≡ γ)) →
 			      i ∈ as
 			  all-items₀ χ ψ i@(X ∘ u ↦ α ∘ ε) refl = σ (i ∷ ε) λ
 			    { χ ψ (X ∘ u ↦ γ ∘ .ε) refl (σ ε (refl , y)) → case trans (sym (++-ε α)) (sym y) of λ {refl → in-head}
@@ -538,11 +538,11 @@ open import grammar-mini N T
 			    ; χ ψ i@(X ∘ u ↦ γ ∘ δ) refl (σ (x₁ ∷ t) (refl , y)) → in-tail (p₀ χ ψ i refl (σ t (refl , (trans (sym (in₀ _ _ _)) (sym y)))))
 			    }
 
-			  all-items₁ : ∀ {w v X u β} -> ∀ χ ψ ->
-			    (i : Item w v) -> i ≡ (X ∘ u ↦ ε ∘ β [ χ ∘ ψ ]) ->
-			    Σ {Item w v *} λ as ->
-			      ∀ {u₀ γ δ} -> ∀ χ ψ -> (i : Item w v) -> i ≡ (X ∘ u₀ ↦ γ ∘ δ [ χ ∘ ψ ]) ->
-			        γ ++ δ ≡ β -> (Σ λ t → t ++ u₀ ≡ u) ->
+			  all-items₁ : ∀ {w v X u β} → ∀ χ ψ →
+			    (i : Item w v) → i ≡ (X ∘ u ↦ ε ∘ β [ χ ∘ ψ ]) →
+			    Σ {Item w v *} λ as →
+			      ∀ {u₀ γ δ} → ∀ χ ψ → (i : Item w v) → i ≡ (X ∘ u₀ ↦ γ ∘ δ [ χ ∘ ψ ]) →
+			        γ ++ δ ≡ β → (Σ λ t → t ++ u₀ ≡ u) →
 			        i ∈ as
 			  all-items₁ χ ψ i@(X ∘ ε ↦ ε ∘ β) refl with all-items₀ χ ψ i refl
 			  all-items₁ χ ψ (X ∘ ε ↦ ε ∘ β) refl | σ p₁ p₀ = σ p₁ λ
@@ -555,10 +555,10 @@ open import grammar-mini N T
 			    ; χ₁ ψ₁ (.X ∘ u₀ ↦ γ ∘ δ) refl x₂ (σ (x₁ ∷ p₄) refl) → in-r (p₃ χ₁ ψ₁ _ refl x₂ (σ p₄ refl))
 			    }
 
-			  all-items₂ : ∀ {w v} ->
-			    (rs : (N × (N ∣ T)*)*) -> (∀ {r} -> rs ∋ r -> CFG.rules G ∋ r) ->
-			    Σ {Item w v *} λ as ->
-			      ∀ {X u γ δ} -> ∀ χ ψ -> (i : Item w v) -> i ≡ (X ∘ u ↦ γ ∘ δ [ χ ∘ ψ ]) -> (X , γ ++ δ) ∈ rs -> i ∈ as
+			  all-items₂ : ∀ {w v} →
+			    (rs : (N × (N ∣ T)*)*) → (∀ {r} → rs ∋ r → CFG.rules G ∋ r) →
+			    Σ {Item w v *} λ as →
+			      ∀ {X u γ δ} → ∀ χ ψ → (i : Item w v) → i ≡ (X ∘ u ↦ γ ∘ δ [ χ ∘ ψ ]) → (X , γ ++ δ) ∈ rs → i ∈ as
 			  all-items₂ ε f = σ ε λ {χ₁ ψ₁ i x ()}
 			  all-items₂ {w} ((Y , α) ∷ rs) f with all-items₁ (f in-head) (σ ε refl) (Y ∘ w ↦ ε ∘ α) refl
 			  all-items₂ {w} ((Y , α) ∷ rs) f | σ p₁ p₀ with all-items₂ rs (f ∘ in-tail)
@@ -567,12 +567,12 @@ open import grammar-mini N T
 			    ; χ ψ (X ∘ u ↦ γ ∘ δ) refl (in-tail x₁) → in-r (p₃ χ ψ _ refl x₁)
 			    }
 
-			  relevant-χ : ∀ {w v} -> (i : Item w v) -> CFG.rules G ∋ (Item.Y i , Item.α i ++ Item.β i)
+			  relevant-χ : ∀ {w v} → (i : Item w v) → CFG.rules G ∋ (Item.Y i , Item.α i ++ Item.β i)
 			  relevant-χ ((Y ∘ j ↦ α ∘ β) {χ}) = elem' eq-rule (Y , α ++ β) (CFG.rules G) χ
 
 			  open ε decidₜ
 
-			  relevant-ψ : ∀ {w v} -> (i : Item w v) -> Σ λ t -> t ++ Item.u i ≡ w
+			  relevant-ψ : ∀ {w v} → (i : Item w v) → Σ λ t → t ++ Item.u i ≡ w
 			  relevant-ψ {ε} ((Y ∘ ε ↦ α ∘ β) {χ} {ψ}) = σ ε refl
 			  relevant-ψ {ε} ((Y ∘ x ∷ u ↦ α ∘ β) {χ} {p}) = void (ε₁ (Σ.proj₀ p))
 			  relevant-ψ {x ∷ w} {v} (Y ∘ ε ↦ α ∘ β [ χ ∘ p ]) = σ (x ∷ w) (++-ε (x ∷ w))
@@ -586,21 +586,21 @@ open import grammar-mini N T
 
 		\end{code}}
 		\begin{code}
-			  all-items : ∀ {w} {v} -> Σ λ as -> {i : Item w v} -> i ∈ as
+			  all-items : ∀ {w} {v} → Σ λ as → {i : Item w v} → i ∈ as
 		\end{code}
 		\AgdaHide{\begin{code}
 			  all-items with all-items₂ (CFG.rules G) id
-			  all-items | σ p₁ p₀ = σ p₁ λ {i} -> p₀ (relevant-χ i) (relevant-ψ i) i refl (relevant-χ i)
+			  all-items | σ p₁ p₀ = σ p₁ λ {i} → p₀ (relevant-χ i) (relevant-ψ i) i refl (relevant-χ i)
 		\end{code}}
 
 		\begin{code}
-			  pred-comp₂ : {w n : T *} ->
-			    (ω : EState w n) ->
-			    (ss : Item w n *) ->
-			    (rs : Item w n *) ->
-			    (m : ℕ) ->
-			    (p : suc (length (Σ.proj₁ (all-items {w} {n}) \\ ss)) ≤ m) ->
-			    Unique (rs ++ ss) ->
+			  pred-comp₂ : {w n : T *} →
+			    (ω : EState w n) →
+			    (ss : Item w n *) →
+			    (rs : Item w n *) →
+			    (m : ℕ) →
+			    (p : suc (length (Σ.proj₁ (all-items {w} {n}) \\ ss)) ≤ m) →
+			    Unique (rs ++ ss) →
 			    EState w n
 			  pred-comp₂ {n} ω ss rs zero () q
 			  pred-comp₂ {n} ω ss ε (suc m) p q = Wₙ ω ss
@@ -650,8 +650,8 @@ open import grammar-mini N T
 		we can package it all up in an EState.
 
 		\begin{code}
-			  pred-comp : ∀ {w v} ->
-			    EState w v -> EState w v
+			  pred-comp : ∀ {w v} →
+			    EState w v → EState w v
 		\end{code}
 		\AgdaHide{\begin{code}
 			  pred-comp {v} w =
@@ -665,24 +665,24 @@ open import grammar-mini N T
 		function for parsing an input string:
 
 		\begin{code}
-			  step₀ : ∀ {w a v} ->
-			    EState w (a ∷ v) ->
+			  step₀ : ∀ {w a v} →
+			    EState w (a ∷ v) →
 			    EState w v
 			  step₀ {w} {a} {v} ω = scanr a (pred-comp ω)
 
-			  parse₀ : ∀ {w v} ->
-			     EState w v ->
+			  parse₀ : ∀ {w v} →
+			     EState w v →
 			     EState w ε
 			  parse₀ {v = ε} w = pred-comp w
 			  parse₀ {v = x ∷ v} w = parse₀ (step₀ w)
 
-			  itemize : ∀ w ->
-			    Σ (λ t -> (t ∈ CFG.rules G) × (fst t ≡ CFG.start G)) * ->
+			  itemize : ∀ w →
+			    Σ (λ t → (t ∈ CFG.rules G) × (fst t ≡ CFG.start G)) * →
 			    Item w w *
 			  itemize w ε = ε
 			  itemize w (σ (X , β) p₀ ∷ rs) = (X ∘ w ↦ ε ∘ β [ fst p₀ ∘ σ ε refl ]) ∷ itemize w rs
 
-			  parse : ∀ w -> EState w ε
+			  parse : ∀ w → EState w ε
 			  parse w =
 			    let x₁ = lookup (CFG.start G) (CFG.rules G) in
 			    parse₀ (start (itemize w x₁))

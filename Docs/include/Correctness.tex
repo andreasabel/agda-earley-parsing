@@ -12,12 +12,12 @@
 		First, we provide a definition of sound items sets:
 
 		\begin{code}
-			Valid : ∀ {w v} -> Item w v -> Set
+			Valid : ∀ {w v} → Item w v → Set
 			Valid {w} {v} i = G ⊢ Item.u i / v ⟶* Item.Y i / Item.β i
 
-			Sound : ∀ {w v} -> EState w v -> Set
-			Sound (start rs) = ∀ {i} -> i ∈ rs -> Valid i
-			Sound (step ω rs) = Sound ω × (∀ {i} -> i ∈ rs -> Valid i)
+			Sound : ∀ {w v} → EState w v → Set
+			Sound (start rs) = ∀ {i} → i ∈ rs → Valid i
+			Sound (step ω rs) = Sound ω × (∀ {i} → i ∈ rs → Valid i)
 		\end{code}
 
 		An item is \codett{Valid} if it can be derived using the Earley rules,
@@ -36,9 +36,9 @@
 		soundness for \codett{EState}s:
 
 		\begin{code}
-			sound-scanr₀ : ∀ {a v w} -> ∀ rs ->
-			  (∀ {i} -> i ∈ rs -> Valid i) ->
-			  (∀ {i} -> i ∈ scanr₀ {w} {v} a rs -> Valid i)
+			sound-scanr₀ : ∀ {a v w} → ∀ rs →
+			  (∀ {i} → i ∈ rs → Valid i) →
+			  (∀ {i} → i ∈ scanr₀ {w} {v} a rs → Valid i)
 
 			sound-scanr₀ ε f ()
 
@@ -54,8 +54,8 @@
 			...            | in-head    = scanner (f in-head)
 			...            | in-tail p₁ = sound-scanr₀ rs (f ∘ in-tail) p₁
 
-			sound-scanr : ∀ {a w v} -> (ω : EState w (a ∷ v)) ->
-			  Sound ω -> Sound (scanr a ω)
+			sound-scanr : ∀ {a w v} → (ω : EState w (a ∷ v)) →
+			  Sound ω → Sound (scanr a ω)
 			sound-scanr (start rs) s = s , sound-scanr₀ rs s
 			sound-scanr (step w rs) (s , s₁) = s , s₁ , sound-scanr₀ rs s₁
 		\end{code}
@@ -75,8 +75,8 @@
 		Next, we continue in a similar fashion for the complete step:
 
 		\begin{code}
-			sound-compl₀ : ∀ {u v w} (w : EState w v) ->
-			  Sound w -> (∀ {i} -> i ∈ compl₀ {u} {v} w -> Valid i)
+			sound-compl₀ : ∀ {u v w} (w : EState w v) →
+			  Sound w → (∀ {i} → i ∈ compl₀ {u} {v} w → Valid i)
 			sound-compl₀ {u} {v} w s p           with eq-T* u v
 			sound-compl₀ {v} {v} (start rs) s p  | yes refl = s
 			sound-compl₀ {v} {v} (step w rs) s p | yes refl = snd s
@@ -90,13 +90,13 @@
 		\codett{sound-compl₁} is more interesting:
 
 		\begin{code}
-			sound-compl₁ : ∀ {u v w} ->
-			  (i : Item w v) ->
-			  (p : Item.β i ≡ ε) ->
-			  (q : Item.u i ≡ u) ->
-			  (rs : Item w u *) ->
-			  Valid i -> (∀ {j} -> j ∈ rs -> Valid j) ->
-			  (∀ {j} -> j ∈ compl₁ i p rs -> Valid j)
+			sound-compl₁ : ∀ {u v w} →
+			  (i : Item w v) →
+			  (p : Item.β i ≡ ε) →
+			  (q : Item.u i ≡ u) →
+			  (rs : Item w u *) →
+			  Valid i → (∀ {j} → j ∈ rs → Valid j) →
+			  (∀ {j} → j ∈ compl₁ i p rs → Valid j)
 
 			sound-compl₁ i refl refl ε v f ()
 
@@ -125,11 +125,11 @@
 		The soundness proof for \codett{sound-compl₂} is then trivial:
 
 		\begin{code}
-			sound-compl₂ : ∀ {v w} ->
-			  (i : Item w v) ->
-			  (p : Item.β i ≡ ε) ->
-			  Valid i -> (ω : EState w v) -> Sound ω ->
-			  (∀ {j} -> j ∈ compl₂ i p ω -> Valid j)
+			sound-compl₂ : ∀ {v w} →
+			  (i : Item w v) →
+			  (p : Item.β i ≡ ε) →
+			  Valid i → (ω : EState w v) → Sound ω →
+			  (∀ {j} → j ∈ compl₂ i p ω → Valid j)
 			sound-compl₂ i p v ω s q =
 			  sound-compl₁ i p refl (compl₀ ω) v (sound-compl₀ ω s) q
 		\end{code}
@@ -148,20 +148,20 @@
 		signatures are shown below:
 
 		\begin{code}
-			sound-pred-comp₁ : ∀ {w v} (ω : EState w v) -> ∀ ss rs ->
-			  (∀ {i} -> i ∈ ss -> Valid i) ->
-			  (∀ {i} -> i ∈ rs -> Valid i) ->
-			  Sound ω -> (∀ {i} -> i ∈ pred-comp₁ ω ss rs -> Valid i)
+			sound-pred-comp₁ : ∀ {w v} (ω : EState w v) → ∀ ss rs →
+			  (∀ {i} → i ∈ ss → Valid i) →
+			  (∀ {i} → i ∈ rs → Valid i) →
+			  Sound ω → (∀ {i} → i ∈ pred-comp₁ ω ss rs → Valid i)
 		\end{code}
 
 		The definition of \codett{sound-pred-comp₂}, which does the iterative
 		refinement of items for each item set, looks a bit more complex:
 
 		\begin{code}
-			sound-pred-comp₂ : ∀ {w v} (ω : EState w v) -> ∀ ss rs m p q ->
-			  (∀ {i} -> i ∈ ss -> Valid i) ->
-			  (∀ {i} -> i ∈ rs -> Valid i) ->
-			  Sound ω -> Sound (pred-comp₂ ω ss rs m p q)
+			sound-pred-comp₂ : ∀ {w v} (ω : EState w v) → ∀ ss rs m p q →
+			  (∀ {i} → i ∈ ss → Valid i) →
+			  (∀ {i} → i ∈ rs → Valid i) →
+			  Sound ω → Sound (pred-comp₂ ω ss rs m p q)
 			sound-pred-comp₂ ω ss rs zero () q f g s
 			sound-pred-comp₂ ω ss ε (suc m) p q f g s = soundₙ ω f s
 			sound-pred-comp₂ ω ss rs@(r₁ ∷ _) (suc m) p q f g s =
@@ -183,16 +183,16 @@
 		soundness in the same way:
 
 		\begin{code}
-			sound-pred-comp : ∀ {w v} {ω : EState w v} ->
-			  Sound ω -> Sound (pred-comp ω)
+			sound-pred-comp : ∀ {w v} {ω : EState w v} →
+			  Sound ω → Sound (pred-comp ω)
 
-			sound-step₀ : ∀ {w a v} {ω : EState w (a ∷ v)} ->
-			  Sound ω -> Sound (step₀ ω)
+			sound-step₀ : ∀ {w a v} {ω : EState w (a ∷ v)} →
+			  Sound ω → Sound (step₀ ω)
 
-			sound-parse₀ : ∀ {w v} -> {ω : EState w v} ->
-			  Sound ω -> Sound (parse₀ ω)
+			sound-parse₀ : ∀ {w v} → {ω : EState w v} →
+			  Sound ω → Sound (parse₀ ω)
 
-			sound-parse : ∀ w -> Sound (parse w)
+			sound-parse : ∀ w → Sound (parse w)
 		\end{code}
 
 		Which concludes the soundness proof for our Earley implementation.
@@ -209,15 +209,15 @@
 		We will begin with a definition of completeness for item sets:
 
 		\begin{code}
-			_≋_ : ∀ {t u v X α β} -> Item t v -> G ∙ t ⊢ u / v ⟶* X / α ∙ β -> Set
+			_≋_ : ∀ {t u v X α β} → Item t v → G ∙ t ⊢ u / v ⟶* X / α ∙ β → Set
 			_≋_ {t} {u} {v} {X} {α} {β} i g =
 			  (Item.Y i , Item.u i , Item.α i , Item.β i) ≡ (X , u , α , β)
 
-			Complete₀ : ∀ {t v} -> Item t v * -> Set
-			Complete₀ {t} {v} rs = ∀ {u Y α β} ->
-			  (i : Item t v) ->
-			  (g : G ∙ t ⊢ u / v ⟶* Y / α ∙ β) ->
-			  i ≋ g ->
+			Complete₀ : ∀ {t v} → Item t v * → Set
+			Complete₀ {t} {v} rs = ∀ {u Y α β} →
+			  (i : Item t v) →
+			  (g : G ∙ t ⊢ u / v ⟶* Y / α ∙ β) →
+			  i ≋ g →
 			  i ∈ rs
 		\end{code}
 
@@ -234,10 +234,10 @@
 
 		\begin{code}
 			mutual
-			  Complete : ∀ {v w} -> EState w v -> Set
+			  Complete : ∀ {v w} → EState w v → Set
 			  Complete ω = Complete₀ (Sₙ ω) × Complete* ω
 
-			  Complete* : ∀ {v w} -> EState w v -> Set
+			  Complete* : ∀ {v w} → EState w v → Set
 			  Complete* (start rs) = ⊤
 			  Complete* (step ω rs) = Complete ω
 		\end{code}
@@ -253,22 +253,22 @@
 		several peices and discuss them separately:
 
 		\begin{code}
-			complete-ind : ∀ {t v a} ->
-			  (Σ λ u -> u ++ (a ∷ v) ≡ t) ∣ v ≡ t ->
-			  {P : Item t v -> Set} ->
+			complete-ind : ∀ {t v a} →
+			  (Σ λ u → u ++ (a ∷ v) ≡ t) ∣ v ≡ t →
+			  {P : Item t v → Set} →
 
-			  (∀ {u X α β} ->
-			    (g : G ∙ t ⊢ u / a ∷ v ⟶* X / α ∙ r a ∷ β) ->
-			    (i : Item t v) -> (i ≋ scanner g) ->
+			  (∀ {u X α β} →
+			    (g : G ∙ t ⊢ u / a ∷ v ⟶* X / α ∙ r a ∷ β) →
+			    (i : Item t v) → (i ≋ scanner g) →
 			    P i
-			  ) ->
+			  ) →
 
-			  (∀ {β} ->
-			    (z : t ≡ v) ->
-			    (x : (CFG.start G , β) ∈ CFG.rules G) ->
-			    (i : Item v v) ->
-			    i ≋ initial x -> eq-prop P i z
-			  ) ->
+			  (∀ {β} →
+			    (z : t ≡ v) →
+			    (x : (CFG.start G , β) ∈ CFG.rules G) →
+			    (i : Item v v) →
+			    i ≋ initial x → eq-prop P i z
+			  ) →
 		\end{code}
 
 		To begin with, the original input string $t$, and its current remainder
@@ -294,20 +294,20 @@
 		Continuing on, we have:
 
 		\begin{code}
-			  (∀ {u X Y α β δ} (x : (Y , δ) ∈ CFG.rules G) ->
-			    (i j : Item t v) ->
-			    (g : G ∙ t ⊢ u / v ⟶* X / α ∙ l Y ∷ β) ->
-			    (i ≋ g) -> P i ->
-			    (j ≋ predict x g) -> P j
-			  ) ->
+			  (∀ {u X Y α β δ} (x : (Y , δ) ∈ CFG.rules G) →
+			    (i j : Item t v) →
+			    (g : G ∙ t ⊢ u / v ⟶* X / α ∙ l Y ∷ β) →
+			    (i ≋ g) → P i →
+			    (j ≋ predict x g) → P j
+			  ) →
 
-			  (∀ {u w X Y α β γ} ->
-			    (j k : Item t v) ->
-			    (g : G ∙ t ⊢ u / w ⟶* X / α ∙ l Y ∷ β) ->
-			    (h : G ∙ t ⊢ w / v ⟶* Y / γ ∙ ε) ->
-			    (j ≋ h) -> P j ->
-			    (k ≋ complet g h) -> P k
-			  ) ->
+			  (∀ {u w X Y α β γ} →
+			    (j k : Item t v) →
+			    (g : G ∙ t ⊢ u / w ⟶* X / α ∙ l Y ∷ β) →
+			    (h : G ∙ t ⊢ w / v ⟶* Y / γ ∙ ε) →
+			    (j ≋ h) → P j →
+			    (k ≋ complet g h) → P k
+			  ) →
 		\end{code}
 
 		These arguments fill a similar function as the previous two, but for
@@ -318,10 +318,10 @@
 		proof.
 
 		\begin{code}
-			  (∀ {u X α β} ->
-			    (g : G ∙ t ⊢ u / v ⟶* X / α ∙ β) ->
-			    (i : Item t v) ->
-			    i ≋ g ->
+			  (∀ {u X α β} →
+			    (g : G ∙ t ⊢ u / v ⟶* X / α ∙ β) →
+			    (i : Item t v) →
+			    i ≋ g →
 			    P i
 			  )
 
@@ -329,7 +329,7 @@
 			  ini refl x i refl
 
 			complete-ind {a} s f ini h c (scanner g) i p =
-			  case test₀ s g of λ {refl -> f g i p}
+			  case test₀ s g of λ {refl → f g i p}
 
 			complete-ind s f ini h c (predict x g) i p =
 			  let x₁ = complete-ind s f ini h c g _ refl in
@@ -373,14 +373,14 @@
 		being \codett{Inert}.
 
 		\begin{code}
-			Inert : ∀ {t v} -> Item t v * -> Item t v * -> Set
+			Inert : ∀ {t v} → Item t v * → Item t v * → Set
 			Inert {t} {v} ss rs =
-			  ∀ {u X Y α β δ} ->
-			  (x : (Y , δ) ∈ CFG.rules G) ->
-			  (i j : Item t v) ->
-			  (g : G ∙ t ⊢ u / v ⟶* X / α ∙ l Y ∷ β) ->
-			  i ≋ g -> i ∈ ss ->
-			  j ≋ predict x g ->
+			  ∀ {u X Y α β δ} →
+			  (x : (Y , δ) ∈ CFG.rules G) →
+			  (i j : Item t v) →
+			  (g : G ∙ t ⊢ u / v ⟶* X / α ∙ l Y ∷ β) →
+			  i ≋ g → i ∈ ss →
+			  j ≋ predict x g →
 			    j ∈ (rs ++ ss)
 		\end{code}
 
@@ -392,8 +392,8 @@
 		preserves inertness:
 
 		\begin{code}
-			inert' : ∀ {t v rs ss} (ω : EState t v) ->
-			  Inert ss rs -> Inert (rs ++ ss) (pred-comp₁ ω ss rs \\ (rs ++ ss))
+			inert' : ∀ {t v rs ss} (ω : EState t v) →
+			  Inert ss rs → Inert (rs ++ ss) (pred-comp₁ ω ss rs \\ (rs ++ ss))
 		\end{code}
 
 		This then makes completeness for \codett{pred-comp₂} predicted items
@@ -402,16 +402,16 @@
 		only the type of the proof is shown here:
 
 		\begin{code}
-			complete₁-pred-comp₂ : ∀ {t v} -> ∀ ss rs m p q ->
-			  (ω : EState t v) ->
-			  Inert ss rs ->
+			complete₁-pred-comp₂ : ∀ {t v} → ∀ ss rs m p q →
+			  (ω : EState t v) →
+			  Inert ss rs →
 			  ∀ {u X Y α β δ}
-			  (x : (Y , δ) ∈ CFG.rules G) ->
-			  (i j : Item t v) ->
-			  (g : G ∙ t ⊢ u / v ⟶* X / α ∙ l Y ∷ β) ->
-			  i ≋ g ->
-			  i ∈ Sₙ (pred-comp₂ ω ss rs m p q) ->
-			  j ≋ predict x g ->
+			  (x : (Y , δ) ∈ CFG.rules G) →
+			  (i j : Item t v) →
+			  (g : G ∙ t ⊢ u / v ⟶* X / α ∙ l Y ∷ β) →
+			  i ≋ g →
+			  i ∈ Sₙ (pred-comp₂ ω ss rs m p q) →
+			  j ≋ predict x g →
 			    j ∈ Sₙ (pred-comp₂ ω ss rs m p q)
 		\end{code}
 
@@ -419,14 +419,14 @@
 		arguments to \codett{complete-ind}:
 
 		\begin{code}
-			Inert₂ : ∀ {t v} -> Item t v * -> Item t v * -> Set
+			Inert₂ : ∀ {t v} → Item t v * → Item t v * → Set
 			Inert₂ {t} {v} ss rs =
-			  ∀ {u w X Y α β γ} ->
-			  (j k : Item t v) ->
-			  (g : G ∙ t ⊢ u / w ⟶* X / α ∙ l Y ∷ β) ->
-			  (h : G ∙ t ⊢ w / v ⟶* Y / γ ∙ ε) ->
-			  j ≋ h -> j ∈ ss ->
-			  k ≋ complet g h ->
+			  ∀ {u w X Y α β γ} →
+			  (j k : Item t v) →
+			  (g : G ∙ t ⊢ u / w ⟶* X / α ∙ l Y ∷ β) →
+			  (h : G ∙ t ⊢ w / v ⟶* Y / γ ∙ ε) →
+			  j ≋ h → j ∈ ss →
+			  k ≋ complet g h →
 			    k ∈ (rs ++ ss)
 		\end{code}
 
@@ -436,9 +436,9 @@
 		prediction:
 
 		\begin{code}
-			inert₂' : ∀ {t v rs ss} (ω : EState t v) ->
-			  Complete* ω ->
-			  Inert₂ ss rs ->
+			inert₂' : ∀ {t v rs ss} (ω : EState t v) →
+			  Complete* ω →
+			  Inert₂ ss rs →
 			  Inert₂ (rs ++ ss) (pred-comp₁ ω ss rs \\ (rs ++ ss))
 			inert₂' {rs = ε} {ss} ω c it x i j g z₁ z₂ z₃ = it x i j g z₁ z₂ z₃
 			inert₂' {rs = rs@(r₁ ∷ rs₀)} {ss} ω c it x i j g z₁ z₂ z₃ =
@@ -455,30 +455,30 @@
 		extra book-keeping being nessacary.
 
 		\begin{code}
-			complete₂-pred-comp₂ : ∀ {t v} -> ∀ ss rs m p q ->
-			  (ω : EState t v) ->
-			  Complete* ω ->
-			  Inert₂ ss rs ->
+			complete₂-pred-comp₂ : ∀ {t v} → ∀ ss rs m p q →
+			  (ω : EState t v) →
+			  Complete* ω →
+			  Inert₂ ss rs →
 			  ∀ {u w X Y α β γ}
-			  (j k : Item t v) ->
-			  (g : G ∙ t ⊢ u / w ⟶* X / α ∙ l Y ∷ β) ->
-			  (h : G ∙ t ⊢ w / v ⟶* Y / γ ∙ ε) ->
-			  j ≋ h -> j ∈ Sₙ (pred-comp₂ ω ss rs m p q) ->
-			  k ≋ complet g h ->
+			  (j k : Item t v) →
+			  (g : G ∙ t ⊢ u / w ⟶* X / α ∙ l Y ∷ β) →
+			  (h : G ∙ t ⊢ w / v ⟶* Y / γ ∙ ε) →
+			  j ≋ h → j ∈ Sₙ (pred-comp₂ ω ss rs m p q) →
+			  k ≋ complet g h →
 			    k ∈ Sₙ (pred-comp₂ ω ss rs m p q)
 		\end{code}
 
 		What remains to be shown is then that the scanning step is complete:
 
 		\begin{code}
-			complete-scanner : ∀ {t u v X α β} -> ∀ a ->
-			  (ω : EState t (a ∷ v)) ->
-			  Complete ω ->
-			  (i : Item t (a ∷ v)) ->
-			  (j : Item t v) ->
-			  (g : G ∙ t ⊢ u / a ∷ v ⟶* X / α ∙ r a ∷ β) ->
-			  i ≋ g ->
-			  j ≋ scanner g ->
+			complete-scanner : ∀ {t u v X α β} → ∀ a →
+			  (ω : EState t (a ∷ v)) →
+			  Complete ω →
+			  (i : Item t (a ∷ v)) →
+			  (j : Item t v) →
+			  (g : G ∙ t ⊢ u / a ∷ v ⟶* X / α ∙ r a ∷ β) →
+			  i ≋ g →
+			  j ≋ scanner g →
 			    j ∈ Sₙ (scanner a ω)
 		\end{code}
 
@@ -486,10 +486,10 @@
 		current item set be the first one):
 
 		\begin{code}
-			complete-itemize : ∀ w {β} ->
-			  (x : (CFG.start G , β) ∈ CFG.rules G) ->
-			  (i : Item w w) ->
-			  i ≋ initial x ->
+			complete-itemize : ∀ w {β} →
+			  (x : (CFG.start G , β) ∈ CFG.rules G) →
+			  (i : Item w w) →
+			  i ≋ initial x →
 			    i ∈ itemize w (lookup (CFG.start G) (CFG.rules G))
 		\end{code}
 
@@ -497,27 +497,27 @@
 		generating new item sets:
 
 		\begin{code}
-			complete-step : ∀ {a₀ a t v} ->
-			  (Σ λ u -> u ++ (a₀ ∷ a ∷ v) ≡ t) ∣ (a ∷ v) ≡ t ->
-			  (ω : EState t (a ∷ v)) ->
-			  Complete* ω ->
-			  (∀ {u X α β} ->
-			    (g : G ∙ t ⊢ u / a₀ ∷ a ∷ v ⟶* X / α ∙ r a₀ ∷ β) ->
-			    (i : Item t (a ∷ v)) -> (i ≋ scanner g) ->
+			complete-step : ∀ {a₀ a t v} →
+			  (Σ λ u → u ++ (a₀ ∷ a ∷ v) ≡ t) ∣ (a ∷ v) ≡ t →
+			  (ω : EState t (a ∷ v)) →
+			  Complete* ω →
+			  (∀ {u X α β} →
+			    (g : G ∙ t ⊢ u / a₀ ∷ a ∷ v ⟶* X / α ∙ r a₀ ∷ β) →
+			    (i : Item t (a ∷ v)) → (i ≋ scanner g) →
 			    i ∈ Sₙ ω
-			  ) ->
-			  (∀ {β} ->
-			    (z : t ≡ a ∷ v) ->
-			    (x : (CFG.start G , β) ∈ CFG.rules G) ->
-			    (i : Item (a ∷ v) (a ∷ v)) ->
-			    i ≋ initial x -> eq-prop (_∈ Sₙ ω) i z
-			  ) ->
-			  ∀ {u X α β} ->
-			  (i : Item t (a ∷ v)) ->
-			  (j : Item t v) ->
-			  (g : G ∙ t ⊢ u / a ∷ v ⟶* X / α ∙ r a ∷ β) ->
-			  i ≋ g ->
-			  j ≋ scanner g ->
+			  ) →
+			  (∀ {β} →
+			    (z : t ≡ a ∷ v) →
+			    (x : (CFG.start G , β) ∈ CFG.rules G) →
+			    (i : Item (a ∷ v) (a ∷ v)) →
+			    i ≋ initial x → eq-prop (_∈ Sₙ ω) i z
+			  ) →
+			  ∀ {u X α β} →
+			  (i : Item t (a ∷ v)) →
+			  (j : Item t v) →
+			  (g : G ∙ t ⊢ u / a ∷ v ⟶* X / α ∙ r a ∷ β) →
+			  i ≋ g →
+			  j ≋ scanner g →
 			    j ∈ Sₙ (step ω)
 			complete-step {a₀} {a} s ω c fx fx₂ i j g refl refl =
 			  let
@@ -529,21 +529,21 @@
 		completeness:
 
 		\begin{code}
-			complete-parse₀ : ∀ {a t v} ->
-			  (Σ λ u -> u ++ (a ∷ v) ≡ t) ∣ v ≡ t ->
-			  (ω : EState t v) ->
-			  Complete* ω ->
-			  (∀ {u X α β} ->
-			    (g : G ∙ t ⊢ u / a ∷ v ⟶* X / α ∙ r a ∷ β) ->
-			    (i : Item t v) -> (i ≋ scanner g) ->
+			complete-parse₀ : ∀ {a t v} →
+			  (Σ λ u → u ++ (a ∷ v) ≡ t) ∣ v ≡ t →
+			  (ω : EState t v) →
+			  Complete* ω →
+			  (∀ {u X α β} →
+			    (g : G ∙ t ⊢ u / a ∷ v ⟶* X / α ∙ r a ∷ β) →
+			    (i : Item t v) → (i ≋ scanner g) →
 			    i ∈ Sₙ ω
-			  ) ->
-			  (∀ {β} ->
-			    (z : t ≡ v) ->
-			    (x : (CFG.start G , β) ∈ CFG.rules G) ->
-			    (i : Item v v) ->
-			    i ≋ initial x -> eq-prop (_∈ Sₙ ω) i z
-			  ) ->
+			  ) →
+			  (∀ {β} →
+			    (z : t ≡ v) →
+			    (x : (CFG.start G , β) ∈ CFG.rules G) →
+			    (i : Item v v) →
+			    i ≋ initial x → eq-prop (_∈ Sₙ ω) i z
+			  ) →
 			  Complete (parse₀ ω)
 			complete-parse₀ {a₀} {t} {v = ε} k ω c fx fx₂ = complete-pred-comp k ω c fx fx₂
 			complete-parse₀ {a₀} {t} {v = a ∷ v} k ω c fx fx₂ =
@@ -568,7 +568,7 @@
 		show completeness of the \codett{parse} function:
 
 		\begin{code}
-			complete-parse : ∀ a₀ w ->
+			complete-parse : ∀ a₀ w →
 			  Complete (parse w)
 			complete-parse a₀ ε =
 			  complete-parse₀ {a = a₀} (r refl) (start (itemize ε (lookup _ _))) top
