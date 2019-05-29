@@ -141,9 +141,18 @@ module parser-sound (G : CFG) where
 
     (∀ {u w X Y α β γ} ->
       (j k : Item t v) ->
+      (w ≡ v -> Void) ->
       (g : G ∙ t ⊢ u / w ⟶* X / α ∙ l Y ∷ β) ->
       (h : G ∙ t ⊢ w / v ⟶* Y / γ ∙ ε) ->
       (j ≋ h) -> P j ->
+      (k ≋ complet g h) -> P k
+    ) ->
+
+    (∀ {u X Y α β γ} ->
+      (j k : Item t v) ->
+      (g : G ∙ t ⊢ u / v ⟶* X / α ∙ l Y ∷ β) ->
+      (h : G ∙ t ⊢ v / v ⟶* Y / γ ∙ ε) ->
+      (j ≋ g) -> P j ->
       (k ≋ complet g h) -> P k
     ) ->
 
@@ -153,19 +162,23 @@ module parser-sound (G : CFG) where
       i ≋ g ->
       P i
     )
-  complete-ind s f ini h c (initial x) i refl =
+  complete-ind s f ini h c d (initial x) i refl =
     ini refl x i refl
 
-  complete-ind {a} s f ini h c (scanner g) i p =
+  complete-ind {a} s f ini h c d (scanner g) i p =
     case test₀ s g of λ {refl -> f g i p}
 
-  complete-ind s f ini h c (predict x g) i p =
-    let x₁ = complete-ind s f ini h c g _ refl in
+  complete-ind s f ini h c d (predict x g) i p =
+    let x₁ = complete-ind s f ini h c d g _ refl in
     h x (_ ∘ _ ↦ _ ∘ _ [ in-g g ∘ suff-g₁ g ]) i g refl x₁ p
 
-  complete-ind s f ini h c (complet g g₁) i p =
-    let x₁ = complete-ind s f ini h c g₁ _ refl in
-    c (_ ∘ _ ↦ _ ∘ _ [ in-g g₁ ∘ suff-g₂ g ]) i g g₁ refl x₁ p
+  complete-ind s f ini h c d (complet {v = v} {w} g g₁) i p with eq-T* v w
+  complete-ind s f ini h c d (complet {v = v} {w} g g₁) i p | yes refl =
+    let x₁ = complete-ind s f ini h c d g _ refl in
+    d (_ ∘ _ ↦ _ ∘ _ [ in-g g ∘ suff-g₁ g ]) i g g₁ refl x₁ p
+  complete-ind s f ini h c d (complet {v = v} {w} g g₁) i p | no x =
+    let x₁ = complete-ind s f ini h c d g₁ _ refl in
+    c (_ ∘ _ ↦ _ ∘ _ [ in-g g₁ ∘ suff-g₂ g ]) i x g g₁ refl x₁ p
 
 --  complete-compl₂ : ∀ {t u v w X Y β γ} -> ∀ α .χ .ψ .χ₁ .ψ₁ ->
 --    (ω : WSet t w) ->
@@ -221,21 +234,116 @@ module parser-sound (G : CFG) where
     (g : G ∙ t ⊢ u / v ⟶* X / α ∙ l Y ∷ β) ->
     i ≋ g -> 
     j ≋ predict x g ->
-      j ∈ Σ.proj₁ (pred-comp₀ i ω)
-  complete₁-pred-comp₀ ω x i@(Y ∘ u ↦ α ∘ l Z ∷ β) j@(Z ∘ u₁ ↦ ε ∘ β₁ [ χ₁ ∘ ψ₁ ]) g refl refl =
+      j ∈ Σ.proj₁ (pred-comp₀ i refl ω)
+  complete₁-pred-comp₀ ω x i@(X ∘ u ↦ α ∘ l Z ∷ β) j g refl refl with elem decidₙ Z (nullable G)
+  complete₁-pred-comp₀ ω x i@(X ∘ u ↦ α ∘ l Z ∷ β) j g refl refl | yes d =
+    let i₁ = X ∘ u ↦ α ←∷ l Z ∘ β in
+    let x₁ = complete-predict₁ ω i j g x refl refl in
+    let rs₁ = Σ.proj₁ (pred-comp₀ i₁  refl ω) in
+    complete-deduplicate (i₁ ∷ (rs₁ ++ predict₁ i refl ω)) (in-r x₁)
+  complete₁-pred-comp₀ ω x i j@(Z ∘ u₁ ↦ ε ∘ β₁) g refl refl | no d =
     let x₁ = complete-predict₁ ω i j g x refl refl in
     complete-deduplicate (predict₁ i refl ω) x₁
 
+  complete₀-compl₀ : ∀ {t u v w X Y α β} ->
+    (ω : WSet t w) ->
+    Complete ω ->
+    (g : G ∙ t ⊢ u / v ⟶* X / α ∙ l Y ∷ β) ->
+    (Σ λ s -> s ++ w ≡ v) ->
+    (j : Item t v) ->
+    j ≋ g ->
+      j ∈ compl₀ ω
+  complete₀-compl₀ {t} {u} {v} {w} ω c g p j           with eq-T* v w
+  complete₀-compl₀ {t} {u} {v} {v} ω c g p j           | yes refl = fst c j g
+  complete₀-compl₀ {w} {u} {v} {w} (start rs) c g p j  | no x =
+    void (x (sym (constrained-eq p (suff-g₂ g))))
+  complete₀-compl₀ {t} {u} {v} {w} (step ω rs) c g p j | no x =
+    complete₀-compl₀ ω (snd c) g (suffix-with-ω (V ω) p (suff-g₂ g)) j
+
+  complete-compl₀ : ∀ {t u v w X Y α β} ->
+    (ω : WSet t w) ->
+    Complete* ω ->
+    (g : G ∙ t ⊢ u / v ⟶* X / α ∙ l Y ∷ β) ->
+    (Σ λ s -> s ++ w ≡ v) ->
+    (v ≡ w -> Void) ->
+    (j : Item t v) ->
+    j ≋ g ->
+      j ∈ compl₀ ω
+  complete-compl₀ {w} {u} {v} {w} (start rs) c g p q j s =
+    void (q (sym (constrained-eq p (suff-g₂ g))))
+  complete-compl₀ {t} {u} {v} {w} (step ω rs) c g p q j s with eq-T* v w
+  complete-compl₀ {t} {u} {v} {w} (step ω rs) c g p q j s | yes x = void (q x)
+  complete-compl₀ {t} {u} {v} {w} (step ω rs) c g p q j s | no x =
+    complete₀-compl₀ ω c g (suffix-with-ω (V ω) p (suff-g₂ g)) j s
+
+  complete-compl₁ : ∀ {t u v w X Y α β γ} -> ∀ rs ->
+    (i : Item t v) ->
+    (j k : Item t w) ->
+    (g : G ∙ t ⊢ u / v ⟶* X / α ∙ l Y ∷ β) ->
+    (h : G ∙ t ⊢ v / w ⟶* Y / γ ∙ ε) ->
+    i ≋ g -> 
+    (p : j ≋ h) ->
+    i ∈ rs ->
+    k ≋ complet g h ->
+      k ∈ compl₁ j (≋-β j h p) rs
+  complete-compl₁ ε i j k g h o p () s
+  complete-compl₁ ((Y ∘ u₁ ↦ α₁ ∘ ε) ∷ rs)       i j k g h refl refl (in-tail q) s =
+    complete-compl₁ rs i j k g h refl refl q s
+  complete-compl₁ ((Y ∘ u₁ ↦ α₁ ∘ r a ∷ β) ∷ rs) i j k g h refl refl (in-tail q) s =
+    complete-compl₁ rs i j k g h refl refl q s
+  complete-compl₁ ((Y ∘ u₁ ↦ α₁ ∘ l Z ∷ β) ∷ rs) i j k g h refl refl q s           with decidₙ (Item.Y j) Z
+  complete-compl₁ ((Y ∘ u₁ ↦ α₁ ∘ l Z ∷ β) ∷ rs) i j k g h refl refl in-head     s | no x = void (x refl)
+  complete-compl₁ ((Y ∘ u₁ ↦ α₁ ∘ l Z ∷ β) ∷ rs) i j k g h refl refl (in-tail q) s | no x =
+    complete-compl₁ rs i j k g h refl refl q s
+  complete-compl₁ ((Y ∘ u₁ ↦ α₁ ∘ l Z ∷ β) ∷ rs) i j k g h refl refl in-head  refl | yes refl = in-head
+  complete-compl₁ ((Y ∘ u₁ ↦ α₁ ∘ l Z ∷ β) ∷ rs) i j k g h refl refl (in-tail q) s | yes refl =
+    in-tail (complete-compl₁ rs i j k g h refl refl q s)
+
+  complete-compl₂ : ∀ {t u v w X Y α β γ} ->
+    (ω : WSet t w) ->
+    Complete* ω ->
+    (i j : Item t w) ->
+    (v ≡ w -> Void) ->
+    (g : G ∙ t ⊢ u / v ⟶* X / α ∙ l Y ∷ β) ->
+    (h : G ∙ t ⊢ v / w ⟶* Y / γ ∙ ε) ->
+    (p : i ≋ h) -> 
+    j ≋ complet g h ->
+      j ∈ compl₂ i (≋-β i h p) ω
+  complete-compl₂ ω c i j p g h refl s =
+    let x₁ = compl₀ ω in
+    let x₂ = complete-compl₀ ω c g (suff-g₃ h) p _ refl in
+    complete-compl₁ x₁ (_ ∘ _ ↦ _ ∘ _ [ in-g g ∘ suff-g₁ g ]) i j g h refl refl x₂ s
+
   complete₂-pred-comp₀ : ∀ {t u v w X Y α β γ} ->
     (ω : WSet t w) ->
+    Complete* ω ->
     (i j : Item t w) ->
+    (v ≡ w -> Void) ->
     (g : G ∙ t ⊢ u / v ⟶* X / α ∙ l Y ∷ β) ->
     (h : G ∙ t ⊢ v / w ⟶* Y / γ ∙ ε) ->
     i ≋ h -> 
     j ≋ complet g h ->
-      j ∈ Σ.proj₁ (pred-comp₀ i ω)
-  complete₂-pred-comp₀ ω i j g h refl refl =
-    complete-deduplicate (compl₂ i refl ω) {!!}
+      j ∈ Σ.proj₁ (pred-comp₀ i refl ω)
+  complete₂-pred-comp₀ {t} {u} {v} {w} {X} {Y} {α} {β} ω c i j n g h refl refl =
+    let x₁ = complete-compl₂ ω c _ _ n g h refl refl in
+    complete-deduplicate (compl₂ i refl ω) x₁
+
+  complete₃-pred-comp₀ : ∀ {t u v X Y α β γ} ->
+    (ω : WSet t v) ->
+    (i j : Item t v) ->
+    (g : G ∙ t ⊢ u / v ⟶* X / α ∙ l Y ∷ β) ->
+    (h : G ∙ t ⊢ v / v ⟶* Y / γ ∙ ε) ->
+    i ≋ g -> 
+    j ≋ complet g h ->
+      j ∈ Σ.proj₁ (pred-comp₀ i refl ω)
+  complete₃-pred-comp₀ {Y = Y} ω i j g h refl q with elem decidₙ Y (nullable G)
+  complete₃-pred-comp₀ {Y = Y} ω i@(_ ∘ _ ↦ α ∘ l Y ∷ β) j g h refl refl | yes x =
+    let i₁ = _ ∘ _ ↦ α ←∷ l Y ∘ _ [ v-step (Item.χ i) ∘ Item.ψ i ] in
+    let x₁ = pred-comp₀ i₁ refl ω in
+    let x₂ = predict₁ i refl ω in
+    complete-deduplicate (i₁ ∷ (Σ.proj₁ x₁ ++ x₂)) in-head
+  complete₃-pred-comp₀ {Y = Y} ω (_ ∘ _ ↦ _ ∘ .(l Y ∷ _)) j g h refl q | no x =
+    void (x (nullable-complete h))
 
   complete₁-pred-comp₁ : ∀ {t u v X Y α β δ ss} -> ∀ rs ->
     (ω : WSet t v)
@@ -246,10 +354,37 @@ module parser-sound (G : CFG) where
     i ∈ rs ->
     j ≋ predict x g ->
       j ∈ pred-comp₁ ω ss rs
-  complete₁-pred-comp₁ {ss = ss} (i  ∷ rs) ω x i j g o in-head q =
-    in-l (complete₁-pred-comp₀ (Wₙ ω ss) x i j g o q)
-  complete₁-pred-comp₁ (r₁ ∷ rs) ω x i j g o (in-tail p) q =
-    in-r (complete₁-pred-comp₁ rs ω x i j g o p q)
+  complete₁-pred-comp₁ {ss = ss} (i  ∷ rs) ω x i j g o in-head q = in-l (complete₁-pred-comp₀ (Wₙ ω ss) x i j g o q)
+  complete₁-pred-comp₁ (r₁ ∷ rs) ω x i j g o (in-tail p) q = in-r (complete₁-pred-comp₁ rs ω x i j g o p q)
+
+  complete₂-pred-comp₁ : ∀ {t u v w X Y α β γ ss} -> ∀ rs ->
+    (ω : WSet t w) ->
+    Complete* ω ->
+    (i j : Item t w) ->
+    (v ≡ w -> Void) ->
+    (g : G ∙ t ⊢ u / v ⟶* X / α ∙ l Y ∷ β) ->
+    (h : G ∙ t ⊢ v / w ⟶* Y / γ ∙ ε) ->
+    i ≋ h -> 
+    i ∈ rs ->
+    j ≋ complet g h ->
+      j ∈ pred-comp₁ ω ss rs
+  complete₂-pred-comp₁ {ss = ss} .(i ∷ _) (start rs)  c i j n g h z₁ in-head z₃ = in-l (complete₂-pred-comp₀ (start ss) top i j n g h z₁ z₃)
+  complete₂-pred-comp₁ {ss = ss} .(i ∷ _) (step ω rs) c i j n g h z₁ in-head z₃ = in-l (complete₂-pred-comp₀ (step ω ss) c i j n g h z₁ z₃)
+  complete₂-pred-comp₁ {ss = ss} (_ ∷ rs) ω c i j n g h z₁ (in-tail z₂) z₃ = in-r (complete₂-pred-comp₁ rs ω c i j n g h z₁ z₂ z₃)
+
+  complete₃-pred-comp₁ : ∀ {t u v X Y α β γ ss} -> ∀ rs ->
+    (ω : WSet t v) ->
+    Complete* ω ->
+    (i j : Item t v) ->
+    (g : G ∙ t ⊢ u / v ⟶* X / α ∙ l Y ∷ β) ->
+    (h : G ∙ t ⊢ v / v ⟶* Y / γ ∙ ε) ->
+    i ≋ g -> 
+    i ∈ rs ->
+    j ≋ complet g h ->
+      j ∈ pred-comp₁ ω ss rs
+  complete₃-pred-comp₁ {ss = ss} .(i ∷ _) (start rs) c i j g h z₁ in-head z₃ = in-l (complete₃-pred-comp₀ (start ss) i j g h z₁ z₃)
+  complete₃-pred-comp₁ {ss = ss} .(i ∷ _) (step ω rs) c i j g h z₁ in-head z₃ = in-l (complete₃-pred-comp₀ (step ω ss) i j g h z₁ z₃)
+  complete₃-pred-comp₁ {ss = ss} (_ ∷ rs) ω c i j g h z₁ (in-tail z₂) z₃ = in-r (complete₃-pred-comp₁ rs ω c i j g h z₁ z₂ z₃)
 
   in-after : ∀ {v w} ->
     (i : Item w v) ->
@@ -365,6 +500,7 @@ module parser-sound (G : CFG) where
   Nx₂ {t} {v} ss rs =
     ∀ {u w X Y α β γ} ->
     (j k : Item t v) ->
+    (w ≡ v -> Void) ->
     (g : G ∙ t ⊢ u / w ⟶* X / α ∙ l Y ∷ β) ->
     (h : G ∙ t ⊢ w / v ⟶* Y / γ ∙ ε) ->
     j ≋ h -> j ∈ ss ->
@@ -376,12 +512,14 @@ module parser-sound (G : CFG) where
     Nx₂ ss rs ->
     Nx₂ (rs ++ ss) (pred-comp₁ ω ss rs \\ (rs ++ ss))
   nx₂' {rs = ε} {ss} ω c nx x i j g z₁ z₂ z₃ = nx x i j g z₁ z₂ z₃
-  nx₂' {rs = rs@(r₁ ∷ rs₀)} {ss} ω c nx x i j g z₁ z₂ z₃ =
+  nx₂' {t} {v} {rs = rs@(r₁ ∷ rs₀)} {ss} ω c nx {u} {w} j k n g h z₁ z₂ z₃ =
     case in-lr rs ss z₂ of
       λ { (r x₁) →
-        let x₁ = nx x i j g z₁ x₁ z₃  in
+        let x₁ = nx j k n g h z₁ x₁ z₃  in
         in-r x₁
-      ; (l x₁) → {!!}
+      ; (l x₁) →
+        let y₁ = complete₂-pred-comp₁ rs ω c j k n g h z₁ x₁ z₃ in
+        include-\\ y₁
       }
 
   complete₂-pred-comp₂ : ∀ {t v} -> ∀ ss rs m p q ->
@@ -390,18 +528,63 @@ module parser-sound (G : CFG) where
     Nx₂ ss rs ->
     ∀ {u w X Y α β γ}
     (j k : Item t v) ->
+    (w ≡ v -> Void) ->
     (g : G ∙ t ⊢ u / w ⟶* X / α ∙ l Y ∷ β) ->
     (h : G ∙ t ⊢ w / v ⟶* Y / γ ∙ ε) ->
     j ≋ h -> j ∈ Sₙ (pred-comp₂ ω ss rs m p q) ->
     k ≋ complet g h ->
       k ∈ Sₙ (pred-comp₂ ω ss rs m p q)
   complete₂-pred-comp₂ ss rs            zero    () q ω           c
-  complete₂-pred-comp₂ ss ε             (suc m) p  q (start rs)  c nx = nx
-  complete₂-pred-comp₂ ss ε             (suc m) p  q (step ω rs) c nx = nx
+  complete₂-pred-comp₂ ss ε             (suc m) p  q (start rs)  c nx = nx 
+  complete₂-pred-comp₂ ss ε             (suc m) p  q (step ω rs) c nx = nx 
   complete₂-pred-comp₂ ss rs@(r₁ ∷ rs₀) (suc m) p  q ω           c nx =
     let p₁ = wf-pcw₃ (Σ.proj₀ all-rules) p q in
     let q₁ = wf-pcw₂ (pred-comp₁ ω ss rs) (rs ++ ss) q in
     complete₂-pred-comp₂ (rs ++ ss) _ m p₁ q₁ ω c (nx₂' ω c nx)
+
+  Nx₄ : ∀ {t v} -> Item t v * -> Item t v * -> Set
+  Nx₄ {t} {v} ss rs =
+    ∀ {u X Y α β γ} ->
+    (j k : Item t v) ->
+    (g : G ∙ t ⊢ u / v ⟶* X / α ∙ l Y ∷ β) ->
+    (h : G ∙ t ⊢ v / v ⟶* Y / γ ∙ ε) ->
+    j ≋ g -> j ∈ ss ->
+    k ≋ complet g h ->
+      k ∈ (rs ++ ss)
+  
+  nx₄' : ∀ {t v rs ss} (ω : WSet t v) ->
+    Complete* ω ->
+    Nx₄ ss rs ->
+    Nx₄ (rs ++ ss) (pred-comp₁ ω ss rs \\ (rs ++ ss))
+  nx₄' {rs = ε} {ss} ω c nx x i j g z₁ z₂ z₃ = nx x i j g z₁ z₂ z₃
+  nx₄' {t} {v} {rs = rs@(r₁ ∷ rs₀)} {ss} ω c nx {u} {w} j k g h z₁ z₂ z₃ =
+    case in-lr rs ss z₂ of
+      λ { (r x₁) →
+        let x₁ = nx j k g h z₁ x₁ z₃  in
+        in-r x₁
+      ; (l x₁) →
+        let y₁ = complete₃-pred-comp₁ rs ω c j k g h z₁ x₁ z₃ in
+        include-\\ y₁
+      }
+
+  complete₄-pred-comp₂ : ∀ {t v} -> ∀ ss rs m p q ->
+    (ω : WSet t v) ->
+    Complete* ω ->
+    Nx₄ ss rs ->
+    ∀ {u X Y α β γ}
+    (j k : Item t v) ->
+    (g : G ∙ t ⊢ u / v ⟶* X / α ∙ l Y ∷ β) ->
+    (h : G ∙ t ⊢ v / v ⟶* Y / γ ∙ ε) ->
+    j ≋ g -> j ∈ Sₙ (pred-comp₂ ω ss rs m p q) ->
+    k ≋ complet g h ->
+      k ∈ Sₙ (pred-comp₂ ω ss rs m p q)
+  complete₄-pred-comp₂ ss rs            zero    () q ω           c
+  complete₄-pred-comp₂ ss ε             (suc m) p  q (start rs)  c nx = nx
+  complete₄-pred-comp₂ ss ε             (suc m) p  q (step ω rs) c nx = nx
+  complete₄-pred-comp₂ ss rs@(r₁ ∷ rs₀) (suc m) p  q ω           c nx =
+    let p₁ = wf-pcw₃ (Σ.proj₀ all-rules) p q in
+    let q₁ = wf-pcw₂ (pred-comp₁ ω ss rs) (rs ++ ss) q in
+    complete₄-pred-comp₂ (rs ++ ss) _ m p₁ q₁ ω c (nx₄' ω c nx)
 
   complete-pred-comp₂ : ∀ {a t v ss rs m p q} ->
     (Σ λ u -> u ++ (a ∷ v) ≡ t) ∣ v ≡ t ->
@@ -409,6 +592,7 @@ module parser-sound (G : CFG) where
     Complete* ω ->
     Nx ss rs ->
     Nx₂ ss rs ->
+    Nx₄ ss rs ->
     (∀ {u X α β} ->
       (g : G ∙ t ⊢ u / a ∷ v ⟶* X / α ∙ r a ∷ β) ->
       (i : Item t v) -> (i ≋ scanner g) ->
@@ -424,13 +608,14 @@ module parser-sound (G : CFG) where
     (g : G ∙ t ⊢ u / v ⟶* X / α ∙ β) ->
     (i : Item t v) ->
     i ≋ g -> i ∈ Sₙ (pred-comp₂ ω ss rs m p q)
-  complete-pred-comp₂ {a} {t} {v} {ss} {rs} {m} {p} {q} h ω c nx nx₂ s u g i e =
+  complete-pred-comp₂ {a} {t} {v} {ss} {rs} {m} {p} {q} h ω c nx nx₂ nx₄ s u g i e =
     complete-ind {P = λ i -> i ∈ Sₙ (pred-comp₂ ω ss rs m p q)}
       h
       s
       u 
       (complete₁-pred-comp₂ ss rs m p q ω nx)
       (complete₂-pred-comp₂ ss rs m p q ω c nx₂)
+      (complete₄-pred-comp₂ ss rs m p q ω c nx₄)
       g i e
 
   complete₀-pred-comp : ∀ {a t v} ->
@@ -439,6 +624,7 @@ module parser-sound (G : CFG) where
     Complete* ω ->
     Nx ε (Σ.proj₁ (deduplicate (Sₙ ω))) ->
     Nx₂ ε (Σ.proj₁ (deduplicate (Sₙ ω))) ->
+    Nx₄ ε (Σ.proj₁ (deduplicate (Sₙ ω))) ->
     (∀ {u X α β} ->
       (g : G ∙ t ⊢ u / a ∷ v ⟶* X / α ∙ r a ∷ β) ->
       (i : Item t v) -> (i ≋ scanner g) ->
@@ -454,10 +640,10 @@ module parser-sound (G : CFG) where
     (g : G ∙ t ⊢ u / v ⟶* X / α ∙ β) ->
     (i : Item t v) ->
     i ≋ g -> i ∈ Sₙ (pred-comp ω)
-  complete₀-pred-comp {a} {t} s ω c nx nx₂ fx fx₂ g i p =
+  complete₀-pred-comp {a} {t} s ω c nx nx₂ nx₄ fx fx₂ g i p =
     let x₁ = deduplicate (Sₙ ω) in
     let x₂ = (unique-++ (Σ.proj₁ x₁) ε (Σ.proj₀ x₁) u-ε λ ()) in
-    complete-pred-comp₂ {p = ≤ₛ (≤-self _)} {q = x₂} s ω c nx nx₂
+    complete-pred-comp₂ {p = ≤ₛ (≤-self _)} {q = x₂} s ω c nx nx₂ nx₄
       (λ g₁ i₁ x → complete₁₁-pred-comp₂ {p = ≤ₛ (≤-self _)} {q = x₂} ω i₁ (fx g₁ i₁ x))
       (λ {refl x i₁ x₃ → complete₁₁-pred-comp₂ {p = ≤ₛ (≤-self _)} {q = x₂} ω i₁ (fx₂ refl x i₁ x₃)})
       g i p
@@ -514,7 +700,7 @@ module parser-sound (G : CFG) where
     Complete (pred-comp ω)
   complete-pred-comp {a} {t} s ω c fx fx₂ =
     let
-      x₅ = complete₀-pred-comp s ω c (λ x i j g x₁ ()) (λ j k g h x ())
+      x₅ = complete₀-pred-comp s ω c (λ x i j g x₁ ()) (λ j k n g h x ()) (λ j k g h x ())
         (λ {g i x → complete-deduplicate (Sₙ ω) (fx g i x)})
         λ {refl x i x₁ → complete-deduplicate (Sₙ ω) (fx₂ refl x i x₁)}
     in

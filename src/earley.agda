@@ -228,13 +228,20 @@ module parser (G : CFG) where
   deduplicate (x ∷ as) | yes x₁ = deduplicate as
   deduplicate (x ∷ as) | no x₁ = σ (x ∷ (Σ.proj₁ (deduplicate as))) (u-∷ (Σ.proj₀ (deduplicate as)) x₁)
 
-  pred-comp₀ : ∀ {v w} ->
+  pred-comp₀ : ∀ {v w β} -> 
     (i : Item w v) ->
+    (β ≡ Item.β i) ->
     (ω : WSet w v) ->
     Σ {Item w v *} λ as -> Unique as
-  pred-comp₀ i@(X ∘ u ↦ α ∘ ε) w = deduplicate (compl₂ i refl w)
-  pred-comp₀ i@(X ∘ u ↦ α ∘ r a ∷ β) w = σ ε u-ε
-  pred-comp₀ i@(X ∘ u ↦ α ∘ l Y ∷ β) w = deduplicate (predict₁ i refl w)
+  pred-comp₀ i@(X ∘ u ↦ α ∘ ε) refl ω = deduplicate (compl₂ i refl ω)
+  pred-comp₀ i@(X ∘ u ↦ α ∘ r a ∷ β) refl ω = σ ε u-ε
+  pred-comp₀ i@(X ∘ u ↦ α ∘ l Y ∷ β) refl ω with elem decidₙ Y (nullable G)
+  pred-comp₀ i@(X ∘ u ↦ α ∘ l Y ∷ β) refl ω | no x = deduplicate (predict₁ i refl ω)
+  pred-comp₀ i@(X ∘ u ↦ α ∘ l Y ∷ β) refl ω | yes x =
+    let i₁ = X ∘ u ↦ α ←∷ l Y ∘ β [ v-step (Item.χ i) ∘ Item.ψ i ] in
+    let x₁ = pred-comp₀ i₁ refl ω in
+    let x₂ = predict₁ i refl ω in
+    deduplicate (i₁ ∷ (Σ.proj₁ x₁ ++ x₂))
 
   pred-comp₁ : {w n : T *} ->
     (ω : WSet w n) ->
@@ -243,7 +250,7 @@ module parser (G : CFG) where
     Item w n *
   pred-comp₁ ω ss ε = ε
   pred-comp₁ ω ss (r₁ ∷ rs) =
-    let x₁ = pred-comp₀ r₁ (Wₙ ω ss) in
+    let x₁ = pred-comp₀ r₁ refl (Wₙ ω ss) in
     Σ.proj₁ x₁ ++ pred-comp₁ ω ss rs
 
   pred-comp₂ : {w n : T *} ->

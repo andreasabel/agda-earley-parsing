@@ -101,16 +101,51 @@ module parser-sound (G : CFG) where
   sound-deduplicate (x ∷ as) f in-head     | no x₁ = f in-head
   sound-deduplicate (x ∷ as) f (in-tail p) | no x₁ = sound-deduplicate as (f ∘ in-tail) p
 
+  sound-deduplicate₂ : ∀ {w v i} -> (as : Item w v *) ->
+    i ∈ Σ.proj₁ (deduplicate as) ->
+    i ∈ as
+  sound-deduplicate₂ ε ()
+  sound-deduplicate₂ (x ∷ as) p with elem eq-item x (Σ.proj₁ (deduplicate as))
+  sound-deduplicate₂ {w} {v} {i} (x ∷ as) p | yes x₁ = in-tail (sound-deduplicate₂ as p)
+  sound-deduplicate₂ {w} {v} {x} (x ∷ as) in-head | no x₁ = in-head
+  sound-deduplicate₂ {w} {v} {i} (x ∷ as) (in-tail p) | no x₁ = in-tail (sound-deduplicate₂ as p)
+
+  complete-deduplicate : ∀ {w v i} -> (as : Item w v *) -> i ∈ as -> i ∈ Σ.proj₁ (deduplicate as)
+  complete-deduplicate ε ()
+  complete-deduplicate (x ∷ as) p with elem eq-item x (Σ.proj₁ (deduplicate as))
+  complete-deduplicate (x ∷ as) in-head     | yes x₁ = x₁
+  complete-deduplicate (x ∷ as) (in-tail p) | yes x₁ = complete-deduplicate as p
+  complete-deduplicate (x ∷ as) in-head     | no x₁ = in-head
+  complete-deduplicate (x ∷ as) (in-tail p) | no x₁ = in-tail (complete-deduplicate as p)
+
   sound-pred-comp₀ : ∀ {u v w X α β} -> ∀ .χ .ψ
     (i : Item w v) -> (p : i ≡ (X ∘ u ↦ α ∘ β [ χ ∘ ψ ])) ->
     (w : WSet w v) ->
     Valid i -> Sound w ->
-    (∀ {j} -> j ∈ Σ.proj₁ (pred-comp₀ i w) -> Valid j)
+    (∀ {j} -> j ∈ Σ.proj₁ (pred-comp₀ i refl w) -> Valid j)
   sound-pred-comp₀ χ ψ i@(X ∘ u ↦ α ∘ ε) refl w v s q =
     sound-deduplicate (compl₂ i refl w) (sound-compl₂ i refl v w s) q
   sound-pred-comp₀ χ ψ i@(X ∘ u ↦ α ∘ r a ∷ β) refl w v s ()
-  sound-pred-comp₀ χ ψ i@(X ∘ u ↦ α ∘ l Y ∷ β) refl w v s q =
+  sound-pred-comp₀ χ ψ i@(X ∘ u ↦ α ∘ l Y ∷ β) refl w v s q with elem decidₙ Y (nullable G)
+  sound-pred-comp₀ χ ψ i@(X ∘ u ↦ α ∘ l Y ∷ β) refl w v s q | no x =
     sound-deduplicate (predict₁ i refl w) (sound-predict₁ i refl w v s) q
+  sound-pred-comp₀ χ ψ i@(X ∘ u ↦ α ∘ l Y ∷ β) refl w v s q | yes x =
+    let i₁ = X ∘ u ↦ α ←∷ l Y ∘ β in
+    let rs₁ = predict₁ i refl w in
+    let rs₂ = Σ.proj₁ (pred-comp₀ i₁ refl w) in
+    let q' = sound-deduplicate₂ (i₁ ∷ (rs₂ ++ rs₁)) q in
+    case in-lr (i₁ ∷ rs₂) rs₁ q' of
+      λ { (r x₁) →
+          let q'' = complete-deduplicate rs₁ x₁ in
+          sound-deduplicate (predict₁ i refl w) (sound-predict₁ i refl w v s) q''
+        ; (l in-head) →
+          let x₁ = nullable-sound x in
+          complet v (Σ.proj₀ x₁)
+        ; (l (in-tail x₁)) →
+          let y₀ = nullable-sound x in
+          let y₁ = complet v (Σ.proj₀ y₀) in
+          sound-pred-comp₀ {β = β} (v-step χ) ψ (X ∘ u ↦ α ←∷ l Y ∘ β) refl w y₁ s x₁
+        }
 
   soundₙ : ∀ {w v ss} (ω : WSet w v) ->
     (∀ {i} -> i ∈ ss -> Valid i) ->
