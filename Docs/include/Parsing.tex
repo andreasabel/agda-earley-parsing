@@ -6,13 +6,14 @@ open import base
 
 \chapter{Parsing} \label{Parsing}
 
-	Parsing is the process of analyzing the structure of a sequence of symbols
-	(called \emph{tokens}). This may simply consist of determining
-	(\emph{recognizing}) \emph{whether} a sequence conforms to a predefined
-	structure \todo{Avoid parenthesization!} (a \emph{grammar}), or to also
-	create a description (\emph{parsing}) of \emph{how} the sequence conforms
-	(resulting in a \emph{parse tree}).  For our purposes, the context-free
-	grammars describe the structures we are interested in.
+	Parsing is the process of analyzing the structure of a sequence of symbols,
+	which are often called \emph{tokens}. This may simply consist of
+	determining, or \emph{recognizing}, \emph{whether} a sequence conforms to a
+	predefined structure, called a \emph{grammar}, or to also create a
+	description of \emph{how} the sequence conforms. This deeper analysis is
+	called \emph{parsing}, and the resulting description is often a \emph{parse
+	tree}.  For our purposes, the context-free grammars describe the
+	structures we are interested in.
 
 	The context-free grammars are a class of grammars that can be described by
 	a set of production, or rewrite, rules on the form $X \mapsto \alpha$,
@@ -59,22 +60,24 @@ open import base
 		record CFG : Set where
 		  constructor _⟩_⟩_
 		  field
-		start : N
-		rules : (N × (N ∣ T)* )*
+		    start : N
+		    rules : (N × (N ∣ T)* )*
 	\end{code}
 
 	Here, type arguments \codett{N} and \codett{T} represent non-terminal and
 	terminal symbols, and the record type has two fields: a starting symbol,
-	and a set of rules for the grammar.  An example: A grammar \codett{ S ⟩ (S
-	, r s ∷ l S ∷ ε) ∷ (S , ε) ∷ ε ⟩ \_ } \todo{Explain \codett{l} and
-	\codett{r}!} will have conforming strings that either are empty, or start
-	with the token \emph{'s'} \todo{Font mismatch \emph{s} vs. \codett{s} is
-	very confusing here.  In general, make the fonts match, please!}
-	\todo{Quotation is `single' or ``double'' in TeX! Opening quotes are
-	different than closing ones!} followed by any sequence that conforms to the
-	\codett{S} non-terminal. The set of conforming sequences for this second
-	grammar is the set of (possibly empty) sequences only containing the token
-	\emph{'s'}.
+	and a set of rules for the grammar.  An example: consider the grammar
+	\codett{ S ⟩ (S , r s ∷ l S ∷ ε) ∷ (S , ε) ∷ ε ⟩ \_ }, where \codett{S} is
+	a nonterminal symbol, \codett{s} is a terminal symbol, and \codett{l} and
+	\codett{r} are the constructors for the left and right choice of our
+	optional type \codett{∣}. This grammak will have conforming strings that
+	either are empty, or start with the token \codett{s} followed by any
+	sequence that conforms to the \codett{S} non-terminal. The set of
+	conforming sequences for this second grammar is the set of (possibly empty)
+	sequences only containing the token \emph{'s'}.
+
+	% Quotation is `single' or ``double'' in TeX! Opening quotes are different
+	% than closing ones!
 
 	A formal definition of when a list of tokens conforms to a grammar is also
 	necessary. Here, we suggest for rules for when a sequence of symbols can be
@@ -118,29 +121,17 @@ open import base
 		infixr 10 _⊢_∈_
 		data _⊢_∈_ (G : CFG) :  T * → (N ∣ T) * → Set where
 		  empty :
-		G ⊢ ε ∈ ε
+		    G ⊢ ε ∈ ε
 
 		  concat : {u v : T *} {A : N} {α : (N ∣ T) *} →
-		G ⊢ u ∈ l A ∷ ε → G ⊢ v ∈ α → G ⊢ u ++ v ∈ l A ∷ α
+		    G ⊢ u ∈ l A ∷ ε → G ⊢ v ∈ α → G ⊢ u ++ v ∈ l A ∷ α
 
 		  term : {u : T *} {a : T} {α : (N ∣ T) *} →
-		G ⊢ u ∈ α → G ⊢ a ∷ u ∈ r a ∷ α
+		    G ⊢ u ∈ α → G ⊢ a ∷ u ∈ r a ∷ α
 
 		  nonterm : {A : N} {α : (N ∣ T) *} {u : T *} →
-		(A , α) ∈ CFG.rules G → G ⊢ u ∈ α → G ⊢ u ∈ l A ∷ ε
+		    (A , α) ∈ CFG.rules G → G ⊢ u ∈ α → G ⊢ u ∈ l A ∷ ε
 	\end{code}
-
-	\todo{
-
-		The concat rule, as the conc rule below, have the problem of being
-		non-productive in the sense that concat can be chained infinitely with
-		$\alpha = \varepsilon$.  This introduces needlessly ambiguity into the
-		parse trees even for non-ambiguous grammars.  I think Nils Anders
-		complained about this flaw following the mid-term evaluation.  The
-		natural thing would be to fuse nonterm into concat, or have a separate
-		judgement for $u \in A$.
-
-	}
 
 	Here, a proposition of the form \codett{G ⊢ u ∈ α} would mean that, given a
 	grammar \codett{G}, the sequence of tokens \codett{u} conforms to the
@@ -156,21 +147,21 @@ open import base
 		infixl 10 _⊢_/_∈_
 		data _⊢_/_∈_ (G : CFG) : T * → T * → (N ∣ T)* → Set where
 		  empt : {w : T *} →
-		G ⊢ w / w ∈ ε
+		    G ⊢ w / w ∈ ε
 
 		  conc : {u v w : T *} {X : N} {α : (N ∣ T) *} →
-		G ⊢ u / v ∈ l X ∷ ε →
-		G ⊢ v / w ∈ α →
-		G ⊢ u / w ∈ l X ∷ α
+		    G ⊢ u / v ∈ l X ∷ ε →
+		    G ⊢ v / w ∈ α →
+		    G ⊢ u / w ∈ l X ∷ α
 
 		  term : {a : T} {u v : T *} {α : (N ∣ T) *} →
-		G ⊢ u / v ∈ α →
-		G ⊢ a ∷ u / v ∈ r a ∷ α
+		    G ⊢ u / v ∈ α →
+		    G ⊢ a ∷ u / v ∈ r a ∷ α
 
 		  nont : {u v : T *} {X : N} {α : (N ∣ T) *} →
-		(X , α) ∈ CFG.rules G →
-		G ⊢ u / v ∈ α →
-		G ⊢ u / v ∈ l X ∷ ε
+		    (X , α) ∈ CFG.rules G →
+		    G ⊢ u / v ∈ α →
+		    G ⊢ u / v ∈ l X ∷ ε
 	\end{code}
 
 	Here, a proposition of the form \codett{G ⊢ v / w ∈ α} would mean that,
@@ -193,16 +184,16 @@ open import base
 		sound₀ (nonterm x a) = nont x (sound₀ a)
 		sound₀ (concat {v = v} a b) = conc (s (sound₀ a)) (sound₀ b)
 		  where
-		s : ∀ {u v w α G} →
-		  G ⊢ u / v ∈ α →
-		  G ⊢ u ++ w / v ++ w ∈ α
+		    s : ∀ {u v w α G} →
+		      G ⊢ u / v ∈ α →
+		      G ⊢ u ++ w / v ++ w ∈ α
 	\end{code}
 	\AgdaHide{\begin{code}
-		s empt = empt
-		s (conc (conc a empt) a₁) = s (conc a a₁)
-		s (conc (nont x a) a₁) = conc (nont x (s a)) (s a₁)
-		s (term a) = term (s a)
-		s (nont x a) = nont x (s a)
+		    s empt = empt
+		    s (conc (conc a empt) a₁) = s (conc a a₁)
+		    s (conc (nont x a) a₁) = conc (nont x (s a)) (s a₁)
+		    s (term a) = term (s a)
+		    s (nont x a) = nont x (s a)
 	\end{code}}
 
 	This proof is fairly simple: constructors \codett{empty}, \codett{term},
@@ -228,8 +219,8 @@ open import base
 	\AgdaHide{
 	\begin{code}
 		  where
-		p₁++q₁++v≡u =
-		  trans (trans (assoc-++ p₁ q₁ _) (sym (app (p₁ ++_) y₁))) (sym x₁)
+		    p₁++q₁++v≡u =
+		      trans (trans (assoc-++ p₁ q₁ _) (sym (app (p₁ ++_) y₁))) (sym x₁)
 	\end{code}}
 
 	One problem with these data types is that it is possible to construct
@@ -254,22 +245,19 @@ open import base
 		infixl 10 _⊢_∥_∈_
 		data _⊢_∥_∈_ (G : CFG) : T * → T * → (N ∣ T)* → Set where
 		  empt : {w : T *} →
-		G ⊢ w ∥ w ∈ ε
+		    G ⊢ w ∥ w ∈ ε
 
 		  conc : {u v w : T *} {X : N} {α β : (N ∣ T) *} →
-		(X , α) ∈ CFG.rules G →
-		G ⊢ u ∥ v ∈ α →
-		G ⊢ v ∥ w ∈ β →
-		  G ⊢ u ∥ w ∈ l X ∷ β
+		    (X , α) ∈ CFG.rules G →
+		    G ⊢ u ∥ v ∈ α →
+		    G ⊢ v ∥ w ∈ β →
+		      G ⊢ u ∥ w ∈ l X ∷ β
 
 		  term : {a : T} {u v : T *} {α : (N ∣ T) *} →
-		G ⊢ u ∥ v ∈ α →
-		  G ⊢ a ∷ u ∥ v ∈ r a ∷ α
+		    G ⊢ u ∥ v ∈ α →
+		      G ⊢ a ∷ u ∥ v ∈ r a ∷ α
 	\end{code}
 	
-	\todo{Why did you even introduce the problematic definition in the first
-	place?}
-
 	This data structure merges the concatenation and non-terminal constructors,
 	so that concatenation can only be performed when introducing a new
 	non-terminal. This ensures that each constructor makes progress and
@@ -277,3 +265,11 @@ open import base
 	complete with respect to the previous definitions, and the proofs for this
 	generally follows the same structure as the proofs between the previous two
 	types, and will therefore not be discussed in detail here.
+
+	Of course, we could have started with this definition for membership in a 
+	grammar, without relating it the earlier definitions. However, as these 
+	data types form the basis on which we construct the proof, it is important 
+	that they are sensible. Since it is also not possible to proove the 
+	correctness of definitions themselves, other than showing their equivalence 
+	to other models, we felt it worthwhile to discuss several variants of this 
+	definition.
