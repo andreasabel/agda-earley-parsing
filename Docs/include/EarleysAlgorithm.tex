@@ -131,20 +131,20 @@ open import grammar-mini N T
 		\begin{code}
 			data _∙_⊢_/_⟶*_/_∙_ (G : CFG) (input : T *) :
 			  (u v : T *) -> N -> (N ∣ T) * -> (N ∣ T) * -> Set where
-			
+
 			  initial : {α : (N ∣ T) *} ->
 			    (CFG.start G , α) ∈ CFG.rules G ->
 			      G ∙ input ⊢ input / input ⟶* CFG.start G / ε ∙ α
-			
+
 			  scanner : {u v : T *} {a : T} {X : N} {α β : (N ∣ T) *} ->
 			    G ∙ input ⊢ u / a ∷ v ⟶* X / α ∙ r a ∷ β ->
 			      G ∙ input ⊢ u / v ⟶* X / α ←∷ r a ∙ β
-			
+
 			  predict : {u v : T *} {X Y : N} {α β δ : (N ∣ T) *} ->
 			    CFG.rules G ∋ (Y , δ) ->
 			    G ∙ input ⊢ u / v ⟶* X / α ∙ l Y ∷ β ->
 			      G ∙ input ⊢ v / v ⟶* Y / ε ∙ δ
-			
+
 			  complet : {u v w : T *} {X Y : N} {α β γ : (N ∣ T) *} ->
 			    G ∙ input ⊢ u / v ⟶* X / α ∙ l Y ∷ β ->
 			    G ∙ input ⊢ v / w ⟶* Y / γ ∙ ε ->
@@ -169,7 +169,7 @@ open import grammar-mini N T
 			suff-g₃ (complet g g₁) with suff-g₃ g , suff-g₃ g₁
 			suff-g₃ (complet g g₁) | σ p₁ p₀ , σ q₁ q₀ =
 			  σ (p₁ ++ q₁) (trans (trans (assoc-++ p₁ _ _) (app (p₁ ++_) (sym q₀))) (sym p₀))
-			
+
 			suff-g₂ : ∀ {G t u v X α β} ->
 			  G ∙ t ⊢ u / v ⟶* X / α ∙ β ->
 			    Σ λ s -> s ++ v ≡ t
@@ -177,9 +177,9 @@ open import grammar-mini N T
 			suff-g₂ (predict x g) = suff-g₂ g
 			suff-g₂ (complet g g₁) = suff-g₂ g₁
 			suff-g₂ (scanner g) with suff-g₂ g
-			suff-g₂ (scanner {a = a} g) | σ p₁ p₀ = 
+			suff-g₂ (scanner {a = a} g) | σ p₁ p₀ =
 			  σ (p₁ ←∷ a) let x₁ = in₀ a p₁ _ in trans (sym x₁) (sym p₀)
-			
+
 			suff-g₁ : ∀ {G t u v X α β} ->
 			  G ∙ t ⊢ u / v ⟶* X / α ∙ β ->
 			    Σ λ s -> s ++ u ≡ t
@@ -276,14 +276,14 @@ open import grammar-mini N T
 			module parser (G : CFG) where
 			  open import count N T decidₙ decidₜ
 
-			  v-step : ∀ {Y α x β} -> 
+			  v-step : ∀ {Y α x β} ->
 			    CFG.rules G ∋ (Y , α ++ (x ∷ β)) -> CFG.rules G ∋ (Y , (α ←∷ x) ++ β)
-			  v-step {Y} {α} {x} {β} v = 
+			  v-step {Y} {α} {x} {β} v =
 			    in₂ (λ x → CFG.rules G ∋ (Y , x)) (in₀ x α β) v
-	
-			  v-unstep : ∀ {Y α x β} -> 
+
+			  v-unstep : ∀ {Y α x β} ->
 			    CFG.rules G ∋ (Y , (α ←∷ x) ++ β) -> CFG.rules G ∋ (Y , α ++ (x ∷ β))
-			  v-unstep {Y} {α} {x} {β} v = 
+			  v-unstep {Y} {α} {x} {β} v =
 			    in₂ (λ x → CFG.rules G ∋ (Y , x)) (sym (in₀ x α β)) v
 		\end{code}}
 
@@ -318,23 +318,23 @@ open import grammar-mini N T
 			  infixl 3 _∘_↦_∘_
 			  pattern _∘_↦_∘_[_∘_] Y u α β χ ψ = (Y ∘ u ↦ α ∘ β) {χ} {ψ}
 			  infixl 3 _∘_↦_∘_[_∘_]
-			
+
 			  eq-α :
 			    (a b : (N ∣ T)*) ->
 			    a ≡ b ??
 			  eq-α = eq-* (eq-∣ decidₙ decidₜ)
-			
+
 			  eq-T* : (a b : T *) -> a ≡ b ??
 			  eq-T* = eq-* decidₜ
-			
+
 			  eq-rule : (a b : N × (N ∣ T) *) -> a ≡ b ??
 			  eq-rule = eq-× decidₙ eq-α
-			
+
 			  eq-item : ∀ {w v} -> (a b : Item w v) -> a ≡ b ??
 			  eq-item (X ∘ i ↦ α ∘ β) (Y ∘ j ↦ γ ∘ δ) with eq-×₄ decidₙ eq-T* eq-α eq-α (X , i , α , β) (Y , j , γ , δ)
 			  eq-item (X ∘ i ↦ α ∘ β) (X ∘ i ↦ α ∘ β) | yes refl = yes refl
 			  eq-item (X ∘ i ↦ α ∘ β) (Y ∘ j ↦ γ ∘ δ) | no x = no λ {refl → x refl}
-			
+
 			  open Unique Item eq-item
 		\end{code}}
 
@@ -357,19 +357,19 @@ open import grammar-mini N T
 			    Σ λ t -> t ++ v ≡ w
 			  V {w} {w} (start rs) = σ ε refl
 			  V {w} {v} (step ω rs) with V ω
-			  V {w} {v} (step {a} ω rs) | σ p₁ p₀ = 
+			  V {w} {v} (step {a} ω rs) | σ p₁ p₀ =
 			    σ (p₁ ←∷ a) (trans (sym (in₀ a p₁ v)) (sym p₀))
-			
+
 			  -- Get the latest state.
-			
+
 			  Sₙ : {w v : T *} ->
 			    EState w v ->
 			    Item w v *
 			  Sₙ (start rs) = rs
 			  Sₙ (step w rs) = rs
-			
+
 			  -- Replace the latest state.
-			
+
 			  Wₙ : {w v : T *} ->
 			    (ω : EState w v) ->
 			    (rs : Item w v *) ->
@@ -405,7 +405,7 @@ open import grammar-mini N T
 			  scanr₀ a ((X ∘ u ↦ α ∘ r b ∷ β [ χ ∘ ψ ]) ∷ rs) with decidₜ a b
 			  ... | yes refl = (X ∘ u ↦ α ←∷ r a ∘ β [ v-step χ ∘ ψ ]) ∷ (scanr₀ a rs)
 			  ... | no x = scanr₀ a rs
-			
+
 			  scanr : {w v : T *} ->
 			    (a : T) ->
 			    EState w (a ∷ v) ->
@@ -432,7 +432,7 @@ open import grammar-mini N T
 			  compl₀ {u} {u} w           | yes refl = Sₙ w
 			  compl₀ {u} {v} (start rs)  | no x = ε
 			  compl₀ {u} {v} (step w rs) | no x = compl₀ w
-			
+
 			  compl₁ : ∀ {u v w} ->
 			    (i : Item w v) -> Item.β i ≡ ε ->
 			    Item w u * -> Item w v *
@@ -443,9 +443,9 @@ open import grammar-mini N T
 			  compl₁ i@(X ∘ u ↦ α ∘ ε) refl ((Y ∘ u₁ ↦ α₁ ∘ l Z ∷ β) ∷ rs) | no x = compl₁ i refl rs
 			  compl₁ i@(X ∘ u ↦ α ∘ ε) refl ((Y ∘ u₁ ↦ α₁ ∘ l X ∷ β [ χ₁ ∘ ψ₁ ]) ∷ rs) | yes refl =
 			    (Y ∘ u₁ ↦ α₁ ←∷ l X ∘ β [ v-step χ₁ ∘ ψ₁ ]) ∷ compl₁ i refl rs
-			
+
 			  -- For a completed item X ↦ α.ε, get the set of possible ancestors (callers).
-			
+
 		\end{code}}
 		\begin{code}
 			  compl : ∀ {v w} ->
@@ -454,7 +454,7 @@ open import grammar-mini N T
 		\end{code}
 		\AgdaHide{\begin{code}
 			  compl i p ω = compl₁ {u = Item.u i} i p (compl₀ ω)
-			
+
 			  predict₀ : ∀ {v w Y β} ->
 			    (Σ λ t -> t ++ v ≡ w) ->
 			    (i : Item w v) -> Item.β i ≡ l Y ∷ β ->
@@ -463,7 +463,7 @@ open import grammar-mini N T
 			  predict₀ ψ₁ i p ε = ε
 			  predict₀ {v} ψ₁ i@(X ∘ u ↦ α ∘ l Y ∷ β) refl (σ (Y , γ) (p , refl) ∷ ps) =
 			    (Y ∘ v ↦ ε ∘ γ [ p ∘ ψ₁ ]) ∷ predict₀ ψ₁ i refl ps
-			
+
 		\end{code}}
 		\begin{code}
 			  predic : ∀ {v w Y β} ->
@@ -474,12 +474,12 @@ open import grammar-mini N T
 		\AgdaHide{\begin{code}
 			  predic i@(X ∘ u ↦ α ∘ l Y ∷ β) refl ω =
 			    predict₀ (V ω) i refl (lookup Y (CFG.rules G))
-			
+
 			  deduplicate : ∀ {w v} -> Item w v * -> Σ λ as -> Unique as
 			  deduplicate ε = σ ε u-ε
 			  deduplicate (x ∷ as) with elem eq-item x (Σ.proj₁ (deduplicate as))
 			  deduplicate (x ∷ as) | yes x₁ = deduplicate as
-			  deduplicate (x ∷ as) | no x₁ = 
+			  deduplicate (x ∷ as) | no x₁ =
 			    σ (x ∷ (Σ.proj₁ (deduplicate as))) (u-∷ (Σ.proj₀ (deduplicate as)) x₁)
 		\end{code}}
 
@@ -502,7 +502,7 @@ open import grammar-mini N T
 			    let x₁ = pred-comp₀ i₁ refl ω in
 			    let x₂ = predic i refl ω in
 			    deduplicate (i₁ ∷ (Σ.proj₁ x₁ ++ x₂))
-			
+
 			  pred-comp₁ : {w n : T *} -> (ω : EState w n) ->
 			    (ss : Item w n *) -> (rs : Item w n *) -> Item w n *
 		\end{code}
@@ -535,7 +535,7 @@ open import grammar-mini N T
 			    { χ ψ (X ∘ u ↦ γ ∘ .(x ∷ β)) refl (σ ε (refl , y)) → case trans (sym (++-ε α)) (sym y) of λ {refl → in-head}
 			    ; χ ψ i@(X ∘ u ↦ γ ∘ δ) refl (σ (x₁ ∷ t) (refl , y)) → in-tail (p₀ χ ψ i refl (σ t (refl , (trans (sym (in₀ _ _ _)) (sym y)))))
 			    }
-			
+
 			  all-items₁ : ∀ {w v X u β} -> ∀ χ ψ ->
 			    (i : Item w v) -> i ≡ (X ∘ u ↦ ε ∘ β [ χ ∘ ψ ]) ->
 			    Σ {Item w v *} λ as ->
@@ -552,7 +552,7 @@ open import grammar-mini N T
 			    { χ₁ ψ₁ (.X ∘ .(x ∷ u) ↦ γ ∘ δ) refl x₂ (σ ε refl) → in-l (p₀ χ₁ ψ₁ _ refl (σ γ (x₂ , refl)))
 			    ; χ₁ ψ₁ (.X ∘ u₀ ↦ γ ∘ δ) refl x₂ (σ (x₁ ∷ p₄) refl) → in-r (p₃ χ₁ ψ₁ _ refl x₂ (σ p₄ refl))
 			    }
-			
+
 			  all-items₂ : ∀ {w v} ->
 			    (rs : (N × (N ∣ T)*)*) -> (∀ {r} -> rs ∋ r -> CFG.rules G ∋ r) ->
 			    Σ {Item w v *} λ as ->
@@ -564,12 +564,12 @@ open import grammar-mini N T
 			    { χ ψ (.Y ∘ u ↦ γ ∘ δ) refl in-head → in-l (p₀ χ ψ _ refl refl ψ)
 			    ; χ ψ (X ∘ u ↦ γ ∘ δ) refl (in-tail x₁) → in-r (p₃ χ ψ _ refl x₁)
 			    }
-			
+
 			  relevant-χ : ∀ {w v} -> (i : Item w v) -> CFG.rules G ∋ (Item.Y i , Item.α i ++ Item.β i)
 			  relevant-χ ((Y ∘ j ↦ α ∘ β) {χ}) = elem' eq-rule (Y , α ++ β) (CFG.rules G) χ
-			
+
 			  open ε decidₜ
-			
+
 			  relevant-ψ : ∀ {w v} -> (i : Item w v) -> Σ λ t -> t ++ Item.u i ≡ w
 			  relevant-ψ {ε} ((Y ∘ ε ↦ α ∘ β) {χ} {ψ}) = σ ε refl
 			  relevant-ψ {ε} ((Y ∘ x ∷ u ↦ α ∘ β) {χ} {p}) = void (ε₁ (Σ.proj₀ p))
@@ -581,7 +581,7 @@ open import grammar-mini N T
 			  relevant-ψ {x ∷ w} {v} (Y ∘ y ∷ w ↦ α ∘ β [ χ ∘ p ]) | no x₂    | yes refl = void (ε₃ x₂ (Σ.proj₀ p))
 			  relevant-ψ {x ∷ w} {v} (Y ∘ y ∷ u ↦ α ∘ β [ χ ∘ p ]) | no x₂    | no x₁ with relevant-ψ {w} {v} (Y ∘ y ∷ u ↦ α ∘ β [ χ ∘ ε₄ (Σ.proj₀ p) x₂ ])
 			  relevant-ψ {x ∷ w} {v} (Y ∘ y ∷ u ↦ α ∘ β [ χ ∘ p ]) | no x₂    | no x₁ | σ q₁ q₀ = σ (x ∷ q₁) (app (x ∷_) q₀)
-			
+
 		\end{code}}
 		\begin{code}
 			  all-items : ∀ {w} {v} -> Σ λ as -> {i : Item w v} -> i ∈ as
@@ -667,19 +667,19 @@ open import grammar-mini N T
 			    EState w (a ∷ v) ->
 			    EState w v
 			  step₀ {w} {a} {v} ω = scanr a (pred-comp ω)
-			
+
 			  parse₀ : ∀ {w v} ->
 			     EState w v ->
 			     EState w ε
 			  parse₀ {v = ε} w = pred-comp w
 			  parse₀ {v = x ∷ v} w = parse₀ (step₀ w)
-			
+
 			  itemize : ∀ w ->
 			    Σ (λ t -> (t ∈ CFG.rules G) × (fst t ≡ CFG.start G)) * ->
 			    Item w w *
 			  itemize w ε = ε
 			  itemize w (σ (X , β) p₀ ∷ rs) = (X ∘ w ↦ ε ∘ β [ fst p₀ ∘ σ ε refl ]) ∷ itemize w rs
-			
+
 			  parse : ∀ w -> EState w ε
 			  parse w =
 			    let x₁ = lookup (CFG.start G) (CFG.rules G) in
