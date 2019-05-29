@@ -51,15 +51,22 @@ latex/agda.sty : latex latex-agda.sty
 	- $(xelatex) $*.tex
 	- $(xelatex) $*.tex
 
-agda/%.lagda : include/%.tex
-	sed -e "s/\t//g" include/$*.tex > agda/$*.lagda
+# Try to apply Agda formatting.  If it fails, use plain copy.
+latex/%.tex : include/%.tex
+	cp $< $@
+	sed -e 's/\t//g' < $< > agda/$*.lagda
+	- agda --latex --latex-dir=agda/latex -i agda agda/$*.lagda && sed -e 's/{code}/{agdacode}/g' < agda/latex/$*.tex > $@
 
-agda/latex/%.tex : agda/%.lagda
-	- agda --latex --latex-dir=agda/latex -i agda agda/$*.lagda
+# Individual rules:
 
+# agda/%.lagda : include/%.tex
+# 	sed -e 's/\t//g' include/$*.tex > agda/$*.lagda
 
-latex/%.tex : agda/latex/%.tex
-	- sed -e 's/{code}/{agdacode}/g' < $< > $@
+# agda/latex/%.tex : agda/%.lagda
+# 	- agda --latex --latex-dir=agda/latex -i agda agda/$*.lagda
+
+# latex/%.tex : agda/latex/%.tex
+# 	- sed -e 's/{code}/{agdacode}/g' < $< > $@
 
 #Remove all temporary files created by pdfLaTeX
 clean:
