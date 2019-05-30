@@ -40,7 +40,7 @@ open import grammar-mini N T
 		sequence of terminals and non-terminals that have already been
 		successfully parsed, $\beta$ is what remains to be parsed, and $i$ is
 		the index of the set where the parsing attempt of $X$ was started. We
-		will use $\mathbb{S}_i$ to mean the item set at position $i$, between
+		will use $\St{i}$ to mean the item set at position $i$, between
 		the $i$th and the $i+1$st character. New items can be constructed from
 		previous items in three ways:
 
@@ -50,7 +50,8 @@ open import grammar-mini N T
 				If $\beta$ is of the form $Y\delta$, meaning that for this item
 				to be completed, a $Y$ must now be parsed at this position, a
 				new item $\earley{Y}{\epsilon}{\gamma}{j}$, where $j$ is the
-				current position, is added to the current set.
+				current position, is added to the current set. We call this to 
+				\emph{predict} based on the current item.
 
 			\item
 
@@ -60,13 +61,15 @@ open import grammar-mini N T
 				$X$ was attempted in the first place. Any item $(Y \mapsto
 				\alpha \cdot X\delta, k)$ in set $i$  could have predicted this
 				item, and as such, we will add a new item $\earley{Y}{\alpha
-				X}{\delta}{k}$ for each such item.
+				X}{\delta}{k}$ for each such item. We call this to
+				\emph{complete} the current item.
 
 			\item
 
 				If $\beta$ is of the form $a\delta$, and the next token in the
 				input sequence is $a$, a new item $\earley{X}{\alpha
-				a}{\delta}{i}$ is added to the next set.
+				a}{\delta}{i}$ is added to the next set. We call this to
+				\emph{scan} the current item.
 
 		\end{itemize}
 
@@ -85,10 +88,159 @@ open import grammar-mini N T
 		be derived is several different ways (or even an unbounded number of
 		ways), the different derivations will all share their common items,
 		which gives the Earley parsing algorithm the ability to correctly
-		analyze ambiguous grammars.
+		analyze ambiguous grammars efficiently.
+	
+	\section{An Example}
 
-		\todo{I guess an example of an Earley parser run would be helpful in
-		this section. (And in your thesis defense!)}
+		%\todo{I guess an example of an Earley parser run would be helpful in
+		%this section. (And in your thesis defense!)}
+		
+		To get a clear understanding of how the Earley parsing algorithm works,
+		we will use it to analyze a short string with a simple grammar. The 
+		grammar rules are as follows:
+		
+		\begin{table}[h]
+		\centering
+		\begin{tabular}{rcl}
+			E & $ \mapsto $ & V \\
+			E & $ \mapsto $ & E O E \\
+			O & $ \mapsto $ & `$+$' \\
+			O & $ \mapsto $ & `$-$' \\
+			V & $ \mapsto $ & `$x$' \\
+			V & $ \mapsto $ & `$y$' \\
+			V & $ \mapsto $ & `$z$' 
+		\end{tabular}
+		\end{table}
+
+		We will take $E$ to be the starting symbol of the grammar, and we will 
+		attempt to parse the string ``$x+y$''. First, we prepare the parser 
+		state by creating 6 empty sets, and adding the initial item to the 
+		first one:
+
+		\begin{table}[h]
+		\centering
+		\begin{tabular}{|c|c|c|c|}
+			\hline
+			$\St{0}$ & $\St{1}$ & $\St{2}$ & $\St{3}$ \\ 
+			\hline
+			$\earley{S_0}{\varepsilon}{E}{0}$ & & & \\
+			\hline
+		\end{tabular}
+		\end{table}
+
+		Now we start working on the first item set, $\St{0}$. The first, and
+		only, item in that set can be predicted on in two different ways,
+		yielding the items $\earley{E}{\varepsilon}{V}{0}$ and
+		$\earley{E}{\varepsilon}{EOE}{0}$. These two are then added to
+		$\St{0}$:
+
+		\begin{table}[h]
+		\centering
+		\begin{tabular}{|c|c|c|c|}
+			\hline
+			$\St{0}$ & $\St{1}$ & $\St{2}$ & $\St{3}$ \\ 
+			\hline
+			$\earley{S_0}{\varepsilon}{E}{0}$ & & & \\
+			$\earley{E}{\varepsilon}{V}{0}$   & & & \\
+			$\earley{E}{\varepsilon}{EOE}{0}$ & & & \\
+			\hline
+		\end{tabular}
+		\end{table}
+
+		The first of these new items, now item number two in $\St{0}$, can also
+		be predicted on, yielding $\earley{V}{\varepsilon}{x}{0}$ ,
+		$\earley{V}{\varepsilon}{y}{0}$, and $\earley{V}{\varepsilon}{z}{0}$.
+		The item at position three can also be predicted on, but as all results
+		of that prediction are already in $\St{0}$, nothing happens. The three
+		new items added from rule three can all be scanned, but only one of
+		them match our input string, yielding the following state:
+
+		\begin{table}[h]
+		\centering
+		\begin{tabular}{|c|c|c|c|}
+			\hline
+			$\St{0}$                          & $\St{1}$ & $\St{2}$ & $\St{3}$ \\ 
+			\hline
+			$\earley{S_0}{\varepsilon}{E}{0}$ & $\earley{V}{x}{\varepsilon}{0}$ & &\\
+			$\earley{E}{\varepsilon}{V}{0}$   & & & \\
+			$\earley{E}{\varepsilon}{EOE}{0}$ & & & \\
+			$\earley{V}{\varepsilon}{x}{0}$   & & & \\
+			$\earley{V}{\varepsilon}{y}{0}$   & & & \\
+			$\earley{V}{\varepsilon}{z}{0}$   & & & \\
+			\hline
+		\end{tabular}
+		\end{table}
+
+		Now there is nothing to be done with any of the items in $\St{0}$, and 
+		so we move on to $\St{1}$. The first item here can be completed. Since
+		it has index $0$, we will look in $\St{0}$ for matching items to 
+		complete with. The second item matches, and so we add a new item
+		$\earley{E}{V}{\varepsilon}{0}$ to the current set $\St{1}$. This new 
+		item can also be completed, and also has index $0$, with two matching 
+		items in $\St{0}$:
+
+		\begin{table}[h]
+		\centering
+		\begin{tabular}{|c|c|c|c|}
+			\hline
+			$\St{0}$                          & $\St{1}$ & $\St{2}$ & $\St{3}$ \\ 
+			\hline
+			$\earley{S_0}{\varepsilon}{E}{0}$ & $\earley{V}{x}{\varepsilon}{0}$   &  & \\
+			$\earley{E}{\varepsilon}{V}{0}$   & $\earley{E}{V}{\varepsilon}{0}$   &  & \\
+			$\earley{E}{\varepsilon}{EOE}{0}$ & $\earley{S_0}{E}{\varepsilon}{0}$ &  & \\
+			$\earley{V}{\varepsilon}{x}{0}$   & $\earley{E}{E}{OE}{0}$            &  & \\
+			$\earley{V}{\varepsilon}{y}{0}$   &                                   &  & \\
+			$\earley{V}{\varepsilon}{z}{0}$   &                                   &  & \\
+			\hline
+		\end{tabular}
+		\end{table}
+
+		At this point, we can complete the initial item, meaning that we could 
+		accept this input if it ended here. Since there is more input to parse,
+		we continue with predicting on item four. When we are done with 
+		$\St{1}$ our state looks like this:
+
+		\begin{table}[H]
+		\centering
+		\begin{tabular}{|c|c|c|c|}
+			\hline
+			$\St{0}$                          & $\St{1}$                          &\St{2} & $\St{3}$ \\
+			\hline
+			$\earley{S_0}{\varepsilon}{E}{0}$ & $\earley{V}{x}{\varepsilon}{0}$   & $\earley{O}{+}{\varepsilon}{1}$ & \\
+			$\earley{E}{\varepsilon}{V}{0}$   & $\earley{E}{V}{\varepsilon}{0}$   & & \\
+			$\earley{E}{\varepsilon}{EOE}{0}$ & $\earley{S_0}{E}{\varepsilon}{0}$ & & \\
+			$\earley{V}{\varepsilon}{x}{0}$   & $\earley{E}{E}{OE}{0}$            & & \\
+			$\earley{V}{\varepsilon}{y}{0}$   & $\earley{O}{\varepsilon}{+}{0}$   & & \\
+			$\earley{V}{\varepsilon}{z}{0}$   & $\earley{O}{\varepsilon}{-}{0}$   & & \\
+			\hline
+		\end{tabular}
+		\end{table}
+		
+		Continuing to add items all the way until the end we get the following
+		state:
+
+		\begin{table}[h]
+		\centering
+		\begin{tabular}{|c|c|c|c|}
+			\hline
+			$\St{0}$                          & $\St{1}$                          & $\St{2}$                         $ & $\St{3}$ \\
+			\hline
+			$\earley{S_0}{\varepsilon}{E}{0}$ & $\earley{V}{x}{\varepsilon}{0}$   & $\earley{O}{+}{\varepsilon}{1}  $ & $\earley{V}{y}{\varepsilon}{2}  $ \\
+			$\earley{E}{\varepsilon}{V}{0}$   & $\earley{E}{V}{\varepsilon}{0}$   & $\earley{E}{EO}{E}{0}           $ & $\earley{E}{V}{\varepsilon}{2}  $ \\
+			$\earley{E}{\varepsilon}{EOE}{0}$ & $\earley{S_0}{E}{\varepsilon}{0}$ & $\earley{E}{\varepsilon}{V}{2}  $ & $\earley{E}{EOE}{\varepsilon}{0}$ \\
+			$\earley{V}{\varepsilon}{x}{0}$   & $\earley{E}{E}{OE}{0}$            & $\earley{E}{\varepsilon}{EOE}{2}$ & $\earley{E}{E}{OE}{2}           $ \\
+			$\earley{V}{\varepsilon}{y}{0}$   & $\earley{O}{\varepsilon}{+}{1}$   & $\earley{V}{\varepsilon}{x}{2}  $ & $\earley{S_0}{E}{\varepsilon}{0}$ \\
+			$\earley{V}{\varepsilon}{z}{0}$   & $\earley{O}{\varepsilon}{-}{1}$   & $\earley{V}{\varepsilon}{y}{2}  $ & $\earley{O}{\varepsilon}{+}{3}  $ \\
+			$                                 &                                   & $\earley{V}{\varepsilon}{z}{2}  $ & $\earley{O}{\varepsilon}{-}{3}  $ \\
+			\hline
+		\end{tabular}
+		\end{table}
+
+		Since the item $\earley{S_0}{E}{\varepsilon}{0}$ is in $\St{3}$ the 
+		input sequence is in the grammar, and we accept the input. We can work 
+		our way backwards from this item using the construction rules in 
+		reverse to figure out how it was made and construct a parse tree for 
+		it.
 
 	\section{Formalization}
 
@@ -99,25 +251,25 @@ open import grammar-mini N T
 			\centering
 			\begin{tabular}{cc}
 				\( \displaystyle \frac{}
-					{\earley{S_0}{\epsilon}{S}{0} \in \mathbb{S}_0}
+					{\earley{S_0}{\epsilon}{S}{0} \in \St{0}}
 					~~\textrm{start } S
 					\) &
 				\( \displaystyle \frac
-					{\earley{X}{\alpha}{Y\beta}{i} \in \mathbb{S}_j}
-					{\earley{Y}{\epsilon}{\delta}{j} \in \mathbb{S}_j}
+					{\earley{X}{\alpha}{Y\beta}{i} \in \St{j}}
+					{\earley{Y}{\epsilon}{\delta}{j} \in \St{j}}
 					~~Y \mapsto \delta
 					\)
 				\\~&~\\
 				\( \displaystyle \frac
-					{\earley{X}{\alpha}{a\beta}{i} \in \mathbb{S}_j}
-					{\earley{X}{\alpha a}{\beta}{i} \in \mathbb{S}_{j+1}}
+					{\earley{X}{\alpha}{a\beta}{i} \in \St{j}}
+					{\earley{X}{\alpha a}{\beta}{i} \in \St{j+1}}
 					\) &
 				\( \displaystyle \frac
 					{
-						\earley{X}{\alpha}{Y\beta}{i} \in \mathbb{S}_j~~~~
-						\earley{Y}{\gamma}{\epsilon}{j} \in \mathbb{S}_k
+						\earley{X}{\alpha}{Y\beta}{i} \in \St{j}~~~~
+						\earley{Y}{\gamma}{\epsilon}{j} \in \St{k}
 						}
-					{\earley{X}{\alpha Y}{\beta}{i} \in \mathbb{S}_k}
+					{\earley{X}{\alpha Y}{\beta}{i} \in \St{k}}
 					\)
 			\end{tabular}
 		\end{table}
@@ -200,20 +352,19 @@ open import grammar-mini N T
 
 
 		A value with type $G \cdot \vinput \vdash u \rslash v \rightarrow^* X
-		\rslash \alpha \cdot \beta$ can be thought of as corresponding to an item
-		$\earley{X}{\alpha}{\beta}{u} \in \mathbb{S}_v$. However, the Agda
+		\rslash \alpha \cdot \beta$ can be thought of as corresponding to an
+		item $\earley{X}{\alpha}{\beta}{u} \in \St{v}$. However, the Agda
 		version uses $u$ and $v$ as remainders of the input string rather than
 		indexes into it.  Given an Earley item {$\earley{X}{\alpha}{\beta}{i}
-		\in \mathbb{S}_j$, the corresponding type for the data type in Agda
-		would then be $G \cdot \vinput \vdash
-		(\tdrop\;i\;\vinput) \rslash (\tdrop\;j\;\vinput)
-		\rightarrow^* X \rslash \alpha \cdot \beta$, where $\tdrop$ removes a specified number of
-		elements from a list. Going the other way, $G \cdot \vinput
-		\vdash u \rslash v \rightarrow^* X \rslash \alpha \cdot \beta$ would correspond to
-		an Earley item $\earley{X}{\alpha}{\beta}{n -
-		\tlength\;u} \in \mathbb{S}_{n -
-		\tlength\;v}$}, where $\tlength$ returns the number of
-		elements in a list and $n = \tlength\;\vinput$.
+		\in \St{j}$, the corresponding type for the data type in Agda would then
+		be $G \cdot \vinput \vdash (\tdrop\;i\;\vinput) \rslash
+		(\tdrop\;j\;\vinput) \rightarrow^* X \rslash \alpha \cdot \beta$, where
+		$\tdrop$ removes a specified number of elements from a list. Going the
+		other way, $G \cdot \vinput \vdash u \rslash v \rightarrow^* X \rslash
+		\alpha \cdot \beta$ would correspond to an Earley item
+		$\earley{X}{\alpha}{\beta}{n - \tlength\;u} \in \St{n - \tlength\;v}$},
+		where $\tlength$ returns the number of elements in a list and $n =
+		\tlength\;\vinput$.
 
 		There are some other differences between the propositions we first
 		wrote for Earley parsers and the data type given above. The addition of
