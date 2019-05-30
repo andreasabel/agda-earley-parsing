@@ -1,14 +1,14 @@
 open import base
 
-module earley-sound (N T : Set) (decidₙ : Dec N) (decidₜ : Dec T) where
+module earley-sound (N T : Set) (eqₙ : Dec N) (eqₜ : Dec T) where
 
 open import grammar N T
-open import earley N T decidₙ decidₜ
+open import earley N T eqₙ eqₜ
 
 module parser-sound (G : CFG) where
 
   open parser G
-  open import count N T decidₙ decidₜ
+  open import count N T eqₙ eqₜ
   open Unique Item eq-item
 
     -- Valid items, those that are Earley-derivable.
@@ -34,7 +34,7 @@ module parser-sound (G : CFG) where
   sound-scanr₀ ((X ∘ u ↦ α ∘ l Y ∷ β) ∷ rs) f p = 
     sound-scanr₀ rs (f ∘ in-tail) p
 
-  sound-scanr₀ {a} ((X ∘ u ↦ α ∘ r b ∷ β) ∷ rs) f p with decidₜ a b
+  sound-scanr₀ {a} ((X ∘ u ↦ α ∘ r b ∷ β) ∷ rs) f p with eqₜ a b
   ... | no x = sound-scanr₀ rs (f ∘ in-tail) p
   ... | yes refl with p
   ...            | in-head    = scanner (f in-head)
@@ -61,15 +61,15 @@ module parser-sound (G : CFG) where
     Valid i -> (∀ {j} -> j ∈ rs -> Valid j) ->
     (∀ {j} -> j ∈ compl₁ i p rs -> Valid j)
 
-  sound-compl₁ (X ∘ u ↦ α ∘ ε) refl refl ε v f ()
+  sound-compl₁ i refl refl ε v f ()
 
-  sound-compl₁ (X ∘ u ↦ α ∘ ε) refl refl ((Y ∘ u₁ ↦ α₁ ∘ ε) ∷ rs) v f q =
+  sound-compl₁ i refl refl ((Y ∘ u ↦ α ∘ ε) ∷ rs) v f q =
     sound-compl₁ _ refl refl rs v (f ∘ in-tail) q
 
-  sound-compl₁ (X ∘ u ↦ α ∘ ε) refl refl ((Y ∘ u₁ ↦ α₁ ∘ r a ∷ β) ∷ rs) v f q =
+  sound-compl₁ i refl refl ((Y ∘ u ↦ α ∘ r a ∷ β) ∷ rs) v f q =
     sound-compl₁ _ refl refl rs v (f ∘ in-tail) q
 
-  sound-compl₁ (X ∘ u ↦ α ∘ ε) refl refl ((Y ∘ u₁ ↦ α₁ ∘ l Z ∷ β) ∷ rs) v f  with decidₙ X Z
+  sound-compl₁ i refl refl ((Y ∘ u ↦ α ∘ l Z ∷ β) ∷ rs) v f with eqₙ (Item.Y i) Z
   ... | no x = sound-compl₁ _ refl refl rs v (f ∘ in-tail)
   ... | yes refl =
     λ { in-head → complet (f in-head) v
@@ -143,10 +143,10 @@ module parser-sound (G : CFG) where
   sound-pred-comp₀ χ ψ i@(X ∘ u ↦ α ∘ ε) refl w v s q =
     sound-deduplicate (compl i refl w) (sound-compl i refl v w s) q
   sound-pred-comp₀ χ ψ i@(X ∘ u ↦ α ∘ r a ∷ β) refl w v s ()
-  sound-pred-comp₀ χ ψ i@(X ∘ u ↦ α ∘ l Y ∷ β) refl w v s q with elem decidₙ Y (nullable G)
-  sound-pred-comp₀ χ ψ i@(X ∘ u ↦ α ∘ l Y ∷ β) refl w v s q | no x =
+  sound-pred-comp₀ χ ψ i@(X ∘ u ↦ α ∘ l Y ∷ β) refl w v s q with elem eqₙ Y (nullable G)
+  ... | no x =
     sound-deduplicate (predic i refl w) (sound-predic i refl w v s) q
-  sound-pred-comp₀ χ ψ i@(X ∘ u ↦ α ∘ l Y ∷ β) refl w v s q | yes x =
+  ... | yes x =
     let i₁ = X ∘ u ↦ α ←∷ l Y ∘ β in
     let rs₁ = predic i refl w in
     let rs₂ = Σ.proj₁ (pred-comp₀ i₁ refl w) in
@@ -161,7 +161,8 @@ module parser-sound (G : CFG) where
         ; (l (in-tail x₁)) →
           let y₀ = nullable-sound x in
           let y₁ = complet v (Σ.proj₀ y₀) in
-          sound-pred-comp₀ {β = β} (v-step χ) ψ (X ∘ u ↦ α ←∷ l Y ∘ β) refl w y₁ s x₁
+          let y₂ = X ∘ u ↦ α ←∷ l Y ∘ β in
+          sound-pred-comp₀ {β = β} (v-step χ) ψ y₂ refl w y₁ s x₁
         }
 
   sound-pred-comp₁ : ∀ {w v} (ω : EState w v) -> ∀ ss rs ->

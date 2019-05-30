@@ -1,14 +1,14 @@
 open import base
 
-module earley-complete (N T : Set) (decidₙ : Dec N) (decidₜ : Dec T) where
+module earley-complete (N T : Set) (eqₙ : Dec N) (eqₜ : Dec T) where
 
 open import grammar N T
-open import earley N T decidₙ decidₜ
+open import earley N T eqₙ eqₜ
 
 module parser-complete (G : CFG) where
 
   open parser G
-  open import count N T decidₙ decidₜ
+  open import count N T eqₙ eqₜ
   open Unique Item eq-item
   
   -- Complete state sets (contain all derivable items).
@@ -25,24 +25,24 @@ module parser-complete (G : CFG) where
 
   test₃ : ∀ {a t} ->
     (Σ λ s -> s ++ (a ∷ t) ≡ t) -> Void
-  test₃ (σ p₁ p₀) = void (ε.ε₂ decidₜ p₀)
+  test₃ (σ p₁ p₀) = void (ε.ε₂ eqₜ p₀)
 
   test₂ : ∀ {v a} {a₀ : T} p q ->
     p ++ (a ∷ v) ≡ q ++ (a₀ ∷ v) ->
     a ≡ a₀
   test₂ ε ε refl = refl
-  test₂ {v = v} ε (x ∷ q) s = void (ε.ε₆ decidₜ _ v (sym s))
-  test₂ {v = v} (x ∷ p) ε s = void (ε.ε₆ decidₜ _ v s)
+  test₂ {v = v} ε (x ∷ q) s = void (ε.ε₆ eqₜ _ v (sym s))
+  test₂ {v = v} (x ∷ p) ε s = void (ε.ε₆ eqₜ _ v s)
   test₂ (x ∷ p) (x₁ ∷ q) s = test₂ p q (uncons x x₁ s)
   
   test₁ : ∀ {a₀ v t} {a : T} ->
     (Σ λ u -> u ++ (a ∷ v) ≡ t) ∣ v ≡ t ->
     (Σ λ u -> u ++ (a₀ ∷ v) ≡ t) ->
     a ≡ a₀
-  test₁ (r refl) (σ q₁ q₀) = void (ε.ε₂ decidₜ q₀)
+  test₁ (r refl) (σ q₁ q₀) = void (ε.ε₂ eqₜ q₀)
   test₁ (l (σ ε refl)) (σ ε refl) = refl
-  test₁ {v = v} (l (σ ε refl)) (σ (x ∷ q₁) q₀) = void (ε.ε₆ decidₜ _ v q₀)
-  test₁ {v = v} (l (σ (x ∷ p₁) p₀)) (σ ε refl) = void (ε.ε₆ decidₜ _ v p₀)
+  test₁ {v = v} (l (σ ε refl)) (σ (x ∷ q₁) q₀) = void (ε.ε₆ eqₜ _ v q₀)
+  test₁ {v = v} (l (σ (x ∷ p₁) p₀)) (σ ε refl) = void (ε.ε₆ eqₜ _ v p₀)
   test₁ (l (σ (x ∷ p₁) p₀)) (σ (x₁ ∷ q₁) refl) = test₂ p₁ q₁ (uncons x x₁ p₀)
 
   test₀ : ∀ {t u v a a₀ X α β} ->
@@ -146,11 +146,11 @@ module parser-complete (G : CFG) where
   complete-scanr₀ a ((X ∘ u ↦ α ∘ l Y ∷ β) ∷ rs) i j g refl (in-tail p) refl =
     complete-scanr₀ a rs i j g refl p refl
 
-  complete-scanr₀ a ((X ∘ u ↦ α ∘ r b ∷ β) ∷ rs) i j g refl in-head     refl with decidₜ a b
+  complete-scanr₀ a ((X ∘ u ↦ α ∘ r b ∷ β) ∷ rs) i j g refl in-head     refl with eqₜ a b
   ... | yes refl = in-head
   ... | no x     = void (x refl)
   
-  complete-scanr₀ a ((X ∘ u ↦ α ∘ r b ∷ β) ∷ rs) i j g refl (in-tail p) refl with decidₜ a b
+  complete-scanr₀ a ((X ∘ u ↦ α ∘ r b ∷ β) ∷ rs) i j g refl (in-tail p) refl with eqₜ a b
   ... | yes refl = in-tail (complete-scanr₀ a rs i j g refl p refl)
   ... | no x     = complete-scanr₀ a rs i j g refl p refl
 
@@ -236,7 +236,7 @@ module parser-complete (G : CFG) where
     i ≋ g -> 
     j ≋ predict x g ->
       j ∈ Σ.proj₁ (pred-comp₀ i refl ω)
-  complete₁-pred-comp₀ ω x i@(X ∘ u ↦ α ∘ l Z ∷ β) j g refl refl with elem decidₙ Z (nullable G)
+  complete₁-pred-comp₀ ω x i@(X ∘ u ↦ α ∘ l Z ∷ β) j g refl refl with elem eqₙ Z (nullable G)
   complete₁-pred-comp₀ ω x i@(X ∘ u ↦ α ∘ l Z ∷ β) j g refl refl | yes d =
     let i₁ = X ∘ u ↦ α ←∷ l Z ∘ β in
     let x₁ = complete-predic ω i j g x refl refl in
@@ -292,7 +292,7 @@ module parser-complete (G : CFG) where
     complete-compl₁ rs i j k g h refl refl q s
   complete-compl₁ ((Y ∘ u₁ ↦ α₁ ∘ r a ∷ β) ∷ rs) i j k g h refl refl (in-tail q) s =
     complete-compl₁ rs i j k g h refl refl q s
-  complete-compl₁ ((Y ∘ u₁ ↦ α₁ ∘ l Z ∷ β) ∷ rs) i j k g h refl refl q s           with decidₙ (Item.Y j) Z
+  complete-compl₁ ((Y ∘ u₁ ↦ α₁ ∘ l Z ∷ β) ∷ rs) i j k g h refl refl q s           with eqₙ (Item.Y j) Z
   complete-compl₁ ((Y ∘ u₁ ↦ α₁ ∘ l Z ∷ β) ∷ rs) i j k g h refl refl in-head     s | no x = void (x refl)
   complete-compl₁ ((Y ∘ u₁ ↦ α₁ ∘ l Z ∷ β) ∷ rs) i j k g h refl refl (in-tail q) s | no x =
     complete-compl₁ rs i j k g h refl refl q s
@@ -337,7 +337,7 @@ module parser-complete (G : CFG) where
     i ≋ g -> 
     j ≋ complet g h ->
       j ∈ Σ.proj₁ (pred-comp₀ i refl ω)
-  complete₃-pred-comp₀ {Y = Y} ω i j g h refl q with elem decidₙ Y (nullable G)
+  complete₃-pred-comp₀ {Y = Y} ω i j g h refl q with elem eqₙ Y (nullable G)
   complete₃-pred-comp₀ {Y = Y} ω i@(_ ∘ _ ↦ α ∘ l Y ∷ β) j g h refl refl | yes x =
     let i₁ = _ ∘ _ ↦ α ←∷ l Y ∘ _ [ v-step (Item.χ i) ∘ Item.ψ i ] in
     let x₁ = pred-comp₀ i₁ refl ω in
@@ -783,7 +783,7 @@ module parser-complete (G : CFG) where
         (_ ∘ _ ↦ _ ∘ _ [ v-unstep (Item.χ i) ∘ Item.ψ i ]) i g refl refl})
       (λ {refl x₂ i x₃ → case k of
         λ { (r ())
-          ; (l (σ p₁ p₀)) → void (ε.ε₂ decidₜ (trans (sym (in₀ _ _ _)) (sym p₀)))
+          ; (l (σ p₁ p₀)) → void (ε.ε₂ eqₜ (trans (sym (in₀ _ _ _)) (sym p₀)))
           }
         })
 
