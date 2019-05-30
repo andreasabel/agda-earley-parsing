@@ -22,21 +22,23 @@ module parser-sound (G : CFG) where
   Sound (start rs) = ∀ {i} -> i ∈ rs -> Valid i
   Sound (step ω rs) = Sound ω × (∀ {i} -> i ∈ rs -> Valid i)
 
-  H : ∀ {v w} {ω : EState w v} -> Sound ω -> (∀ {i} -> i ∈ Sₙ ω -> Valid i)
-  H {ω = start rs} s = s
-  H {ω = step ω rs} s = snd s
-
   sound-scanr₀ : ∀ {a v w} -> ∀ rs ->
     (∀ {i} -> i ∈ rs -> Valid i) ->
     (∀ {i} -> i ∈ scanr₀ {w} {v} a rs -> Valid i)
+
   sound-scanr₀ ε f ()
-  sound-scanr₀ ((X ∘ u ↦ α ∘ ε) ∷ rs) f p = sound-scanr₀ rs (f ∘ in-tail) p
-  sound-scanr₀ ((X ∘ u ↦ α ∘ l Y ∷ β) ∷ rs) f p = sound-scanr₀ rs (f ∘ in-tail) p
+  
+  sound-scanr₀ ((X ∘ u ↦ α ∘ ε) ∷ rs) f p = 
+    sound-scanr₀ rs (f ∘ in-tail) p
+
+  sound-scanr₀ ((X ∘ u ↦ α ∘ l Y ∷ β) ∷ rs) f p = 
+    sound-scanr₀ rs (f ∘ in-tail) p
+
   sound-scanr₀ {a} ((X ∘ u ↦ α ∘ r b ∷ β) ∷ rs) f p with decidₜ a b
   ... | no x = sound-scanr₀ rs (f ∘ in-tail) p
   ... | yes refl with p
-  ... | in-head    = scanner (f in-head)
-  ... | in-tail p₁ = sound-scanr₀ rs (f ∘ in-tail) p₁
+  ...            | in-head    = scanner (f in-head)
+  ...            | in-tail p₁ = sound-scanr₀ rs (f ∘ in-tail) p₁
 
   sound-scanr : ∀ {a w v} -> (ω : EState w (a ∷ v)) ->
     Sound ω -> Sound (scanr a ω)
@@ -46,7 +48,8 @@ module parser-sound (G : CFG) where
   sound-compl₀ : ∀ {u v w} (w : EState w v) ->
     Sound w -> (∀ {i} -> i ∈ compl₀ {u} {v} w -> Valid i)
   sound-compl₀ {u} {v} w s p           with eq-T* u v
-  sound-compl₀ {v} {v} w s p           | yes refl = H s p
+  sound-compl₀ {v} {v} (start rs) s p  | yes refl = s p
+  sound-compl₀ {v} {v} (step w rs) s p | yes refl = snd s p
   sound-compl₀ {u} {v} (start rs) s () | no x
   sound-compl₀ {u} {v} (step w rs) s p | no x = sound-compl₀ w (fst s) p
 
@@ -57,13 +60,21 @@ module parser-sound (G : CFG) where
     (rs : Item w u *) ->
     Valid i -> (∀ {j} -> j ∈ rs -> Valid j) ->
     (∀ {j} -> j ∈ compl₁ i p rs -> Valid j)
+
   sound-compl₁ (X ∘ u ↦ α ∘ ε) refl refl ε v f ()
-  sound-compl₁ (X ∘ u ↦ α ∘ ε) refl refl ((Y ∘ u₁ ↦ α₁ ∘ ε) ∷ rs) v f q = sound-compl₁ _ refl refl rs v (f ∘ in-tail) q
-  sound-compl₁ (X ∘ u ↦ α ∘ ε) refl refl ((Y ∘ u₁ ↦ α₁ ∘ r a ∷ β) ∷ rs) v f q = sound-compl₁ _ refl refl rs v (f ∘ in-tail) q
-  sound-compl₁ (X ∘ u ↦ α ∘ ε) refl refl ((Y ∘ u₁ ↦ α₁ ∘ l Z ∷ β) ∷ rs) v f q           with decidₙ X Z
-  sound-compl₁ (X ∘ u ↦ α ∘ ε) refl refl ((Y ∘ u₁ ↦ α₁ ∘ l Z ∷ β) ∷ rs) v f q           | no x = sound-compl₁ _ refl refl rs v (f ∘ in-tail) q
-  sound-compl₁ (X ∘ u ↦ α ∘ ε) refl refl ((Y ∘ u₁ ↦ α₁ ∘ l X ∷ β) ∷ rs) v f in-head     | yes refl = complet (f in-head) v
-  sound-compl₁ (X ∘ u ↦ α ∘ ε) refl refl ((Y ∘ u₁ ↦ α₁ ∘ l X ∷ β) ∷ rs) v f (in-tail q) | yes refl = sound-compl₁ _ refl refl rs v (f ∘ in-tail) q
+
+  sound-compl₁ (X ∘ u ↦ α ∘ ε) refl refl ((Y ∘ u₁ ↦ α₁ ∘ ε) ∷ rs) v f q =
+    sound-compl₁ _ refl refl rs v (f ∘ in-tail) q
+
+  sound-compl₁ (X ∘ u ↦ α ∘ ε) refl refl ((Y ∘ u₁ ↦ α₁ ∘ r a ∷ β) ∷ rs) v f q =
+    sound-compl₁ _ refl refl rs v (f ∘ in-tail) q
+
+  sound-compl₁ (X ∘ u ↦ α ∘ ε) refl refl ((Y ∘ u₁ ↦ α₁ ∘ l Z ∷ β) ∷ rs) v f  with decidₙ X Z
+  ... | no x = sound-compl₁ _ refl refl rs v (f ∘ in-tail)
+  ... | yes refl =
+    λ { in-head → complet (f in-head) v
+      ; (in-tail q) → sound-compl₁ _ refl refl rs v (f ∘ in-tail) q
+      }
 
   sound-compl : ∀ {v w} ->
     (i : Item w v) ->
@@ -72,6 +83,12 @@ module parser-sound (G : CFG) where
     (∀ {j} -> j ∈ compl i p ω -> Valid j)
   sound-compl i p v ω s q =
     sound-compl₁ i p refl (compl₀ ω) v (sound-compl₀ ω s) q
+
+  soundₙ : ∀ {w v ss} (ω : EState w v) ->
+    (∀ {i} -> i ∈ ss -> Valid i) ->
+    Sound ω -> Sound (Wₙ ω ss)
+  soundₙ (start rs) f s = f
+  soundₙ (step ω rs) f s = fst s , f
 
   sound-predict₀ : ∀ {v w  Y β} ->
     (ψ₁ : Σ λ t -> t ++ v ≡ w) ->
@@ -147,12 +164,6 @@ module parser-sound (G : CFG) where
           sound-pred-comp₀ {β = β} (v-step χ) ψ (X ∘ u ↦ α ←∷ l Y ∘ β) refl w y₁ s x₁
         }
 
-  soundₙ : ∀ {w v ss} (ω : EState w v) ->
-    (∀ {i} -> i ∈ ss -> Valid i) ->
-    Sound ω -> Sound (Wₙ ω ss)
-  soundₙ (start rs) f s = f
-  soundₙ (step ω rs) f s = fst s , f
-
   sound-pred-comp₁ : ∀ {w v} (ω : EState w v) -> ∀ ss rs ->
     (∀ {i} -> i ∈ ss -> Valid i) ->
     (∀ {i} -> i ∈ rs -> Valid i) ->
@@ -180,19 +191,39 @@ module parser-sound (G : CFG) where
 
   sound-pred-comp : ∀ {w v} {ω : EState w v} ->
     Sound ω -> Sound (pred-comp ω)
-  sound-pred-comp {w} {v} {ω} s =
+  sound-pred-comp {w} {v} {ω@(start rs)} s =
     let x₁ = deduplicate (Sₙ ω) in
     let x₂ = (unique-++ (Σ.proj₁ x₁) ε (Σ.proj₀ x₁) u-ε λ ()) in
     let m = suc (length (Σ.proj₁ (all-items {w}) \\ ε)) in
     sound-pred-comp₂ ω ε (Σ.proj₁ x₁) m (≤ₛ (≤-self _)) x₂ (λ ())
-      (sound-deduplicate (Sₙ ω) (H s))
+      (sound-deduplicate (Sₙ ω) s)
+      s
+  sound-pred-comp {w} {v} {ω@(step _ rs)} s =
+    let x₁ = deduplicate (Sₙ ω) in
+    let x₂ = (unique-++ (Σ.proj₁ x₁) ε (Σ.proj₀ x₁) u-ε λ ()) in
+    let m = suc (length (Σ.proj₁ (all-items {w}) \\ ε)) in
+    sound-pred-comp₂ ω ε (Σ.proj₁ x₁) m (≤ₛ (≤-self _)) x₂ (λ ())
+      (sound-deduplicate (Sₙ ω) (snd s))
       s
 
-  sound-step : ∀ {w a v} {ω : EState w (a ∷ v)} ->
+  sound-step₀ : ∀ {w a v} {ω : EState w (a ∷ v)} ->
     Sound ω -> Sound (step₀ ω)
-  sound-step {ω = ω} s = sound-scanr (pred-comp ω) (sound-pred-comp s)
+  sound-step₀ {ω = ω} s = sound-scanr (pred-comp ω) (sound-pred-comp s)
 
   sound-parse₀ : ∀ {w v} -> {ω : EState w v} ->
     Sound ω -> Sound (parse₀ ω)
   sound-parse₀ {v = ε} s = sound-pred-comp s
-  sound-parse₀ {v = x ∷ v} s = sound-parse₀ (sound-step s)
+  sound-parse₀ {v = x ∷ v} s = sound-parse₀ (sound-step₀ s)
+
+  sound-itemize : ∀ {w} rs ->
+    (∀ {i} -> i ∈ itemize w rs -> Valid i)
+  sound-itemize ε {i} ()
+  sound-itemize (σ (X , β) (x , refl) ∷ rs) in-head = initial x
+  sound-itemize (σ (X , β) p₀ ∷ rs)  (in-tail p) = sound-itemize rs p
+
+  sound-parse : ∀ w -> Sound (parse w)
+  sound-parse w =
+    let x₁ = lookup (CFG.start G) (CFG.rules G) in
+    let x₂ = sound-itemize {w} x₁ in
+    let ω = start (itemize w x₁) in
+    sound-parse₀ {ω = ω} x₂

@@ -14,78 +14,14 @@ module parser-complete (G : CFG) where
   -- Complete state sets (contain all derivable items).
 
   _≋_ : ∀ {t u v X α β} -> (i : Item t v) -> G ∙ t ⊢ u / v ⟶* X / α ∙ β -> Set
-  _≋_ {t} {u} {v} {X} {α} {β} i g = (Item.Y i , Item.u i , Item.α i , Item.β i) ≡ (X , u , α , β)
+  _≋_ {t} {u} {v} {X} {α} {β} i g =
+    (Item.Y i , Item.u i , Item.α i , Item.β i) ≡ (X , u , α , β)
 
   ≋-β : ∀ {t u v X α β} -> ∀ i -> (g : G ∙ t ⊢ u / v ⟶* X / α ∙ β) -> i ≋ g -> Item.β i ≡ β
   ≋-β i g refl = refl
 
   eq-prop : {a b : T *} (P : Item a b -> Set) (i : Item b b) -> a ≡ b -> Set
   eq-prop P i refl = P i
-
-  Complete₀ : ∀ {t v} -> Item t v * -> Set
-  Complete₀ {t} {v} rs = ∀ {u Y α β} ->
-    (i : Item t v) ->
-    (g : G ∙ t ⊢ u / v ⟶* Y / α ∙ β) ->
-    i ≋ g ->
-    i ∈ rs
-
-  mutual
-    Complete : ∀ {v w} -> EState w v -> Set
-    Complete ω = Complete₀ (Sₙ ω) × Complete* ω
-  
-    Complete* : ∀ {v w} -> EState w v -> Set
-    Complete* (start rs) = ⊤
-    Complete* (step ω rs) = Complete ω
-
-  complete-scanr₀ : ∀ {t u v X α β} -> ∀ a rs ->
-    (i : Item t (a ∷ v)) ->
-    (j : Item t v) ->
-    (g : G ∙ t ⊢ u / a ∷ v ⟶* X / α ∙ r a ∷ β) ->
-    i ≋ g -> i ∈ rs ->
-    j ≋ scanner g ->
-      j ∈ scanr₀ a rs
-  complete-scanr₀ a ε i j g refl () refl
-
-  complete-scanr₀ a ((X ∘ u ↦ α ∘ ε) ∷ rs)       i j g refl (in-tail p) refl =
-    complete-scanr₀ a rs i j g refl p refl
-
-  complete-scanr₀ a ((X ∘ u ↦ α ∘ l Y ∷ β) ∷ rs) i j g refl (in-tail p) refl =
-    complete-scanr₀ a rs i j g refl p refl
-
-  complete-scanr₀ a ((X ∘ u ↦ α ∘ r b ∷ β) ∷ rs) i j g refl in-head     refl with decidₜ a b
-  ... | yes refl = in-head
-  ... | no x     = void (x refl)
-  
-  complete-scanr₀ a ((X ∘ u ↦ α ∘ r b ∷ β) ∷ rs) i j g refl (in-tail p) refl with decidₜ a b
-  ... | yes refl = in-tail (complete-scanr₀ a rs i j g refl p refl)
-  ... | no x     = complete-scanr₀ a rs i j g refl p refl
-
-  complete-scanr : ∀ {t u v X α β} -> ∀ a ->
-    (ω : EState t (a ∷ v)) ->
-    Complete ω ->
-    (i : Item t (a ∷ v)) ->
-    (j : Item t v) ->
-    (g : G ∙ t ⊢ u / a ∷ v ⟶* X / α ∙ r a ∷ β) ->
-    i ≋ g ->
-    j ≋ scanner g ->
-      j ∈ Sₙ (scanr a ω)
-  complete-scanr a ω@(start rs) c  i j g refl refl with (fst c) i g refl
-  complete-scanr a ω@(start rs) c  i j g refl refl | d = complete-scanr₀ a (Sₙ ω) i j g refl d refl
-  complete-scanr a ω@(step _ rs) c i j g refl refl with (fst c) i g refl
-  complete-scanr a ω@(step _ rs) c i j g refl refl | d = complete-scanr₀ a (Sₙ ω) i j g refl d refl
-
-  Contains : ∀ {v w} -> ∀ X u α β .χ .ψ -> EState w v -> Set
-  Contains X u α β χ ψ (start rs) = (X ∘ u ↦ α ∘ β [ χ ∘ ψ ]) ∈ rs
-  Contains X u α β χ ψ (step ω rs) = Contains X u α β χ ψ ω ∣ (X ∘ u ↦ α ∘ β [ χ ∘ ψ ]) ∈ rs
-
---  complete-compl₀ : ∀ {u v w X t α β} (ω : EState w v) -> ∀ .χ .ψ ->
---    Contains X t α β χ ψ ω ->
---    (X ∘ t ↦ α ∘ β [ χ ∘ ψ ]) ∈ compl₀ {u} ω
---  complete-compl₀ {u} {v} ω χ ψ g                with eq-T* u v
---  complete-compl₀ {u} {u} ω χ ψ g                | yes refl = {!!}
---  complete-compl₀ {u} {v} (start rs) χ ψ g       | no x = {!!}
---  complete-compl₀ {u} {v} (step ω rs) χ ψ (r x₁) | no x = {!!}
---  complete-compl₀ {u} {v} (step ω rs) χ ψ (l x₁) | no x = {!!}
 
   test₃ : ∀ {a t} ->
     (Σ λ s -> s ++ (a ∷ t) ≡ t) -> Void
@@ -114,7 +50,22 @@ module parser-complete (G : CFG) where
     (h : G ∙ t ⊢ u / a₀ ∷ v ⟶* X / α ∙ r a₀ ∷ β) ->
     a ≡ a₀
   test₀ p g = test₁ p (suff-g₂ g)
-    
+
+  Complete₀ : ∀ {t v} -> Item t v * -> Set
+  Complete₀ {t} {v} rs = ∀ {u Y α β} ->
+    (i : Item t v) ->
+    (g : G ∙ t ⊢ u / v ⟶* Y / α ∙ β) ->
+    i ≋ g ->
+    i ∈ rs
+
+  mutual
+    Complete : ∀ {v w} -> EState w v -> Set
+    Complete ω = Complete₀ (Sₙ ω) × Complete* ω
+  
+    Complete* : ∀ {v w} -> EState w v -> Set
+    Complete* (start rs) = ⊤
+    Complete* (step ω rs) = Complete ω
+
   complete-ind : ∀ {a t v} ->
     {P : Item t v -> Set} ->
     (Σ λ u -> u ++ (a ∷ v) ≡ t) ∣ v ≡ t ->
@@ -179,6 +130,56 @@ module parser-complete (G : CFG) where
   complete-ind s f ini h c d (complet {v = v} {w} g g₁) i p | no x =
     let x₁ = complete-ind s f ini h c d g₁ _ refl in
     c (_ ∘ _ ↦ _ ∘ _ [ in-g g₁ ∘ suff-g₂ g ]) i x g g₁ refl x₁ p
+
+  complete-scanr₀ : ∀ {t u v X α β} -> ∀ a rs ->
+    (i : Item t (a ∷ v)) ->
+    (j : Item t v) ->
+    (g : G ∙ t ⊢ u / a ∷ v ⟶* X / α ∙ r a ∷ β) ->
+    i ≋ g -> i ∈ rs ->
+    j ≋ scanner g ->
+      j ∈ scanr₀ a rs
+  complete-scanr₀ a ε i j g refl () refl
+
+  complete-scanr₀ a ((X ∘ u ↦ α ∘ ε) ∷ rs)       i j g refl (in-tail p) refl =
+    complete-scanr₀ a rs i j g refl p refl
+
+  complete-scanr₀ a ((X ∘ u ↦ α ∘ l Y ∷ β) ∷ rs) i j g refl (in-tail p) refl =
+    complete-scanr₀ a rs i j g refl p refl
+
+  complete-scanr₀ a ((X ∘ u ↦ α ∘ r b ∷ β) ∷ rs) i j g refl in-head     refl with decidₜ a b
+  ... | yes refl = in-head
+  ... | no x     = void (x refl)
+  
+  complete-scanr₀ a ((X ∘ u ↦ α ∘ r b ∷ β) ∷ rs) i j g refl (in-tail p) refl with decidₜ a b
+  ... | yes refl = in-tail (complete-scanr₀ a rs i j g refl p refl)
+  ... | no x     = complete-scanr₀ a rs i j g refl p refl
+
+  complete-scanr : ∀ {t u v X α β} -> ∀ a ->
+    (ω : EState t (a ∷ v)) ->
+    Complete ω ->
+    (i : Item t (a ∷ v)) ->
+    (j : Item t v) ->
+    (g : G ∙ t ⊢ u / a ∷ v ⟶* X / α ∙ r a ∷ β) ->
+    i ≋ g ->
+    j ≋ scanner g ->
+      j ∈ Sₙ (scanr a ω)
+  complete-scanr a ω@(start rs) c  i j g refl refl with (fst c) i g refl
+  complete-scanr a ω@(start rs) c  i j g refl refl | d = complete-scanr₀ a (Sₙ ω) i j g refl d refl
+  complete-scanr a ω@(step _ rs) c i j g refl refl with (fst c) i g refl
+  complete-scanr a ω@(step _ rs) c i j g refl refl | d = complete-scanr₀ a (Sₙ ω) i j g refl d refl
+
+  Contains : ∀ {v w} -> ∀ X u α β .χ .ψ -> EState w v -> Set
+  Contains X u α β χ ψ (start rs) = (X ∘ u ↦ α ∘ β [ χ ∘ ψ ]) ∈ rs
+  Contains X u α β χ ψ (step ω rs) = Contains X u α β χ ψ ω ∣ (X ∘ u ↦ α ∘ β [ χ ∘ ψ ]) ∈ rs
+
+--  complete-compl₀ : ∀ {u v w X t α β} (ω : EState w v) -> ∀ .χ .ψ ->
+--    Contains X t α β χ ψ ω ->
+--    (X ∘ t ↦ α ∘ β [ χ ∘ ψ ]) ∈ compl₀ {u} ω
+--  complete-compl₀ {u} {v} ω χ ψ g                with eq-T* u v
+--  complete-compl₀ {u} {u} ω χ ψ g                | yes refl = {!!}
+--  complete-compl₀ {u} {v} (start rs) χ ψ g       | no x = {!!}
+--  complete-compl₀ {u} {v} (step ω rs) χ ψ (r x₁) | no x = {!!}
+--  complete-compl₀ {u} {v} (step ω rs) χ ψ (l x₁) | no x = {!!}
 
 --  complete-compl₂ : ∀ {t u v w X Y β γ} -> ∀ α .χ .ψ .χ₁ .ψ₁ ->
 --    (ω : EState t w) ->
