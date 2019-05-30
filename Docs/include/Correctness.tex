@@ -887,6 +887,6 @@
 		potentially ambiguous grammars, as the ambiguities can create an
 		exponential blowup in the number of nodes in the resulting parse tree,
 		or even create potentially infinite loops of ambiguities. Depending on
-		how the result will be used different structures might be appropriate
-		such as Sparse Packed Parse Forests~\cite{?}, or to simply always
-		choose the first option when an ambiguity arises.
+		how the result will be used different structures might be appropriate, 
+		or a function that decides what option to choose when given several can 
+		be provided in order to create a normal parse tree.
