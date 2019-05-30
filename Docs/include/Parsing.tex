@@ -51,6 +51,8 @@ open import base
 	A grammar is often given a \emph{starting symbol}. This can be considered
 	the `topmost' non-terminal symbol in the grammar, and a sequence is said to
 	be `in' the grammar if it conforms to the structure of the starting symbol.
+	A sequence is also sometimes said to be `in' a list of terminals and 
+	non-terminals, meaning it confoms to the structure of said list.
 
 	Here is how we could encode a context-free grammar in Agda:
 
@@ -58,7 +60,7 @@ open import base
 		module Parsing (N T : Set) where
 
 		record CFG : Set where
-		  constructor _⟩_⟩_
+		  constructor _⟩_
 		  field
 		    start : N
 		    rules : (N × (N ∣ T)* )*
@@ -67,7 +69,7 @@ open import base
 	Here, type arguments \codett{N} and \codett{T} represent non-terminal and
 	terminal symbols, and the record type has two fields: a starting symbol,
 	and a set of rules for the grammar.  An example: consider the grammar
-	\codett{ S ⟩ (S , r s ∷ l S ∷ ε) ∷ (S , ε) ∷ ε ⟩ \_ }, where \codett{S} is
+	\codett{ S ⟩ (S , r s ∷ l S ∷ ε) ∷ (S , ε) ∷ ε}, where \codett{S} is
 	a nonterminal symbol, \codett{s} is a terminal symbol, and \codett{l} and
 	\codett{r} are the constructors for the left and right choice of our
 	optional type \codett{∣}. This grammak will have conforming strings that
@@ -80,14 +82,8 @@ open import base
 	% than closing ones!
 
 	A formal definition of when a list of tokens conforms to a grammar is also
-	necessary. Here, we suggest for rules for when a sequence of symbols can be
-	rewritten to a list of terminal and non-terminal symbols:
-	\todo{``Rewriting'' is used in the other direction in language theory,
-	expanding non-terminals to sentential forms.  The other direction can be
-	maybe called ``reduction'' in the sense of reduction taking place in a
-	shift-reduce parser.  However, I would rather call this relation the
-	language membership relation:  When is a word member of a language given by
-	a sentential form?}
+	necessary. Here, we suggest for rules for when a sequence conforms to a
+	list of terminal and non-terminal symbols: 
 
 	%% Simpler way to get this math display
 	\[
@@ -223,6 +219,15 @@ open import base
 		      trans (trans (assoc-++ p₁ q₁ _) (sym (app (p₁ ++_) y₁))) (sym x₁)
 	\end{code}}
 
+	The \codett{Σ λ \_ → \_} notation used here is a dependent pair, in this
+	case of a sequence $t$ and a proof that it is both in $\alpha$ and that it
+	is a prefix of $v$ ending before $u$. We use this type because there is no
+	explicit reference to the parsed sequence in the \codett{\_⊢\_/\_∈\_} type,
+	but it is required for \codett{\_⊢\_∈\_}. Apart from the
+	\codett{with}-statements used to match on the recursive calls used for 
+	constructing $t$, the structure of \codett{complete₀} is similar to that of
+	\codett{sound₀}. The equality proof \codett{p₁++q₁++v≡u} is not shown here.
+
 	One problem with these data types is that it is possible to construct
 	several different proofs for the same derivation of the same rule using the
 	conc and empt rules:
@@ -266,10 +271,10 @@ open import base
 	generally follows the same structure as the proofs between the previous two
 	types, and will therefore not be discussed in detail here.
 
-	Of course, we could have started with this definition for membership in a 
-	grammar, without relating it the earlier definitions. However, as these 
-	data types form the basis on which we construct the proof, it is important 
-	that they are sensible. Since it is also not possible to proove the 
-	correctness of definitions themselves, other than showing their equivalence 
-	to other models, we felt it worthwhile to discuss several variants of this 
-	definition.
+	Of course, we could have started with this definition for membership in a
+	grammar, without relating it the earlier definitions. However, as these
+	data types form the basis on which we construct the correctness proofs of
+	our implementation, it is important that they are sensible. Since it is
+	also not possible to prove the correctness of definitions themselves, other
+	than showing their equivalence to other models, we felt it worthwhile to
+	discuss several variants of this definition.

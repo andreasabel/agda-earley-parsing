@@ -1,12 +1,12 @@
 open import base
 
-module earley (N T : Set) (decidₙ : Dec N) (decidₜ : Dec T) where
+module earley (N T : Set) (eqₙ : Dec N) (eqₜ : Dec T) where
 
 open import grammar N T
 
 module parser (G : CFG) where
 
-  open import count N T decidₙ decidₜ
+  open import count N T eqₙ eqₜ
 
   v-step : ∀ {Y α x β} -> CFG.rules G ∋ (Y , α ++ (x ∷ β)) -> CFG.rules G ∋ (Y , (α ←∷ x) ++ β)
   v-step {Y} {α} {x} {β} v = in₂ (λ x → CFG.rules G ∋ (Y , x)) (in₀ x α β) v
@@ -38,16 +38,16 @@ module parser (G : CFG) where
   eq-α :
     (a b : (N ∣ T)*) ->
     a ≡ b ??
-  eq-α = eq-* (eq-∣ decidₙ decidₜ)
+  eq-α = eq-* (eq-∣ eqₙ eqₜ)
 
   eq-T* : (a b : T *) -> a ≡ b ??
-  eq-T* = eq-* decidₜ
+  eq-T* = eq-* eqₜ
 
   eq-rule : (a b : N × (N ∣ T) *) -> a ≡ b ??
-  eq-rule = eq-× decidₙ eq-α
+  eq-rule = eq-× eqₙ eq-α
 
   eq-item : ∀ {w v} -> (a b : Item w v) -> a ≡ b ??
-  eq-item (X ∘ i ↦ α ∘ β) (Y ∘ j ↦ γ ∘ δ) with eq-×₄ decidₙ eq-T* eq-α eq-α (X , i , α , β) (Y , j , γ , δ)
+  eq-item (X ∘ i ↦ α ∘ β) (Y ∘ j ↦ γ ∘ δ) with eq-×₄ eqₙ eq-T* eq-α eq-α (X , i , α , β) (Y , j , γ , δ)
   eq-item (X ∘ i ↦ α ∘ β) (X ∘ i ↦ α ∘ β) | yes refl = yes refl
   eq-item (X ∘ i ↦ α ∘ β) (Y ∘ j ↦ γ ∘ δ) | no x = no λ {refl → x refl}
 
@@ -99,13 +99,13 @@ module parser (G : CFG) where
   relevant-χ : ∀ {w v} -> (i : Item w v) -> CFG.rules G ∋ (Item.Y i , Item.α i ++ Item.β i)
   relevant-χ ((Y ∘ j ↦ α ∘ β) {χ}) = elem' eq-rule (Y , α ++ β) (CFG.rules G) χ
 
-  open ε decidₜ
+  open ε eqₜ
 
   relevant-ψ : ∀ {w v} -> (i : Item w v) -> Σ λ t -> t ++ Item.u i ≡ w
   relevant-ψ {ε} ((Y ∘ ε ↦ α ∘ β) {χ} {ψ}) = σ ε refl
   relevant-ψ {ε} ((Y ∘ x ∷ u ↦ α ∘ β) {χ} {p}) = void (ε₁ (Σ.proj₀ p))
   relevant-ψ {x ∷ w} {v} (Y ∘ ε ↦ α ∘ β [ χ ∘ p ]) = σ (x ∷ w) (++-ε (x ∷ w))
-  relevant-ψ {x ∷ w} {v} (Y ∘ y ∷ u ↦ α ∘ β [ χ ∘ p ]) with decidₜ x y | eq-T* w u
+  relevant-ψ {x ∷ w} {v} (Y ∘ y ∷ u ↦ α ∘ β [ χ ∘ p ]) with eqₜ x y | eq-T* w u
   relevant-ψ {x ∷ w} {v} (Y ∘ x ∷ w ↦ α ∘ β [ χ ∘ p ]) | yes refl | yes refl = σ ε refl
   relevant-ψ {x ∷ w} {v} (Y ∘ x ∷ u ↦ α ∘ β [ χ ∘ p ]) | yes refl | no x₁ with relevant-ψ {w} {v} (Y ∘ x ∷ u ↦ α ∘ β [ χ ∘ ε₅ (Σ.proj₀ p) x₁ ])
   relevant-ψ {x ∷ w} {v} (Y ∘ x ∷ u ↦ α ∘ β [ χ ∘ p ]) | yes refl | no x₁ | σ q₁ q₀ = σ (x ∷ q₁) (app (x ∷_) q₀)
@@ -168,7 +168,7 @@ module parser (G : CFG) where
   scanr₀ a ε = ε
   scanr₀ a ((X ∘ u ↦ α ∘ ε) ∷ rs) = scanr₀ a rs
   scanr₀ a ((X ∘ u ↦ α ∘ l Y ∷ β) ∷ rs) = scanr₀ a rs
-  scanr₀ a ((X ∘ u ↦ α ∘ r b ∷ β [ χ ∘ ψ ]) ∷ rs) with decidₜ a b
+  scanr₀ a ((X ∘ u ↦ α ∘ r b ∷ β [ χ ∘ ψ ]) ∷ rs) with eqₜ a b
   ... | yes refl = (X ∘ u ↦ α ←∷ r a ∘ β [ v-step χ ∘ ψ ]) ∷ (scanr₀ a rs)
   ... | no x = scanr₀ a rs
 
@@ -192,7 +192,7 @@ module parser (G : CFG) where
   compl₁ i@(X ∘ u ↦ α ∘ ε) refl ε = ε
   compl₁ i@(X ∘ u ↦ α ∘ ε) refl ((Y ∘ u₁ ↦ α₁ ∘ ε) ∷ rs) = compl₁ i refl rs
   compl₁ i@(X ∘ u ↦ α ∘ ε) refl ((Y ∘ u₁ ↦ α₁ ∘ r a ∷ β) ∷ rs) = compl₁ i refl rs
-  compl₁ i@(X ∘ u ↦ α ∘ ε) refl ((Y ∘ u₁ ↦ α₁ ∘ l Z ∷ β) ∷ rs) with decidₙ X Z
+  compl₁ i@(X ∘ u ↦ α ∘ ε) refl ((Y ∘ u₁ ↦ α₁ ∘ l Z ∷ β) ∷ rs) with eqₙ X Z
   compl₁ i@(X ∘ u ↦ α ∘ ε) refl ((Y ∘ u₁ ↦ α₁ ∘ l Z ∷ β) ∷ rs) | no x = compl₁ i refl rs
   compl₁ i@(X ∘ u ↦ α ∘ ε) refl ((Y ∘ u₁ ↦ α₁ ∘ l X ∷ β [ χ₁ ∘ ψ₁ ]) ∷ rs) | yes refl =
     (Y ∘ u₁ ↦ α₁ ←∷ l X ∘ β [ v-step χ₁ ∘ ψ₁ ]) ∷ compl₁ i refl rs
@@ -231,16 +231,16 @@ module parser (G : CFG) where
     (i : Item w v) ->
     (β ≡ Item.β i) ->
     (ω : EState w v) ->
-    Σ {Item w v *} λ as -> Unique as
-  pred-comp₀ i@(X ∘ u ↦ α ∘ ε) refl ω = deduplicate (compl i refl ω)
-  pred-comp₀ i@(X ∘ u ↦ α ∘ r a ∷ β) refl ω = σ ε u-ε
-  pred-comp₀ i@(X ∘ u ↦ α ∘ l Y ∷ β) refl ω with elem decidₙ Y (nullable G)
-  pred-comp₀ i@(X ∘ u ↦ α ∘ l Y ∷ β) refl ω | no x = deduplicate (predic i refl ω)
+    Item w v *
+  pred-comp₀ i@(X ∘ u ↦ α ∘ ε) refl ω = compl i refl ω
+  pred-comp₀ i@(X ∘ u ↦ α ∘ r a ∷ β) refl ω = ε
+  pred-comp₀ i@(X ∘ u ↦ α ∘ l Y ∷ β) refl ω with elem eqₙ Y (nullable G)
+  pred-comp₀ i@(X ∘ u ↦ α ∘ l Y ∷ β) refl ω | no x = predic i refl ω
   pred-comp₀ i@(X ∘ u ↦ α ∘ l Y ∷ β) refl ω | yes x =
     let i₁ = X ∘ u ↦ α ←∷ l Y ∘ β [ v-step (Item.χ i) ∘ Item.ψ i ] in
     let x₁ = pred-comp₀ i₁ refl ω in
     let x₂ = predic i refl ω in
-    deduplicate (i₁ ∷ (Σ.proj₁ x₁ ++ x₂))
+    i₁ ∷ (x₁ ++ x₂)
 
   pred-comp₁ : {w n : T *} ->
     (ω : EState w n) ->
@@ -250,7 +250,7 @@ module parser (G : CFG) where
   pred-comp₁ ω ss ε = ε
   pred-comp₁ ω ss (r₁ ∷ rs) =
     let x₁ = pred-comp₀ r₁ refl (Wₙ ω ss) in
-    Σ.proj₁ x₁ ++ pred-comp₁ ω ss rs
+    x₁ ++ pred-comp₁ ω ss rs
 
   pred-comp₂ : {w n : T *} ->
     (ω : EState w n) ->

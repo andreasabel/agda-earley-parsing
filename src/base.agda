@@ -335,12 +335,12 @@ in-l : {T : Set} {a : T} {as bs : T *} -> as ∋ a -> (as ++ bs) ∋ a
 in-l in-head = in-head
 in-l (in-tail p) = in-tail (in-l p)
 
-in-lr : ∀ {T} {a : T} -> ∀ as bs -> a ∈ (as ++ bs) -> a ∈ as ∣ a ∈ bs
-in-lr ε bs p = r p
-in-lr (a ∷ as) bs in-head = l in-head
-in-lr (a ∷ as) bs (in-tail p) with in-lr as bs p
-in-lr (a ∷ as) bs (in-tail p) | r x = r x
-in-lr (a ∷ as) bs (in-tail p) | l x = l (in-tail x)
+in-either : ∀ {T} {a : T} -> ∀ as bs -> a ∈ (as ++ bs) -> a ∈ as ∣ a ∈ bs
+in-either ε bs p = r p
+in-either (a ∷ as) bs in-head = l in-head
+in-either (a ∷ as) bs (in-tail p) with in-either as bs p
+in-either (a ∷ as) bs (in-tail p) | r x = r x
+in-either (a ∷ as) bs (in-tail p) | l x = l (in-tail x)
 
 in-lr₂ : ∀ {T} {a b : T} -> ∀ as bs -> a ∈ (as ++ (b ∷ bs)) -> a ∈ ((b ∷ as) ++ bs)
 in-lr₂ ε bs p = p
@@ -353,17 +353,17 @@ in-lr₃ : ∀ {T} {a b : T} -> ∀ as bs -> a ∈ ((b ∷ as) ++ bs) -> a ∈ (
 in-lr₃ ε bs p = p
 in-lr₃ (a ∷ as) bs in-head = in-r {as = a ∷ as} in-head
 in-lr₃ (a ∷ as) bs (in-tail in-head) = in-head
-in-lr₃ (a ∷ as) bs (in-tail (in-tail p)) with in-lr as bs p
+in-lr₃ (a ∷ as) bs (in-tail (in-tail p)) with in-either as bs p
 in-lr₃ (a ∷ as) bs (in-tail (in-tail p)) | r x = in-tail (in-r (in-tail x))
 in-lr₃ (a ∷ as) bs (in-tail (in-tail p)) | l x = in-tail (in-l x)
 
 in-lr₄ : ∀ {T} {a b : T} -> ∀ as bs -> a ∈ (as ++ bs) -> a ∈ (as ++ (b ∷ bs))
-in-lr₄ as bs p with in-lr as bs p
+in-lr₄ as bs p with in-either as bs p
 in-lr₄ as bs p | r x = in-r (in-tail x)
 in-lr₄ as bs p | l x = in-l x
 
 in-lr₅ : ∀ {T} {a b : T} -> ∀ as bs -> b ∈ as -> a ∈ (as ++ (b ∷ bs)) -> a ∈ (as ++ bs)
-in-lr₅ as bs p q with in-lr as _ q
+in-lr₅ as bs p q with in-either as _ q
 in-lr₅ as bs p q | r in-head = in-l p
 in-lr₅ as bs p q | r (in-tail x) = in-r x
 in-lr₅ as bs p q | l x = in-l x
@@ -373,11 +373,11 @@ in-neither {T} {ε} {bs} p q s = q s
 in-neither {T} {x ∷ as} {bs} p q in-head = p in-head
 in-neither {T} {x ∷ as} {bs} p q (in-tail s) = in-neither (p ∘ in-tail) q s
 
-in-either : ∀ {T as bs} {a : T} -> (P : T -> Set) ->
+in-both : ∀ {T as bs} {a : T} -> (P : T -> Set) ->
   (a ∈ as -> P a) -> (a ∈ bs -> P a) -> a ∈ (as ++ bs) -> P a
-in-either {T} {ε} {bs} P p q s = q s
-in-either {T} {x ∷ as} {bs} P p q in-head = p in-head
-in-either {T} {x ∷ as} {bs} P p q (in-tail s) = in-either P (p ∘ in-tail) q s
+in-both {T} {ε} {bs} P p q s = q s
+in-both {T} {x ∷ as} {bs} P p q in-head = p in-head
+in-both {T} {x ∷ as} {bs} P p q (in-tail s) = in-both P (p ∘ in-tail) q s
 
 not-in-l : {T : Set} {b : T} {as bs : T *} -> ((as ++ bs) ∋ b -> Void) -> as ∋ b -> Void
 not-in-l f in-head = f in-head
@@ -654,7 +654,7 @@ module Unique {T : Set} (Item : T * -> T * -> Set) (eq-item : ∀ {w v}(a b : It
   idem-\\ (a ∷ as) bs with elem eq-item a bs
   idem-\\ (a ∷ as) bs | yes x = idem-\\ as bs
   idem-\\ (a ∷ as) bs | no x with elem eq-item a bs
-  idem-\\ (a ∷ as) bs | no x | yes x₁ = void {!x x₁!}
+  idem-\\ (a ∷ as) bs | no x | yes x₁ = void (x x₁)
   idem-\\ (a ∷ as) bs | no x | no x₁ = app (a ∷_) (idem-\\ as (a ∷ bs))
   
   no-include-\\₂ : ∀ {w n} -> {x : Item w n} (as bs : Item w n *) ->
@@ -675,7 +675,7 @@ module Unique {T : Set} (Item : T * -> T * -> Set) (eq-item : ∀ {w v}(a b : It
   include-\\ {as = a ∷ as} {bs} {a₀} (in-tail p) | yes x = include-\\ p
   include-\\ {as = a ∷ as} {bs} {a₀} in-head     | no x  = in-head
   include-\\ {as = a ∷ as} {bs} {a₀} (in-tail p) | no x  =
-    case in-lr _ (a ∷ bs) (include-\\ {as = as} {a ∷ bs} p) of
+    case in-either _ (a ∷ bs) (include-\\ {as = as} {a ∷ bs} p) of
       λ { (r in-head) → in-head
         ; (r (in-tail x₂)) → in-r x₂
         ; (l x₂) → in-tail (in-l x₂)
@@ -761,7 +761,7 @@ module Unique {T : Set} (Item : T * -> T * -> Set) (eq-item : ∀ {w v}(a b : It
   pcw₁ (x ∷ as) bs cs | yes x₁ | yes x₂ = pcw₁ as bs cs
   pcw₁ (x ∷ as) bs cs | yes x₁ | no x₂ = void (x₂ (in-r x₁))
   pcw₁ (x ∷ as) bs cs | no x₁  with elem eq-item x (cs ++ bs)
-  pcw₁ (x ∷ as) bs cs | no x₁  | yes x₂ with in-lr cs bs x₂
+  pcw₁ (x ∷ as) bs cs | no x₁  | yes x₂ with in-either cs bs x₂
   pcw₁ (x ∷ as) bs cs | no x₁  | yes x₂ | l x₃ =
     let x₁ = pcw₁ as (x ∷ bs) cs in
     let x₂ = diff-unord as (cs ++ (x ∷ bs)) (cs ++ bs) eq-item (in-lr₄ cs bs) (in-lr₅ cs bs x₃) in

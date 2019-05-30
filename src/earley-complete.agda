@@ -235,16 +235,13 @@ module parser-complete (G : CFG) where
     (g : G ∙ t ⊢ u / v ⟶* X / α ∙ l Y ∷ β) ->
     i ≋ g -> 
     j ≋ predict x g ->
-      j ∈ Σ.proj₁ (pred-comp₀ i refl ω)
+      j ∈ pred-comp₀ i refl ω
   complete₁-pred-comp₀ ω x i@(X ∘ u ↦ α ∘ l Z ∷ β) j g refl refl with elem eqₙ Z (nullable G)
   complete₁-pred-comp₀ ω x i@(X ∘ u ↦ α ∘ l Z ∷ β) j g refl refl | yes d =
-    let i₁ = X ∘ u ↦ α ←∷ l Z ∘ β in
     let x₁ = complete-predic ω i j g x refl refl in
-    let rs₁ = Σ.proj₁ (pred-comp₀ i₁  refl ω) in
-    complete-deduplicate (i₁ ∷ (rs₁ ++ predic i refl ω)) (in-r x₁)
+    in-r x₁
   complete₁-pred-comp₀ ω x i j@(Z ∘ u₁ ↦ ε ∘ β₁) g refl refl | no d =
-    let x₁ = complete-predic ω i j g x refl refl in
-    complete-deduplicate (predic i refl ω) x₁
+    complete-predic ω i j g x refl refl
 
   complete₀-compl₀ : ∀ {t u v w X Y α β} ->
     (ω : EState t w) ->
@@ -324,10 +321,8 @@ module parser-complete (G : CFG) where
     (h : G ∙ t ⊢ v / w ⟶* Y / γ ∙ ε) ->
     i ≋ h -> 
     j ≋ complet g h ->
-      j ∈ Σ.proj₁ (pred-comp₀ i refl ω)
-  complete₂-pred-comp₀ {t} {u} {v} {w} {X} {Y} {α} {β} ω c i j n g h refl refl =
-    let x₁ = complete-compl₂ ω c _ _ n g h refl refl in
-    complete-deduplicate (compl i refl ω) x₁
+      j ∈ pred-comp₀ i refl ω
+  complete₂-pred-comp₀ ω c i j n g h refl = complete-compl₂ ω c _ _ n g h refl
 
   complete₃-pred-comp₀ : ∀ {t u v X Y α β γ} ->
     (ω : EState t v) ->
@@ -336,15 +331,11 @@ module parser-complete (G : CFG) where
     (h : G ∙ t ⊢ v / v ⟶* Y / γ ∙ ε) ->
     i ≋ g -> 
     j ≋ complet g h ->
-      j ∈ Σ.proj₁ (pred-comp₀ i refl ω)
-  complete₃-pred-comp₀ {Y = Y} ω i j g h refl q with elem eqₙ Y (nullable G)
-  complete₃-pred-comp₀ {Y = Y} ω i@(_ ∘ _ ↦ α ∘ l Y ∷ β) j g h refl refl | yes x =
-    let i₁ = _ ∘ _ ↦ α ←∷ l Y ∘ _ [ v-step (Item.χ i) ∘ Item.ψ i ] in
-    let x₁ = pred-comp₀ i₁ refl ω in
-    let x₂ = predic i refl ω in
-    complete-deduplicate (i₁ ∷ (Σ.proj₁ x₁ ++ x₂)) in-head
-  complete₃-pred-comp₀ {Y = Y} ω (_ ∘ _ ↦ _ ∘ .(l Y ∷ _)) j g h refl q | no x =
-    void (x (nullable-complete h))
+      j ∈ pred-comp₀ i refl ω
+  complete₃-pred-comp₀ {Y = Y} ω i j g h refl refl
+      with elem eqₙ Y (nullable G)
+  ... | yes x = in-head
+  ... | no x = void (x (nullable-complete h))
 
   complete₁-pred-comp₁ : ∀ {t u v X Y α β δ ss} -> ∀ rs ->
     (ω : EState t v)
@@ -449,7 +440,7 @@ module parser-complete (G : CFG) where
     let x₂ = x₁ \\ (rs ++ ss) in
     let y₁ = complete₁-pred-comp₁ rs ω x i j g p p' q in
     let y₂ = include-\\ {as = x₁} {bs = rs ++ ss} y₁ in
-    case in-lr x₂ (rs ++ ss) y₂ of
+    case in-either x₂ (rs ++ ss) y₂ of
       λ { (r z) → complete₁₀-pred-comp₂ {m = m} ω j z
         ; (l z) → complete₁₁-pred-comp₂ {m = m} ω j z
         }
@@ -469,7 +460,7 @@ module parser-complete (G : CFG) where
     Inert (rs ++ ss) (pred-comp₁ ω ss rs \\ (rs ++ ss))
   inert' {rs = ε} {ss} ω nx x i j g z₁ z₂ z₃ = nx x i j g z₁ z₂ z₃
   inert' {rs = rs@(r₁ ∷ rs₀)} {ss} ω nx x i j g z₁ z₂ z₃ =
-    case in-lr rs ss z₂ of
+    case in-either rs ss z₂ of
       λ { (r x₁) →
         let x₁ = nx x i j g z₁ x₁ z₃  in
         in-r x₁
@@ -514,7 +505,7 @@ module parser-complete (G : CFG) where
     Inert₂ (rs ++ ss) (pred-comp₁ ω ss rs \\ (rs ++ ss))
   inert₂' {rs = ε} {ss} ω c nx x i j g z₁ z₂ z₃ = nx x i j g z₁ z₂ z₃
   inert₂' {t} {v} {rs = rs@(r₁ ∷ rs₀)} {ss} ω c nx {u} {w} j k n g h z₁ z₂ z₃ =
-    case in-lr rs ss z₂ of
+    case in-either rs ss z₂ of
       λ { (r x₁) →
         let x₁ = nx j k n g h z₁ x₁ z₃  in
         in-r x₁
@@ -559,7 +550,7 @@ module parser-complete (G : CFG) where
     Inert₃ (rs ++ ss) (pred-comp₁ ω ss rs \\ (rs ++ ss))
   inert₃' {rs = ε} {ss} ω c nx x i j g z₁ z₂ z₃ = nx x i j g z₁ z₂ z₃
   inert₃' {t} {v} {rs = rs@(r₁ ∷ rs₀)} {ss} ω c nx {u} {w} j k g h z₁ z₂ z₃ =
-    case in-lr rs ss z₂ of
+    case in-either rs ss z₂ of
       λ { (r x₁) →
         let x₁ = nx j k g h z₁ x₁ z₃  in
         in-r x₁

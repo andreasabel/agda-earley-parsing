@@ -75,7 +75,7 @@
 		\end{code}
 
 		The structure of the proof matches the structure of the original
-		definitions closely, due to the way normalizaitons are axiomatic to the
+		definitions closely, due to the way normalisations are axiomatic to the
 		type system. If there is no input, there is no output, so nothing needs
 		to be shown. When there is, \codett{scanr₀} only generates new items
 		from items that expect a terminal symbol, and only does so when that
@@ -184,24 +184,6 @@
 			  sound-deduplicate (x ∷ as) f p           | yes x₁ = sound-deduplicate as (f ∘ in-tail) p
 			  sound-deduplicate (x ∷ as) f in-head     | no x₁ = f in-head
 			  sound-deduplicate (x ∷ as) f (in-tail p) | no x₁ = sound-deduplicate as (f ∘ in-tail) p
-			
-			  sound-deduplicate₂ : ∀ {w v i} → (as : Item w v *) →
-			    i ∈ Σ.proj₁ (deduplicate as) →
-			    i ∈ as
-			  sound-deduplicate₂ ε ()
-			  sound-deduplicate₂ (x ∷ as) p with elem eq-item x (Σ.proj₁ (deduplicate as))
-			  sound-deduplicate₂ {w} {v} {i} (x ∷ as) p | yes x₁ = in-tail (sound-deduplicate₂ as p)
-			  sound-deduplicate₂ {w} {v} {x} (x ∷ as) in-head | no x₁ = in-head
-			  sound-deduplicate₂ {w} {v} {i} (x ∷ as) (in-tail p) | no x₁ = in-tail (sound-deduplicate₂ as p)
-			
-			  complete-deduplicate : ∀ {w v i} → (as : Item w v *) → i ∈ as → i ∈ Σ.proj₁ (deduplicate as)
-			  complete-deduplicate ε ()
-			  complete-deduplicate (x ∷ as) p with elem eq-item x (Σ.proj₁ (deduplicate as))
-			  complete-deduplicate (x ∷ as) in-head     | yes x₁ = x₁
-			  complete-deduplicate (x ∷ as) (in-tail p) | yes x₁ = complete-deduplicate as p
-			  complete-deduplicate (x ∷ as) in-head     | no x₁ = in-head
-			  complete-deduplicate (x ∷ as) (in-tail p) | no x₁ = in-tail (complete-deduplicate as p)
-
 			  soundₙ : ∀ {w v ss} (ω : EState w v) →
 			    (∀ {i} → i ∈ ss → Valid i) →
 			    Sound ω → Sound (Wₙ ω ss)
@@ -210,33 +192,32 @@
 
 		\end{code}}
 
-		Soundness of the merged step \codett{pred-comp} of the \codett{predict}
-		and \codett{compl} steps is also completely trivial, as there are no
-		modification to existing items nor generation of new ones except for
-		what is done in \codett{compl₂} and \codett{predict₁}. Their type
-		signatures are shown below: \todo{Code change}
+		Soundness of the \codett{predict} and \codett{compl} steps is also
+		completely trivial, as there are no modification to existing items nor
+		generation of new ones except for what is done in \codett{compl₂} and
+		\codett{predict₁}. \codett{sound-pred-comp₀} is a bit more interesting:
 
 		\begin{code}
-			  sound-pred-comp₀ : ∀ {u v w X α β} → ∀ .χ .ψ
-			    (i : Item w v) → (p : i ≡ (X ∘ u ↦ α ∘ β [ χ ∘ ψ ])) →
-			    (w : EState w v) →
-			    Valid i → Sound w →
-			    (∀ {j} → j ∈ Σ.proj₁ (pred-comp₀ i refl w) → Valid j)
+			  sound-pred-comp₀ : ∀ {u v w X α β} -> ∀ .χ .ψ
+			    (i : Item w v) -> (p : i ≡ (X ∘ u ↦ α ∘ β [ χ ∘ ψ ])) ->
+			    (w : EState w v) ->
+			    Valid i -> Sound w ->
+			    (∀ {j} -> j ∈ pred-comp₀ i refl w -> Valid j)
+			
 			  sound-pred-comp₀ χ ψ i@(X ∘ u ↦ α ∘ ε) refl w v s q =
-			    sound-deduplicate (compl i refl w) (sound-compl i refl v w s) q
+			    sound-compl i refl v w s q
+			
 			  sound-pred-comp₀ χ ψ i@(X ∘ u ↦ α ∘ r a ∷ β) refl w v s ()
-			  sound-pred-comp₀ χ ψ i@(X ∘ u ↦ α ∘ l Y ∷ β) refl w v s q with elem eqₙ Y (nullable G)
-			  sound-pred-comp₀ χ ψ i@(X ∘ u ↦ α ∘ l Y ∷ β) refl w v s q | no x =
-			    sound-deduplicate (predic i refl w) (sound-predic i refl w v s) q
-			  sound-pred-comp₀ χ ψ i@(X ∘ u ↦ α ∘ l Y ∷ β) refl w v s q | yes x =
+			
+			  sound-pred-comp₀ χ ψ i@(X ∘ u ↦ α ∘ l Y ∷ β) refl w v s q 
+			  	  with elem eqₙ Y (nullable G)
+			  ... | no x = sound-predic i refl w v s q
+			  ... | yes x =
 			    let i₁ = X ∘ u ↦ α ←∷ l Y ∘ β in
 			    let rs₁ = predic i refl w in
-			    let rs₂ = Σ.proj₁ (pred-comp₀ i₁ refl w) in
-			    let q' = sound-deduplicate₂ (i₁ ∷ (rs₂ ++ rs₁)) q in
-			    case in-lr (i₁ ∷ rs₂) rs₁ q' of
-			      λ { (r x₁) →
-			          let q'' = complete-deduplicate rs₁ x₁ in
-			          sound-deduplicate (predic i refl w) (sound-predic i refl w v s) q''
+			    let rs₂ = pred-comp₀ i₁ refl w in
+			    case in-either (i₁ ∷ rs₂) rs₁ q of
+			      λ { (r x₁) → sound-predic i refl w v s x₁
 			        ; (l in-head) →
 			          let x₁ = nullable-sound x in
 			          complet v (Σ.proj₀ x₁)
@@ -256,8 +237,18 @@
 			  sound-pred-comp₁ ω ss (x ∷ rs) f g s p =
 			    let x₁ = sound-pred-comp₀ _ _ x refl (Wₙ ω ss) (g in-head) (soundₙ ω f s) in
 			    let x₂ = sound-pred-comp₁ ω ss rs f (g ∘ in-tail) s in
-			    in-either Valid x₁ x₂ p
+			    in-both Valid x₁ x₂ p
 		\end{code}}
+
+		For items that need to be completed and non-nullable items, soundness
+		is straightforward. For nullable items, we prove soundness by case
+		analysis on how the item was constructed. It must come from either the
+		normal predict step, the complete-immediately-after-predict, or from
+		several steps of complete-immediately-after-predict followed by a
+		normal prediction and completion. Soundness for the normal predict and
+		complete steps is trivial, and all modifications we perform on items
+		are permissible for nullable items, and the other two alternatives are
+		therefore also sound.
 
 		The definition of \codett{sound-pred-comp₂}, which does the iterative
 		refinement of items for each item set, looks a bit more complex:
@@ -276,7 +267,7 @@
 			    let p₂ = wf-pcw₂ x₁ (rs ++ ss) q in
 			    let p₃ = sound-pred-comp₁ ω ss rs f g s in
 			    let p₄ = s-pcw₀ Valid p₃ in
-			    sound-pred-comp₂ ω (rs ++ ss) x₂ m p₁ p₂ (in-either Valid g f) p₄ s
+			    sound-pred-comp₂ ω (rs ++ ss) x₂ m p₁ p₂ (in-both Valid g f) p₄ s
 		\end{code}
 
 		Fortunately, most of the apparent complexity of this function is caused
@@ -314,7 +305,7 @@
 		\end{code}
 		\AgdaHide{\begin{code}
 			  sound-step₀ {ω = ω} s = sound-scanr (pred-comp ω) (sound-pred-comp s)
-		\end{code}}\vspace{-0.4cm}
+		\end{code}}
 		\begin{code}
 			  sound-parse₀ : ∀ {w v} → {ω : EState w v} →
 			    Sound ω → Sound (parse₀ ω)
@@ -430,12 +421,12 @@
 		Here, the \codett{Complete*} property for a \codett{EState} would mean
 		that all item sets, except for the very topmost one, are complete, and
 		\codett{Complete} represents completeness for \codett{EState}s: all
-		prevous item sets are complete, as is the topmost one.
+		previous item sets are complete, as is the topmost one.
 
 		We start by taking a fairly high-level overview of the completeness
 		proof which we will do by induction on the Earley propositions. The
 		type for this function is fairly lengthy, so we will break it up into
-		several peices and discuss them separately:
+		several pieces and discuss them separately:
 
 		\begin{code}
 			  complete-ind : ∀ {a t v} →
@@ -504,12 +495,16 @@
 			    ) →
 		\end{code}
 
-		These arguments fill a similar function as the previous two, but for
-		items that can be generated via the predict and complete steps,
-		repspectively. While their function as part of the induction step is
-		equivalent to that of the two previous arguments, when making use of
-		this induction step these will represent the main reasoning of the
-		proof.
+		These arguments are used as the induction steps for the proof. We split
+		these in three parts: one for items that have been predicted, and two
+		for items that have been completed. The completed items are separated 
+		based on if they have the same starting index, which is the same as 
+		separating them based on if they are in the same item set or not. If 
+		the items are not in the same item set, they should have been completed
+		normally by \codett{compl}, but if they are in the same set, they may 
+		instead have been completed immediately after prediction by 
+		\codett{pred-comp₀}, and this is why we choose to split these proofs 
+		here.
 
 		\begin{code}
 			    (∀ {u X α β} →
@@ -535,39 +530,40 @@
 			  complete-ind s f ini h c d (complet {v = v} {w} g g₁) i p | no x =
 			    let x₁ = complete-ind s f ini h c d g₁ _ refl in
 			    c (_ ∘ _ ↦ _ ∘ _ [ in-g g₁ ∘ suff-g₂ g ]) i x g g₁ refl x₁ p
-		\end{code}\todo{code change}
+		\end{code}
 
-		Given that the proposition holds for all ways of counstructing items in
+		Given that the proposition holds for all ways of constructing items in
 		ways that satisfy the Earley rules discuss in Chapter~\ref{Earleys}, it
 		will hold for all items that can be constructed using these rules. The
 		proof is straightforward, but unfortunately, while the compiler can
 		automatically infer the item needed in the recursion, it is unable to
-		infer it's $\chi$ and $\psi$ values. Fortunately, these can be
-		recunstructed from the Earley rules.
+		infer it's $\chi$ and $\psi$ values. Fortunately, values with the same
+		type can be reconstructed from the Earley rules, and since $\chi$ and
+		$\psi$ were declared irrelevant when defining the item type, we need
+		not care if the new proofs are the same as the ``original'' ones.
 
 		In order to prove completeness for the entire algorithm, we will now
 		use \codett{complete-ind} to show that all items in the current item
 		set will be generated by \codett{pred-comp} and use this together with
-		completness for \codett{scan} to show that the generation of the items
+		completeness for \codett{scan} to show that the generation of the items
 		in each item set is complete. This can then be applied recursively to
 		show that the entire \codett{EState} is complete. Of these steps, the
 		most complex is completeness for \codett{pred-comp}, which needs to be
-		done in two steps: completeness for items that are \codett{predict}ed,
-		and completeness for items that are \codett{compl}eted. This is further
-		complicated by the fact that some \codett{compl}eted items may in fact
-		be generated by the \codett{predict} stage instead of the
-		\codett{compl} stage. This happens when there are rules which accept
-		the empty string, which the \codett{compl} stage is unable to handle
-		properly. The combined predicted and completed item is then added
-		directly by the predict stage, similarly to what is done in
-		\cite{aycock02}.
+		done in two steps: completeness for items that are predicted, and
+		completeness for items that are completed. This is further complicated
+		by the fact that some completed items may in fact be generated by the
+		\codett{predict} step instead of the \codett{compl} step. This happens
+		when there are rules which accept the empty string, which the
+		\codett{compl} step is unable to handle properly. The combined
+		predicted and completed item is then added directly by the predict
+		step, similarly to what is done in \cite{aycock02}.
 
-		To show completeness for the \codett{predict}ed items from
-		\codett{pred-comp₂} we will make use of the fact that items that have
-		already been predicted on cannot be combined in any other way to form
-		new items that are different than the ones created by prediction the
-		first time. This is represented in the proof as the set \codett{ss}
-		being \codett{Inert}.
+		To show completeness for the predicted items from \codett{pred-comp₂}
+		we will make use of the fact that items that have already been
+		predicted on cannot be combined in any other way to form new items that
+		are different than the ones created by prediction the first time. This
+		is represented in the proof as the set \codett{ss} being
+		\codett{Inert}.
 
 		\begin{code}
 			  Inert : ∀ {t v} → Item t v * → Item t v * → Set
@@ -584,14 +580,14 @@
 		\codett{ss} is inert if all items derivable form it are either in
 		\codett{ss} or another specified set \codett{rs}: the items next in
 		line to be predicted and completed on. We can then show that the basic
-		step in \codett{pred-comp₂} (predicting and completeing on \codett{rs}
+		step in \codett{pred-comp₂} (predicting and completing on \codett{rs}
 		to form the next \codett{rs}, and adding \codett{rs} to the inert set)
 		preserves inertness:
 
 		\AgdaHide{\begin{code}
 			  complete₁-pred-comp₁ : T *
 			  complete₁-pred-comp₁ = ε
-		\end{code}}\todo{undef}
+		\end{code}}
 		\begin{code}
 			  inert' : ∀ {t v rs ss} (ω : EState t v) →
 			    Inert ss rs →
@@ -600,7 +596,7 @@
     	\AgdaHide{\begin{code}
 			  inert' {rs = ε} {ss} ω nx x i j g z₁ z₂ z₃ = nx x i j g z₁ z₂ z₃
 			  inert' {rs = rs@(r₁ ∷ rs₀)} {ss} ω nx x i j g z₁ z₂ z₃ =
-			    case in-lr rs ss z₂ of
+			    case in-either rs ss z₂ of
 			      λ { (r x₁) →
 			        let x₁ = nx x i j g z₁ x₁ z₃  in
 			        in-r x₁
@@ -609,6 +605,14 @@
 			        include-\\ y₁
 			      }
 		\end{code}}
+
+		Each item can be in either \codett{rs} or \codett{ss} to start with. In
+		the case that it was in \codett{ss}, nothing needs to be shown as the
+		item is already inert. If the item was in \codett{rs}, we need to show
+		that it will be part of the newly predicted set of items. Because we
+		only care about predicted items, completeness of \codett{pred-comp₁} is
+		the same as completeness of \codett{compl}, which is very simple as it
+		only looks items up in the rules of the grammar.
 
 		This then makes completeness for \codett{pred-comp₂} predicted items
 		simple to prove. Only some book-keeping related to the termination of
@@ -652,66 +656,65 @@
 			    j ≋ h → j ∈ ss →
 			    k ≋ complet g h →
 			      k ∈ (rs ++ ss)
+
+			  Inert₃ : ∀ {t v} -> Item t v * -> Item t v * -> Set
+			  Inert₃ {t} {v} ss rs =
+			    ∀ {u X Y α β γ} ->
+			    (j k : Item t v) ->
+			    (g : G ∙ t ⊢ u / v ⟶* X / α ∙ l Y ∷ β) ->
+			    (h : G ∙ t ⊢ v / v ⟶* Y / γ ∙ ε) ->
+			    j ≋ g -> j ∈ ss ->
+			    k ≋ complet g h ->
+			      k ∈ (rs ++ ss)
 		\end{code}
 
-		However, \codett{inert₂'} is complicated somewhat by the need to
-		differentiate between items that where completed using the
-		\codett{compl} step, and the ones that were completed immediately opon
-		prediction: \todo{code change}
-
-		\AgdaHide{\begin{code}
-			  complete₂-pred-comp₁ : T *
-			  complete₂-pred-comp₁ = ε
-		\end{code}}\todo{undef}
+		\codett{inert₂'} and \codett{inert₃'} are very similar to
+		\codett{inert'} and as such we will not discuss them further. However,
+		completeness for \codett{pred-comp₀} for completed items is more
+		interesting than it is for predicted ones, and deserves some
+		discussion. We start with \codett{complete₃-pred-comp₀}, which is used
+		in \codett{inert₃'}:
+		
 		\begin{code}
-			  inert₂' : ∀ {t v rs ss} (ω : EState t v) →
-			    Complete* ω →
-			    Inert₂ ss rs →
-			    Inert₂ (rs ++ ss) (pred-comp₁ ω ss rs \\ (rs ++ ss))
-			  inert₂' {rs = ε} {ss} ω c nx x i j g z₁ z₂ z₃ = nx x i j g z₁ z₂ z₃
-			  inert₂' {t} {v} {rs = rs@(r₁ ∷ rs₀)} {ss} ω c nx {u} {w} j k n g h z₁ z₂ z₃ =
-			    case in-lr rs ss z₂ of
-			      λ { (r x₁) →
-			        let x₁ = nx j k n g h z₁ x₁ z₃  in
-			        in-r x₁
-			      ; (l x₁) →
-			        let y₁ = complete₂-pred-comp₁ rs ω c j k n g h z₁ x₁ z₃ in
-			        include-\\ y₁
-			      }
+			  complete₃-pred-comp₀ : ∀ {t u v X Y α β γ} ->
+			    (ω : EState t v) ->
+			    (i j : Item t v) ->
+			    (g : G ∙ t ⊢ u / v ⟶* X / α ∙ l Y ∷ β) ->
+			    (h : G ∙ t ⊢ v / v ⟶* Y / γ ∙ ε) ->
+			    i ≋ g ->
+			    j ≋ complet g h ->
+			      j ∈ pred-comp₀ i refl ω
+			  complete₃-pred-comp₀ {Y = Y} ω i j g h refl refl
+			      with elem eqₙ Y (nullable G)
+			  ... | yes x = in-head
+			  ... | no x = void (x (nullable-complete h))
 		\end{code}
 
-		When this has been done, completeness for the items that have been
-		completed from \codett{pred-comp₂} is simple to prove, with only some
-		extra book-keeping being nessacary.
+		Since the start and remainder indicies of $h$ are both $v$, $Y$ must be
+		a nullable rule. We still have to check if $Y$ is in the nullable set,
+		in order to help the compiler normalize \codett{pred-comp₀} properly.
+		If the test comes back positive, the completed rule will have been
+		created by the immediate completion in \codett{pred-comp₀}. We also
+		need to satisfy the type checker in the case that $Y$ should not be in
+		the nullable set. The \codett{void} function here is the principle of
+		explosion: taking an impossibility as an argument and returning any
+		type we desire. We show the impossibility using a proof that
+		\codett{nullable} is complete and contains $Y$ since it is nullable,
+		along with $x$, which is a proof that $Y$ is not in contained in
+		\codett{nullable G}.
+
+		We also want to look at the case when a rule is not nullable. In this
+		case we don't need to examine \codett{pred-comp₀} closely, as it will
+		always call \codett{compl} directly, and we therefore move directly to
+		completeness for \codett{compl}:
 
 		\begin{code}
-			  complete₂-pred-comp₂ : ∀ {t v} → ∀ ss rs m p q →
-			    (ω : EState t v) →
-			    Complete* ω →
-			    Inert₂ ss rs →
-			    ∀ {u w X Y α β γ}
-			    (j k : Item t v) →
-			    (w ≡ v → Void) →
-			    (g : G ∙ t ⊢ u / w ⟶* X / α ∙ l Y ∷ β) →
-			    (h : G ∙ t ⊢ w / v ⟶* Y / γ ∙ ε) →
-			    j ≋ h → j ∈ Sₙ (pred-comp₂ ω ss rs m p q) →
-			    k ≋ complet g h →
-			      k ∈ Sₙ (pred-comp₂ ω ss rs m p q)
-		\end{code}
-		\AgdaHide{\begin{code}
-			  complete₂-pred-comp₂ ss rs            zero    () q ω           c
-			  complete₂-pred-comp₂ ss ε             (suc m) p  q (start rs)  c nx = nx 
-			  complete₂-pred-comp₂ ss ε             (suc m) p  q (step ω rs) c nx = nx 
-			  complete₂-pred-comp₂ ss rs@(r₁ ∷ rs₀) (suc m) p  q ω           c nx =
-			    let p₁ = wf-pcw₃ (Σ.proj₀ all-items) p q in
-			    let q₁ = wf-pcw₂ (pred-comp₁ ω ss rs) (rs ++ ss) q in
-			    complete₂-pred-comp₂ (rs ++ ss) _ m p₁ q₁ ω c (inert₂' ω c nx)
+
 		\end{code}}
 
-		\todo{code change}
 		What remains to be shown is then that the scanning step is complete:
 
-		\AgdaHide{\begin{code}
+		\begin{code}
 			  complete-scanr₀ : ∀ {t u v X α β} → ∀ a rs →
 			    (i : Item t (a ∷ v)) →
 			    (j : Item t v) →
@@ -719,6 +722,16 @@
 			    i ≋ g → i ∈ rs →
 			    j ≋ scanner g →
 			      j ∈ scanr₀ a rs
+		\end{code}
+		
+		We only show the type of the proof here, as the \codett{scanr₀}
+		function is fairly simple. Any item $j$ that is the result of a
+		scanning step, will created by \codett{scanr₀} if had been generated 
+		before it. We simply need to walk through scanning the list of 
+		potential items until we come to the predecessor, at which point $j$ 
+		will be generated.
+
+		\AgdaHide{\begin{code}
 			  complete-scanr₀ a ε i j g refl () refl
 			
 			  complete-scanr₀ a ((X ∘ u ↦ α ∘ ε) ∷ rs)       i j g refl (in-tail p) refl =
@@ -734,8 +747,7 @@
 			  complete-scanr₀ a ((X ∘ u ↦ α ∘ r b ∷ β) ∷ rs) i j g refl (in-tail p) refl with eqₜ a b
 			  ... | yes refl = in-tail (complete-scanr₀ a rs i j g refl p refl)
 			  ... | no x     = complete-scanr₀ a rs i j g refl p refl
-		\end{code}}
-		\begin{code}
+
 			  complete-scanr : ∀ {t u v X α β} → ∀ a →
 			    (ω : EState t (a ∷ v)) →
 			    Complete ω →
@@ -745,21 +757,19 @@
 			    i ≋ g →
 			    j ≋ scanner g →
 			      j ∈ Sₙ (scanr a ω)
-		\end{code}
-		\AgdaHide{\begin{code}
 			  complete-scanr a ω@(start rs) c  i j g refl refl with (fst c) i g refl
 			  complete-scanr a ω@(start rs) c  i j g refl refl | d = complete-scanr₀ a (Sₙ ω) i j g refl d refl
 			  complete-scanr a ω@(step _ rs) c i j g refl refl with (fst c) i g refl
 			  complete-scanr a ω@(step _ rs) c i j g refl refl | d = complete-scanr₀ a (Sₙ ω) i j g refl d refl
 		\end{code}}
 
-		Followed by a proof that all initial items are present (should the
-		current item set be the first one):
+		This is followed by a proof that all initial items are present (should
+		the current item set be the first one):
 
 		\AgdaHide{\begin{code}
 			  complete₀-itemize : T *
 			  complete₀-itemize = ε
-		\end{code}}\todo{undef}
+		\end{code}}
 		\begin{code}
 			  complete-itemize : ∀ w {β} →
 			    (x : (CFG.start G , β) ∈ CFG.rules G) →
@@ -779,7 +789,7 @@
 		\AgdaHide{\begin{code}
 			  complete-pred-comp : T *
 			  complete-pred-comp = ε
-		\end{code}}\todo{undef}\todo{undef}
+		\end{code}}
 		\begin{code}
 			  complete-step : ∀ {a₀ a t v} →
 			    (Σ λ u → u ++ (a₀ ∷ a ∷ v) ≡ t) ∣ (a ∷ v) ≡ t →
@@ -810,7 +820,7 @@
 		\end{code}
 
 		This can then be used to show that any number of steps still preserve
-		completeness:
+		completeness. We only show the type for complete-parse₀:
 
 		\begin{code}
 			  complete-parse₀ : ∀ {a t v} →
@@ -829,24 +839,10 @@
 			      i ≋ initial x → eq-prop (_∈ Sₙ ω) i z
 			    ) →
 			    Complete (parse₀ ω)
-			  complete-parse₀ {a₀} {t} {v = ε} k ω c fx fx₂ = complete-pred-comp k ω c fx fx₂
-			  complete-parse₀ {a₀} {t} {v = a ∷ v} k ω c fx fx₂ =
-			    let
-			      x₁ = complete-pred-comp k ω c fx fx₂
-			      x₂ = case k of
-			        λ { (r refl) → l (σ ε refl)
-			          ; (l (σ p₁ p₀)) → l (σ (p₁ ←∷ a₀) (trans (sym (in₀ _ _ _)) (sym p₀)))
-			          }
-			    in
-			    complete-parse₀ {v = v} x₂ (step₀ ω) x₁
-			      (λ {g i refl → complete-scanr a (pred-comp ω) x₁
-			        (_ ∘ _ ↦ _ ∘ _ [ v-unstep (Item.χ i) ∘ Item.ψ i ]) i g refl refl})
-			      (λ {refl x₂ i x₃ → case k of
-			        λ { (r ())
-			          ; (l (σ p₁ p₀)) → void (ε.ε₂ eqₜ (trans (sym (in₀ _ _ _)) (sym p₀)))
-			          }
-			        })
 		\end{code}
+		\AgdaHide{\begin{code}
+			  complete-parse₀ = top
+		\end{code}}
 
 		Supplying the proof that the initial states are complete we can finally
 		show completeness of the \codett{parse} function:
@@ -886,7 +882,7 @@
 	\section{Parse trees}
 
 		The output of the of the implemented parser - an \codett{EState}
-		essentially being a set of set of Earley items - is eqedly not a
+		essentially being a set of set of Earley items - is decidedly not a
 		parse tree.  Parse tree are not generally useful when parsing
 		potentially ambiguous grammars, as the ambiguities can create an
 		exponential blowup in the number of nodes in the resulting parse tree,

@@ -490,25 +490,25 @@ open import grammar-mini N T
 			    σ (x ∷ (Σ.proj₁ (deduplicate as))) (u-∷ (Σ.proj₀ (deduplicate as)) x₁)
 		\end{code}}
 
-		The complete and predict stages do, however, work together and they are
-		therefore, unlike the scanning step, from now on merged into a single
-		action:
+		The complete and predict stages joined together as a single step, with 
+		the addition of a special-case handling for rules that are nullable, 
+		that is, rules that can accept the empty string:
 
 		\begin{code}
-			  pred-comp₀ : ∀ {v w β} →
-			    (i : Item w v) →
-			    (β ≡ Item.β i) →
-			    (ω : EState w v) →
-			    Σ {Item w v *} λ as → Unique as
-			  pred-comp₀ i@(X ∘ u ↦ α ∘ ε) refl ω = deduplicate (compl i refl ω)
-			  pred-comp₀ i@(X ∘ u ↦ α ∘ r a ∷ β) refl ω = σ ε u-ε
+			  pred-comp₀ : ∀ {v w β} ->
+			    (i : Item w v) ->
+			    (β ≡ Item.β i) ->
+			    (ω : EState w v) ->
+			    Item w v *
+			  pred-comp₀ i@(X ∘ u ↦ α ∘ ε) refl ω = compl i refl ω
+			  pred-comp₀ i@(X ∘ u ↦ α ∘ r a ∷ β) refl ω = ε
 			  pred-comp₀ i@(X ∘ u ↦ α ∘ l Y ∷ β) refl ω with elem eqₙ Y (nullable G)
-			  pred-comp₀ i@(X ∘ u ↦ α ∘ l Y ∷ β) refl ω | no x = deduplicate (predic i refl ω)
+			  pred-comp₀ i@(X ∘ u ↦ α ∘ l Y ∷ β) refl ω | no x = predic i refl ω
 			  pred-comp₀ i@(X ∘ u ↦ α ∘ l Y ∷ β) refl ω | yes x =
 			    let i₁ = X ∘ u ↦ α ←∷ l Y ∘ β [ v-step (Item.χ i) ∘ Item.ψ i ] in
 			    let x₁ = pred-comp₀ i₁ refl ω in
 			    let x₂ = predic i refl ω in
-			    deduplicate (i₁ ∷ (Σ.proj₁ x₁ ++ x₂))
+			    i₁ ∷ (x₁ ++ x₂)
 
 			  pred-comp₁ : {w n : T *} → (ω : EState w n) →
 			    (ss : Item w n *) → (rs : Item w n *) → Item w n *
@@ -517,14 +517,27 @@ open import grammar-mini N T
 			  pred-comp₁ ω ss ε = ε
 			  pred-comp₁ ω ss (r₁ ∷ rs) =
 			    let x₁ = pred-comp₀ r₁ refl (Wₙ ω ss) in
-			    Σ.proj₁ x₁ ++ pred-comp₁ ω ss rs
+			    x₁ ++ pred-comp₁ ω ss rs
 		\end{code}}
 
-		This does not do much more than selecting the appropriate step based on
-		the item to be analyzed, and mapping this over a list of items to be
-		analyzed. The result is also filtered so that all generated items are
-		unique. This is then put when generating all the predicted and
-		completed items for an item set:
+		Items that can be completed are completed using \codett{compl} as one
+		would expect, and items that need scanning are not relevant for this
+		function. For items that can be predicted on, however, the behaviour is
+		slightly more complicated. Non-nullable predictions are done normally,
+		but for nullable ones an extra item $i_1$ is produced. This item could
+		have been produced by completing the resulting nullable item
+		immediately, but if the same nullable item had already been constructed
+		and completed, it would not have been analyzed again properly by our
+		algorithm and so the current item would not be analyzed properly. This
+		method ensures that all items are properly analyzed, and is similar to
+		methods used by others when implementating Earley
+		parsers~\cite{aycock02}.
+		
+		This does not do much more than selecting the appropriate
+		step based on the item to be analyzed, and mapping this over a list of
+		items to be analyzed. The result is also filtered so that all generated
+		items are unique. This is then put when generating all the predicted
+		and completed items for an item set:
 
 		\AgdaHide{\begin{code}
 			  all-items₀ : ∀ {v w X u α β} → ∀ χ ψ →

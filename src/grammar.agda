@@ -7,7 +7,6 @@ record CFG : Set where
   field
     start : N
     rules : (N × (N ∣ T)* )*
-    valid : (X : N) -> Σ λ α -> (X , α) ∈ rules
 
 infixr 10 _⊢_∈_
 data _⊢_∈_ (G : CFG) :  T * -> (N ∣ T) * -> Set where
