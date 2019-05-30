@@ -236,13 +236,13 @@ open import grammar-mini N T
 			    G ⊢ v ∥ w ∈ β →
 			    G ⊢ u ∥ w ∈ α ++ β
 			sound₁ (initial x)     b = b
-			sound₁ (scanner g)     b = in₂ (λ γ → _ ⊢ _ ∥ _ ∈ γ) (in₀ _ _ _) (sound₁ g (term b))
+			sound₁ (scanner g)     b = (sound₁ g (term b))
 			sound₁ (predict x g)   b = b
 			sound₁ (complet g g₁)  b =
-			  let x₁ = in₂ (λ γ → _ ⊢ _ ∥ _ ∈ γ) (++-ε _) (sound₁ g₁ empt) in
-			  let x₂ = in₂ (λ γ → (_ , γ) ∈ _) (++-ε _) (in-g g₁) in
+			  let x₁ = (sound₁ g₁ empt) in
+			  let x₂ = (in-g g₁) in
 			  let x₃ = conc x₂ x₁ b in
-			  in₂ (λ γ → _ ⊢ _ ∥ _ ∈ γ) (in₀ _ _ _) (sound₁ g x₃)
+			  (sound₁ g x₃)
 		\end{code}
 
 		Soundness is fairly straightforward. The \codett{in-g} function proves
@@ -257,16 +257,16 @@ open import grammar-mini N T
 			  G ∙ t ⊢ u / v ⟶* X / α ∙ β →
 			    G ⊢ v ∥ w ∈ β →
 			  G ∙ t ⊢ u / w ⟶* X / α ++ β ∙ ε
-			complete₁ a empt = in₂ (λ γ → _ ∙ _ ⊢ _ / _ ⟶* _ / γ ∙ ε) (sym (++-ε _)) a
+			complete₁ a empt = a
 			complete₁ a (conc x g g₁) =
 			  let x₁ = predict x a in
 			  let x₂ = complete₁ x₁ g in
 			  let x₃ = complet a x₂ in
 			  let x₄ = complete₁ x₃ g₁ in
-			  in₂ (λ γ → _ ∙ _ ⊢ _ / _ ⟶* _ / γ ∙ _) (sym (in₀ _ _ _)) x₄
+			  x₄
 			complete₁ a (term g) =
 			  let x₁ = complete₁ (scanner a) g in
-			  in₂ (λ γ → _ ∙ _ ⊢ _ / _ ⟶* _ / γ ∙ _) (sym (in₀ _ _ _)) x₁
+			  x₁
 		\end{code}
 
 		Like with the soundness proof some parts related to string

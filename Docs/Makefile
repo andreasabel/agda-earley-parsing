@@ -55,7 +55,7 @@ latex/agda.sty : latex latex-agda.sty
 latex/%.tex : include/%.tex
 	cp $< $@
 	sed -e 's/\t//g' < $< > agda/$*.lagda
-	- agda --latex --latex-dir=agda/latex -i agda agda/$*.lagda && sed -e 's/{code}/{agdacode}/g' < agda/latex/$*.tex > $@
+	- agda --latex --latex-dir=agda/latex --only-scope-checking -i agda agda/$*.lagda && sed -e 's/{code}/{agdacode}/g' < agda/latex/$*.tex > $@
 
 # Individual rules:
 
