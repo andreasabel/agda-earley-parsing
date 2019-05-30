@@ -145,7 +145,7 @@ suff-g₁ (initial x) = σ ε refl
 suff-g₁ (scanner g) = suff-g₁ g
 suff-g₁ (predict x g) = suff-g₂ g
 suff-g₁ (complet g g₁) = suff-g₁ g
-  
+ 
 sound₁ : ∀ {G t u v w X α β} ->
   G ∙ t ⊢ u / v ⟶* X / α ∙ β ->
     G ⊢ v ∥ w ∈ β ->
