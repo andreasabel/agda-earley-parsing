@@ -102,21 +102,25 @@ open import grammar-mini N T
 		\begin{table}[h]
 		\centering
 		\begin{tabular}{rcl}
-			E & $ \mapsto $ & V \\
-			E & $ \mapsto $ & E O E \\
-			O & $ \mapsto $ & `$+$' \\
-			O & $ \mapsto $ & `$-$' \\
-			V & $ \mapsto $ & `$x$' \\
-			V & $ \mapsto $ & `$y$' \\
-			V & $ \mapsto $ & `$z$'
+			$E$ & $ \mapsto $ & $V$ \\
+			$E$ & $ \mapsto $ & $E$ $O$ $E$ \\
+			$O$ & $ \mapsto $ & `$+$' \\
+			$O$ & $ \mapsto $ & `$-$' \\
+			$V$ & $ \mapsto $ & `$x$' \\
+			$V$ & $ \mapsto $ & `$y$' \\
+			$V$ & $ \mapsto $ & `$z$'
 		\end{tabular}
 		\end{table}
 
 		We will take $E$ to be the starting symbol of the grammar, and we will
 		attempt to parse the string ``$x+y$''. First, we prepare the parser
-		state by creating 6 empty sets, and adding the initial item to the
+		state by creating four empty sets, and adding the initial item to the
 		first one:
 
+\todo{Is it necessary to add a new starting symbol $S_0$?  Couldn't
+  you use $E$ as you do in the Agda formalization?  This would amount
+  to adding all rules for $E$ as initial rules, and accept an input as
+  soon as one of the rules for $E$ added in state $0$ has been completed.}
 		\begin{table}[h]
 		\centering
 		\begin{tabular}{|c|c|c|c|}
@@ -273,6 +277,9 @@ open import grammar-mini N T
 					\)
 			\end{tabular}
 		\end{table}
+\todo{The Agda formalization does not have $S_0$; thus, a better match
+would be the start rule $\earley S \epsilon \alpha 0 \in \St 0$ where
+$S \mapsto \alpha$ is a grammar rule for start symbols $S$.}
 
 		These inference rules match closely with the descriptions of how new
 		items can be constructed, together with the initial item, and a similar
@@ -395,6 +402,10 @@ open import grammar-mini N T
 			  let x₃ = conc x₂ x₁ b in
 			  (sound₁ g x₃)
 		\end{code}
+\todo{Consider using different letters than $x$.  In particular,
+  elements different types should be represented by different letters.
+ E.g., you could use $r$ for rules, $d$ for Earley derivations etc.
+ This helps with reading these proofs.}
 
 		Soundness is fairly straightforward. The \codett{in-g} function proves
 		the invariant $\alpha \concat \beta \in \textrm{rules } G$ for the
