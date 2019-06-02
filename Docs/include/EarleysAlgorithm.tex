@@ -860,6 +860,52 @@ open import grammar-mini N T
 
 		This concludes our implementation of the Earley parsing algorithm.
 
+	\section{Performance}
+		
+		The implemented parser was tested on two grammars with several
+		different inputs. These were chosen arbitrarily in order to get an idea
+		of the performance of the implemented parser for simple grammars. The
+		two grammars are shown in table \ref{grammars}, and the performance
+		when parsing inputs of different lengths is shown in table
+		\ref{performance}. We can clearly see from table \ref{performance} that
+		the execution time is super-linear for both grammars, which is slower 
+		than the Earley parsing algorithm's theoretical time complexity for 
+		these types of grammars.
+
+		\begin{table}[h]
+		\centering
+		\caption{The two grammars tested. The grammar to the left matches any 
+			number of starting parentheses, followed by an equal number of 
+			closing parentheses. The grammar to the right matches any string 
+			containing only a's and b's, as long as the number of a's and b's 
+			is not the same.}
+		\label{grammars}
+		\begin{tabular}{c|c}
+			Matching Parentheses & Different number of a's and b's \\
+			$S \mapsto (S) $ & $S \mapsto U$ \\
+			$S \mapsto \epsilon $ & $S \mapsto V$ \\
+			& $U \mapsto TaU$  \\
+			& $U \mapsto TaT$  \\
+			& $U \mapsto UaT$  \\
+			& $V \mapsto TbV$  \\
+			& $V \mapsto TbT$  \\
+			& $V \mapsto VbT$  \\
+			& $T \mapsto aTbT$ \\
+			& $T \mapsto bTaT$ \\
+			
+		\end{tabular}
+		\end{table}
+
+		\begin{table}[h]
+		\centering
+		\caption{Execution time [s] while parsing inputs of different sizes [\# 
+			of tokens]. Left graph shows performance while parsing the 
+			\emph{Matching Parentheses} grammar, Right graph while parsing 
+			\emph{Different number of a's and b's}.}
+		\label{performance}
+		\includegraphics[width=15cm]{figure/graph.pdf}.
+		\end{table}
+
 %%% Local Variables:
 %%% mode: latex
 %%% TeX-master: "../Report"

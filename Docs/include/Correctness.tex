@@ -709,8 +709,26 @@
 		completeness for \codett{compl}:
 
 		\begin{code}
+			  complete-compl : ∀ {t u v w X Y α β γ} ->
+			    (ω : EState t w) ->
+			    Complete* ω ->
+			    (i j : Item t w) ->
+			    (v ≡ w -> Void) ->
+			    (g : G ∙ t ⊢ u / v ⟶* X / α ∙ l Y ∷ β) ->
+			    (h : G ∙ t ⊢ v / w ⟶* Y / γ ∙ ε) ->
+			    (p : i ≋ h) ->
+			    j ≋ complet g h ->
+			      j ∈ compl i (≋-β i h p) ω
+		\end{code}
 
-		\end{code}}
+		Here, \codett{≋-β i h p} gives the proof \codett{Item.β ≡ γ} that is
+		needed for \codett{compl}. A sketch of the completeness proof for
+		\codett{compl} is as follows: First, the item corresponding to $g$ is
+		searched for in $\omega$, and since we know that $Y$ is not nullable,
+		and given \codett{Complete* ω}, all items that could correspond to $g$
+		will be found in this search. We then filter the resulting items to 
+		find the right one, and this filtering can also easily be shown to be 
+		complete.
 
 		What remains to be shown is then that the scanning step is complete:
 
@@ -881,8 +899,8 @@
 
 	\section{Parse trees}
 
-		The output of the of the implemented parser - an \codett{EState}
-		essentially being a set of set of Earley items - is decidedly not a
+		The output of the of the implemented parser -- an \codett{EState}
+		essentially being a set of set of Earley items -- is decidedly not a
 		parse tree.  Parse tree are not generally useful when parsing
 		potentially ambiguous grammars, as the ambiguities can create an
 		exponential blowup in the number of nodes in the resulting parse tree,

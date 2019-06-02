@@ -172,26 +172,6 @@ module parser-complete (G : CFG) where
   Contains X u α β χ ψ (start rs) = (X ∘ u ↦ α ∘ β [ χ ∘ ψ ]) ∈ rs
   Contains X u α β χ ψ (step ω rs) = Contains X u α β χ ψ ω ∣ (X ∘ u ↦ α ∘ β [ χ ∘ ψ ]) ∈ rs
 
---  complete-compl₀ : ∀ {u v w X t α β} (ω : EState w v) -> ∀ .χ .ψ ->
---    Contains X t α β χ ψ ω ->
---    (X ∘ t ↦ α ∘ β [ χ ∘ ψ ]) ∈ compl₀ {u} ω
---  complete-compl₀ {u} {v} ω χ ψ g                with eq-T* u v
---  complete-compl₀ {u} {u} ω χ ψ g                | yes refl = {!!}
---  complete-compl₀ {u} {v} (start rs) χ ψ g       | no x = {!!}
---  complete-compl₀ {u} {v} (step ω rs) χ ψ (r x₁) | no x = {!!}
---  complete-compl₀ {u} {v} (step ω rs) χ ψ (l x₁) | no x = {!!}
-
---  complete-compl₂ : ∀ {t u v w X Y β γ} -> ∀ α .χ .ψ .χ₁ .ψ₁ ->
---    (ω : EState t w) ->
---    (i : Item t w) ->
---    (p : i ≡ (Y ∘ v ↦ γ ∘ ε)) ->
---    G ⊢ u / v ⟶* X / l Y ∷ β ->
---    G ⊢ v / w ⟶* Y / ε ->
---    (X ∘ u ↦ α ←∷ l Y ∘ β [ χ₁ ∘ ψ₁ ]) ∈ compl₂ χ ψ i p ω
---  complete-compl₂ α χ ψ χ₁ ψ₁ ω i p g h =
---    let c₁ = complete-compl₀ ω (in₁ (app (_ ,_) (sym (in₀ _ _ _))) χ₁) ψ₁ {!!} in
---    complete-compl₁ α χ ψ χ₁ ψ₁ (compl₀ ω) i p c₁ g h
-
   complete-predict₀ : ∀ {t u v X Y α β δ} ->
     (ψ₀ : Σ λ s -> s ++ v ≡ t) ->
     (i j : Item t v) ->
@@ -297,7 +277,7 @@ module parser-complete (G : CFG) where
   complete-compl₁ ((Y ∘ u₁ ↦ α₁ ∘ l Z ∷ β) ∷ rs) i j k g h refl refl (in-tail q) s | yes refl =
     in-tail (complete-compl₁ rs i j k g h refl refl q s)
 
-  complete-compl₂ : ∀ {t u v w X Y α β γ} ->
+  complete-compl : ∀ {t u v w X Y α β γ} ->
     (ω : EState t w) ->
     Complete* ω ->
     (i j : Item t w) ->
@@ -307,7 +287,7 @@ module parser-complete (G : CFG) where
     (p : i ≋ h) -> 
     j ≋ complet g h ->
       j ∈ compl i (≋-β i h p) ω
-  complete-compl₂ ω c i j p g h refl s =
+  complete-compl ω c i j p g h refl s =
     let x₁ = compl₀ ω in
     let x₂ = complete-compl₀ ω c g (suff-g₃ h) p _ refl in
     complete-compl₁ x₁ (_ ∘ _ ↦ _ ∘ _ [ in-g g ∘ suff-g₁ g ]) i j g h refl refl x₂ s
@@ -322,7 +302,7 @@ module parser-complete (G : CFG) where
     i ≋ h -> 
     j ≋ complet g h ->
       j ∈ pred-comp₀ i refl ω
-  complete₂-pred-comp₀ ω c i j n g h refl = complete-compl₂ ω c _ _ n g h refl
+  complete₂-pred-comp₀ ω c i j n g h refl = complete-compl ω c _ _ n g h refl
 
   complete₃-pred-comp₀ : ∀ {t u v X Y α β γ} ->
     (ω : EState t v) ->

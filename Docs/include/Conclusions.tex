@@ -20,6 +20,14 @@
 	significantly change the complexity of proofs, even when the equivalence of
 	the new definition and the previous one is relatively easy to prove.
 
+	Unfortunately, the performance of the parser implementation leaves more to
+	be desired: The execution time for the parser is super-linear even for very
+	simple and non-ambiguous grammars. We speculate that some of this slowdown
+	is caused by a poor choice of data structures: the use of linked lists for
+	essentially all containers results in many operations that could have been
+	done in constant time to instead have a linear or even quadratic time 
+	complexity.
+
 	We also discuss the format of the output of the implemented parser, and
 	argue that the completeness proof, together with the equivalence of the
 	Earley formalization and one of the other parsing formalizations, is strong

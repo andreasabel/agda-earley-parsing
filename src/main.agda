@@ -64,14 +64,14 @@ eqₜ c d | false = no w
   where postulate w : _
 
 open import earley ℕ Char eq-ℕ eqₜ
-open parser no-same-ab
+open parser parens
 
 s' : ∀ {w} -> Item w ε * -> ℕ
 s' {w} ε = 0
 s' {w} ((Y ∘ u ↦ α ∘ x ∷ β) ∷ as) = s' as
 s' {w} ((Y ∘ u ↦ α ∘ ε) ∷ as) with eq-* eqₜ u w
 s' {w} ((Y ∘ u ↦ α ∘ ε) ∷ as) | no x = s' as
-s' {w} ((Y ∘ w ↦ α ∘ ε) ∷ as) | yes refl with eq-ℕ Y (CFG.start no-same-ab)
+s' {w} ((Y ∘ w ↦ α ∘ ε) ∷ as) | yes refl with eq-ℕ Y (CFG.start parens)
 s' {w} ((Y ∘ w ↦ α ∘ ε) ∷ as) | yes refl | yes refl = 1
 s' {w} ((Y ∘ w ↦ α ∘ ε) ∷ as) | yes refl | no x = s' as
 
