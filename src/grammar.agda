@@ -154,22 +154,22 @@ sound₁ (initial x) b = b
 sound₁ (scanner g) b = in₂ (λ t -> _ ⊢ _ ∥ _ ∈ t) (in₀ _ _ _) (sound₁ g (term b))
 sound₁ (predict x g) b = b
 sound₁ (complet g g₁) b =
-  let x₁ = in₂ (λ t -> _ ⊢ _ ∥ _ ∈ t) (++-ε _) (sound₁ g₁ empt) in
-  let x₂ = in₂ (λ t -> (_ , t) ∈ _) (++-ε _) (in-g g₁) in
-  let x₃ = conc x₂ x₁ b in
-  in₂ (λ t -> _ ⊢ _ ∥ _ ∈ t) (in₀ _ _ _) (sound₁ g x₃)
+  let b₁ = in₂ (λ t -> _ ⊢ _ ∥ _ ∈ t) (++-ε _) (sound₁ g₁ empt) in
+  let x₁ = in₂ (λ t -> (_ , t) ∈ _) (++-ε _) (in-g g₁) in
+  let b₂ = conc x₁ b₁ b in
+  in₂ (λ t -> _ ⊢ _ ∥ _ ∈ t) (in₀ _ _ _) (sound₁ g b₂)
 
 complete₁ : ∀ {t u v w X α β} {G : CFG} ->
   G ∙ t ⊢ u / v ⟶* X / α ∙ β ->
   G ⊢ v ∥ w ∈ β ->
     G ∙ t ⊢ u / w ⟶* X / α ++ β ∙ ε
-complete₁ a empt = in₂ (λ t -> _ ∙ _ ⊢ _ / _ ⟶* _ / t ∙ ε) (sym (++-ε _)) a
-complete₁ a (conc x g g₁) =
-  let x₁ = predict x a in
-  let x₂ = complete₁ x₁ g in
-  let x₃ = complet a x₂ in
-  let x₄ = complete₁ x₃ g₁ in
-  in₂ (λ t -> _ ∙ _ ⊢ _ / _ ⟶* _ / t ∙ _) (sym (in₀ _ _ _)) x₄
-complete₁ a (term g) =
-  let x₁ = complete₁ (scanner a) g in
-  in₂ (λ t -> _ ∙ _ ⊢ _ / _ ⟶* _ / t ∙ _) (sym (in₀ _ _ _)) x₁
+complete₁ b empt = in₂ (λ t -> _ ∙ _ ⊢ _ / _ ⟶* _ / t ∙ ε) (sym (++-ε _)) b
+complete₁ b (conc x g g₁) =
+  let b₁ = predict x b in
+  let b₂ = complete₁ b₁ g in
+  let g₂ = complet b b₂ in
+  let g₃ = complete₁ g₂ g₁ in
+  in₂ (λ t -> _ ∙ _ ⊢ _ / _ ⟶* _ / t ∙ _) (sym (in₀ _ _ _)) g₃
+complete₁ b (term g) =
+  let g' = complete₁ (scanner b) g in
+  in₂ (λ t -> _ ∙ _ ⊢ _ / _ ⟶* _ / t ∙ _) (sym (in₀ _ _ _)) g'
