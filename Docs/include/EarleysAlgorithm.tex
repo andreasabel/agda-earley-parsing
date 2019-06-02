@@ -50,7 +50,7 @@ open import grammar-mini N T
 				If $\beta$ is of the form $Y\delta$, meaning that for this item
 				to be completed, a $Y$ must now be parsed at this position, a
 				new item $\earley{Y}{\epsilon}{\gamma}{j}$, where $j$ is the
-				current position, is added to the current set. We call this to 
+				current position, is added to the current set. We call this to
 				\emph{predict} based on the current item.
 
 			\item
@@ -89,39 +89,43 @@ open import grammar-mini N T
 		ways), the different derivations will all share their common items,
 		which gives the Earley parsing algorithm the ability to correctly
 		analyze ambiguous grammars efficiently.
-	
+
 	\section{An Example}
 
 		%\todo{I guess an example of an Earley parser run would be helpful in
 		%this section. (And in your thesis defense!)}
-		
+
 		To get a clear understanding of how the Earley parsing algorithm works,
-		we will use it to analyze a short string with a simple grammar. The 
+		we will use it to analyze a short string with a simple grammar. The
 		grammar rules are as follows:
-		
+
 		\begin{table}[h]
 		\centering
 		\begin{tabular}{rcl}
-			E & $ \mapsto $ & V \\
-			E & $ \mapsto $ & E O E \\
-			O & $ \mapsto $ & `$+$' \\
-			O & $ \mapsto $ & `$-$' \\
-			V & $ \mapsto $ & `$x$' \\
-			V & $ \mapsto $ & `$y$' \\
-			V & $ \mapsto $ & `$z$' 
+			$E$ & $ \mapsto $ & $V$ \\
+			$E$ & $ \mapsto $ & $E$ $O$ $E$ \\
+			$O$ & $ \mapsto $ & `$+$' \\
+			$O$ & $ \mapsto $ & `$-$' \\
+			$V$ & $ \mapsto $ & `$x$' \\
+			$V$ & $ \mapsto $ & `$y$' \\
+			$V$ & $ \mapsto $ & `$z$'
 		\end{tabular}
 		\end{table}
 
-		We will take $E$ to be the starting symbol of the grammar, and we will 
-		attempt to parse the string ``$x+y$''. First, we prepare the parser 
-		state by creating 6 empty sets, and adding the initial item to the 
+		We will take $E$ to be the starting symbol of the grammar, and we will
+		attempt to parse the string ``$x+y$''. First, we prepare the parser
+		state by creating four empty sets, and adding the initial item to the
 		first one:
 
+\todo{Is it necessary to add a new starting symbol $S_0$?  Couldn't
+  you use $E$ as you do in the Agda formalization?  This would amount
+  to adding all rules for $E$ as initial rules, and accept an input as
+  soon as one of the rules for $E$ added in state $0$ has been completed.}
 		\begin{table}[h]
 		\centering
 		\begin{tabular}{|c|c|c|c|}
 			\hline
-			$\St{0}$ & $\St{1}$ & $\St{2}$ & $\St{3}$ \\ 
+			$\St{0}$ & $\St{1}$ & $\St{2}$ & $\St{3}$ \\
 			\hline
 			$\earley{S_0}{\varepsilon}{E}{0}$ & & & \\
 			\hline
@@ -138,7 +142,7 @@ open import grammar-mini N T
 		\centering
 		\begin{tabular}{|c|c|c|c|}
 			\hline
-			$\St{0}$ & $\St{1}$ & $\St{2}$ & $\St{3}$ \\ 
+			$\St{0}$ & $\St{1}$ & $\St{2}$ & $\St{3}$ \\
 			\hline
 			$\earley{S_0}{\varepsilon}{E}{0}$ & & & \\
 			$\earley{E}{\varepsilon}{V}{0}$   & & & \\
@@ -159,7 +163,7 @@ open import grammar-mini N T
 		\centering
 		\begin{tabular}{|c|c|c|c|}
 			\hline
-			$\St{0}$                          & $\St{1}$ & $\St{2}$ & $\St{3}$ \\ 
+			$\St{0}$                          & $\St{1}$ & $\St{2}$ & $\St{3}$ \\
 			\hline
 			$\earley{S_0}{\varepsilon}{E}{0}$ & $\earley{V}{x}{\varepsilon}{0}$ & &\\
 			$\earley{E}{\varepsilon}{V}{0}$   & & & \\
@@ -171,19 +175,19 @@ open import grammar-mini N T
 		\end{tabular}
 		\end{table}
 
-		Now there is nothing to be done with any of the items in $\St{0}$, and 
+		Now there is nothing to be done with any of the items in $\St{0}$, and
 		so we move on to $\St{1}$. The first item here can be completed. Since
-		it has index $0$, we will look in $\St{0}$ for matching items to 
+		it has index $0$, we will look in $\St{0}$ for matching items to
 		complete with. The second item matches, and so we add a new item
-		$\earley{E}{V}{\varepsilon}{0}$ to the current set $\St{1}$. This new 
-		item can also be completed, and also has index $0$, with two matching 
+		$\earley{E}{V}{\varepsilon}{0}$ to the current set $\St{1}$. This new
+		item can also be completed, and also has index $0$, with two matching
 		items in $\St{0}$:
 
 		\begin{table}[h]
 		\centering
 		\begin{tabular}{|c|c|c|c|}
 			\hline
-			$\St{0}$                          & $\St{1}$ & $\St{2}$ & $\St{3}$ \\ 
+			$\St{0}$                          & $\St{1}$ & $\St{2}$ & $\St{3}$ \\
 			\hline
 			$\earley{S_0}{\varepsilon}{E}{0}$ & $\earley{V}{x}{\varepsilon}{0}$   &  & \\
 			$\earley{E}{\varepsilon}{V}{0}$   & $\earley{E}{V}{\varepsilon}{0}$   &  & \\
@@ -195,9 +199,9 @@ open import grammar-mini N T
 		\end{tabular}
 		\end{table}
 
-		At this point, we can complete the initial item, meaning that we could 
+		At this point, we can complete the initial item, meaning that we could
 		accept this input if it ended here. Since there is more input to parse,
-		we continue with predicting on item four. When we are done with 
+		we continue with predicting on item four. When we are done with
 		$\St{1}$ our state looks like this:
 
 		\begin{table}[H]
@@ -215,7 +219,7 @@ open import grammar-mini N T
 			\hline
 		\end{tabular}
 		\end{table}
-		
+
 		Continuing to add items all the way until the end we get the following
 		state:
 
@@ -236,10 +240,10 @@ open import grammar-mini N T
 		\end{tabular}
 		\end{table}
 
-		Since the item $\earley{S_0}{E}{\varepsilon}{0}$ is in $\St{3}$ the 
-		input sequence is in the grammar, and we accept the input. We can work 
-		our way backwards from this item using the construction rules in 
-		reverse to figure out how it was made and construct a parse tree for 
+		Since the item $\earley{S_0}{E}{\varepsilon}{0}$ is in $\St{3}$ the
+		input sequence is in the grammar, and we accept the input. We can work
+		our way backwards from this item using the construction rules in
+		reverse to figure out how it was made and construct a parse tree for
 		it.
 
 	\section{Formalization}
@@ -273,6 +277,9 @@ open import grammar-mini N T
 					\)
 			\end{tabular}
 		\end{table}
+\todo{The Agda formalization does not have $S_0$; thus, a better match
+would be the start rule $\earley S \epsilon \alpha 0 \in \St 0$ where
+$S \mapsto \alpha$ is a grammar rule for start symbols $S$.}
 
 		These inference rules match closely with the descriptions of how new
 		items can be constructed, together with the initial item, and a similar
@@ -395,6 +402,10 @@ open import grammar-mini N T
 			  let x₃ = conc x₂ x₁ b in
 			  (sound₁ g x₃)
 		\end{code}
+\todo{Consider using different letters than $x$.  In particular,
+  elements different types should be represented by different letters.
+ E.g., you could use $r$ for rules, $d$ for Earley derivations etc.
+ This helps with reading these proofs.}
 
 		Soundness is fairly straightforward. The \codett{in-g} function proves
 		the invariant $\alpha \concat \beta \in \textrm{rules } G$ for the
@@ -641,8 +652,8 @@ open import grammar-mini N T
 			    σ (x ∷ (Σ.proj₁ (deduplicate as))) (u-∷ (Σ.proj₀ (deduplicate as)) x₁)
 		\end{code}}
 
-		The complete and predict stages joined together as a single step, with 
-		the addition of a special-case handling for rules that are nullable, 
+		The complete and predict stages joined together as a single step, with
+		the addition of a special-case handling for rules that are nullable,
 		that is, rules that can accept the empty string:
 
 		\begin{code}
@@ -683,7 +694,7 @@ open import grammar-mini N T
 		method ensures that all items are properly analyzed, and is similar to
 		methods used by others when implementating Earley
 		parsers~\cite{aycock02}.
-		
+
 		This does not do much more than selecting the appropriate
 		step based on the item to be analyzed, and mapping this over a list of
 		items to be analyzed. The result is also filtered so that all generated
@@ -849,7 +860,7 @@ open import grammar-mini N T
 			    Σ (λ t → (t ∈ CFG.rules G) × (fst t ≡ CFG.start G)) * →
 			    Item w w *
 			  itemize w ε = ε
-			  itemize w (σ (X , β) p₀ ∷ rs) = 
+			  itemize w (σ (X , β) p₀ ∷ rs) =
 			    (X ∘ w ↦ ε ∘ β [ fst p₀ ∘ σ ε refl ]) ∷ itemize w rs
 
 			  parse : ∀ w → EState w ε
