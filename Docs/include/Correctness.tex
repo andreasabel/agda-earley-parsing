@@ -911,3 +911,10 @@
 		how the result will be used different structures might be appropriate, 
 		or a function that decides what option to choose when given several can 
 		be provided in order to create a normal parse tree.
+
+		The \codett{EState} is useful as an output for the completeness proof, 
+		however: the \codett{Complete} property ensures that any Earley 
+		proposition will have a corresponding item in the \codett{EState}. This
+		can be applied recursively to the construction of any such proposition,
+		which means that all possible parses for ambiguous grammar will be 
+		properly included in the \codett{EState}.
