@@ -30,18 +30,42 @@ module count (N T : Set) (decidₙ : Dec N) (decidₜ : Dec T) where
   ∋-comm (in-tail in-head) = in-head
   ∋-comm (in-tail (in-tail p₁)) = in-tail (in-tail p₁)
   
+  nullable₀ : (N × (N ∣ T) *) * -> N * -> N *
+  nullable₀ ε ns = ns
+  nullable₀ ((X , α) ∷ rs)       ns with elem decidₙ X ns
+  nullable₀ ((X , α) ∷ rs)       ns | yes x = nullable₀ rs ns
+  nullable₀ ((X , ε) ∷ rs)       ns | no x = nullable₀ rs (X ∷ ns)
+  nullable₀ ((X , r a ∷ α) ∷ rs) ns | no x = nullable₀ rs ns
+  nullable₀ ((X , l Y ∷ α) ∷ rs) ns | no x with elem decidₙ Y ns
+  nullable₀ ((X , l Y ∷ α) ∷ rs) ns | no x | yes x₁ = nullable₀ ((X , α) ∷ rs) ns
+  nullable₀ ((X , l Y ∷ α) ∷ rs) ns | no x | no x₁ = nullable₀ rs ns
+
+  nullable₁ :
+    (rs : (N × (N ∣ T) *) *) ->
+    (ns : N *) ->
+    (m : ℕ) ->
+    N *
+  nullable₁ rs ns zero = ns
+  nullable₁ rs ns (suc m) = nullable₁ rs (nullable₀ rs ns) m
+
   nullable : CFG -> N *
-  nullable G = go (CFG.rules G) ε
-    where
-      go : (N × (N ∣ T) *) * -> N * -> N *
-      go ε ns = ns
-      go ((X , α) ∷ rs)       ns with elem decidₙ X ns
-      go ((X , α) ∷ rs)       ns | yes x = go rs ns
-      go ((X , ε) ∷ rs)       ns | no x = go rs (X ∷ ns)
-      go ((X , r a ∷ α) ∷ rs) ns | no x = go rs ns
-      go ((X , l Y ∷ α) ∷ rs) ns | no x with elem decidₙ Y ns
-      go ((X , l Y ∷ α) ∷ rs) ns | no x | yes x₁ = go ((X , α) ∷ rs) ns
-      go ((X , l Y ∷ α) ∷ rs) ns | no x | no x₁ = {!!}
+  nullable G = nullable₁ (CFG.rules G) ε (length (CFG.rules G))
+
+  nullable₀-sound : ∀ {G X u} rs ns ->
+    (∀ {X α} -> (X , α) ∈ rs -> (X , α) ∈ CFG.rules G) ->
+    (∀ {Y u} -> Y ∈ ns -> G ⊢ u ∥ u ∈ l Y ∷ ε) ->
+    X ∈ nullable₀ rs ns -> G ⊢ u ∥ u ∈ l X ∷ ε
+
+  nullable₀-sound ε ns f g p = g p
+  nullable₀-sound ((X , α) ∷ rs) ns f g p       with elem decidₙ X ns
+  nullable₀-sound ((X , α) ∷ rs) ns f g p       | yes x = nullable₀-sound rs ns (f ∘ in-tail) g p
+  nullable₀-sound ((X , ε) ∷ rs) ns f g p       | no x =
+    nullable₀-sound rs ns (f ∘ in-tail) g {!p!}
+
+  nullable₀-sound ((X , r a ∷ α) ∷ rs) ns f g p | no x = nullable₀-sound rs ns (f ∘ in-tail) g p
+  nullable₀-sound ((X , l Y ∷ α) ∷ rs) ns f g p | no x with elem decidₙ Y ns
+  nullable₀-sound ((X , l Y ∷ α) ∷ rs) ns f g p | no x | yes x₁ = {!!}
+  nullable₀-sound ((X , l Y ∷ α) ∷ rs) ns f g p | no x | no x₁ = nullable₀-sound rs ns (f ∘ in-tail) g p
 
   nullable-sound : ∀ {G X t u} ->
     X ∈ nullable G -> Σ λ γ -> G ∙ t ⊢ u / u ⟶* X / γ ∙ ε

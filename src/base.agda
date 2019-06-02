@@ -10,6 +10,7 @@ id x = x
 infix 4 _≡_
 data _≡_ {T : Set} (t : T) : T -> Set where
   refl : t ≡ t
+
 {-# BUILTIN EQUALITY _≡_  #-}
 
 app : {T U : Set} {a b : T} (f : T -> U) -> a ≡ b -> f a ≡ f b
@@ -69,6 +70,9 @@ subtract : (a b : ℕ) -> b ≤ a -> ℕ
 subtract a zero ≤₀ = a
 subtract (suc a) (suc b) (≤ₛ p) = subtract a b p
 
+_-_ : (x x₁ : ℕ) (x₂ : x₁ ≤ x) → ℕ
+_-_ = subtract
+
 ≤-zero : {n : ℕ} -> n ≤ zero -> n ≡ zero
 ≤-zero ≤₀ = refl
 
@@ -116,6 +120,9 @@ void₁ ()
 +-imp {zero} {b} ()
 +-imp {suc a} {b} p = +-imp (unsuc p)
 
+≤-imp : {a : ℕ} -> suc a ≤ a -> Void
+≤-imp (≤ₛ p) = ≤-imp p
+
 oddsuc : {a b : ℕ} -> a ≡ b -> a ≡ suc b -> Void
 oddsuc refl ()
 
@@ -136,6 +143,10 @@ infixr 3 _∣_
 data Bool : Set where
   true : Bool
   false : Bool
+
+{-# BUILTIN BOOL Bool #-}
+{-# BUILTIN TRUE true #-}
+{-# BUILTIN FALSE false #-}
 
 data Maybe : Set -> Set where
   Just : {T : Set} -> T -> Maybe T

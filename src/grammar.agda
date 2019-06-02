@@ -2,8 +2,9 @@ open import base
 
 module grammar (N T : Set) where
 
+infix 10 _⟩_
 record CFG : Set where
-  constructor _⟩_⟩_
+  constructor _⟩_
   field
     start : N
     rules : (N × (N ∣ T)* )*

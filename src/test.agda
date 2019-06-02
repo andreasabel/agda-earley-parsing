@@ -1,38 +1,67 @@
+{-# FOREIGN GHC import qualified Data.Text.IO as Text #-}
+
 open import base
 
-data T₀ : Set where
-  s₀ : T₀
-  a₀ : T₀
+data Unit : Set where
+  unit : Unit
 
-data N₀ : Set where
-  S₀ : N₀
-  A₀ : N₀
+{-# COMPILE GHC Unit = data () (()) #-}
 
-open import grammar N₀ T₀
+postulate
+  String : Set
+
+{-# BUILTIN STRING String #-}
+
+postulate
+  IO : Set → Set
+
+{-# BUILTIN IO IO #-}
+{-# COMPILE GHC IO = type IO #-}
+
+postulate
+  putStr : String → IO Unit
+
+{-# COMPILE GHC putStr = Text.putStr #-}
+
+postulate
+  Char : Set
+
+{-# BUILTIN CHAR Char #-}
+
+open import grammar ℕ Char
 
 G₀ : CFG
-G₀ = record
-    { start = S₀
-    ; rules = (A₀ , r a₀ ∷ ε) ∷ (S₀ , r s₀ ∷ l S₀ ∷ r s₀ ∷ ε) ∷ (S₀ , l A₀ ∷ ε) ∷ ε
-    ; valid = λ { S₀ → σ _ (in-tail in-head) ; A₀ → σ _ in-head}
-    }
+G₀ = 0 ⟩
+  (1 , r 'a' ∷ ε) ∷
+  (0 , r 's' ∷ l 0 ∷ r 's' ∷ ε) ∷
+  (0 , l 1 ∷ ε) ∷ ε
 
-t : T₀ *
-t = s₀ ∷ a₀ ∷ s₀ ∷ ε
+private
+ primitive
+  primCharToNat    : Char → ℕ
+  primCharEquality : Char → Char → Bool
+  primTrustMe : ∀ {A : Set} {x y : A} → x ≡ y
 
-simple : G₀ ⊢ t / ε ⟶* S₀ / ε
-simple =
-  let x₁ = initial in
-  let x₂ = predict {G = G₀} (in-tail in-head) x₁ in
-  let x₃ = predict {G = G₀} (in-tail (in-tail in-head)) x₁ in
-  let x₄ = scanner x₂ in
-  let x₅ = predict {G = G₀} in-head x₃ in
-  let x₆ = predict {G = G₀} (in-tail in-head) x₄ in
-  let x₇ = predict {G = G₀} (in-tail (in-tail in-head)) x₄ in
-  let x₈ = predict {G = G₀} in-head x₇ in
-  let x₉ = scanner x₈ in
-  let x₁₀ = complet x₇ x₉ in
-  let x₁₁ = complet x₄ x₁₀ in
-  let x₁₂ = scanner x₁₁ in
-  let x₁₃ = complet x₁ x₁₂ in
-  x₁₃
+eqₜ : Dec Char
+eqₜ c d with primCharEquality c d
+eqₜ c d | true = yes primTrustMe
+eqₜ c d | false = no w
+  where postulate w : _
+
+open import earley ℕ Char eq-ℕ eqₜ
+open parser G₀
+
+t : Char *
+t = 's' ∷ 'a' ∷ 's' ∷ ε
+
+s : ℕ
+s =
+  let x₁ = parse t in
+  length (Sₙ x₁)
+
+show : ℕ -> String
+show zero = "Reject\n"
+show (suc n) = "Accept\n"
+
+main : IO Unit
+main = putStr (show s)
