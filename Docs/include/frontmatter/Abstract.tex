@@ -9,7 +9,22 @@ Chalmers University of Technology and University of Gothenburg
 \thispagestyle{plain}			% Supress header
 \vspace{0pt plus 1.0pt}
 \section*{Abstract}
-Abstract text about your project in  Computer Science and Engineering.
+
+The Earley parsing algorithm, named after its inventor Jay Earley, was first
+described in 1968~\cite{Earley}, is a parsing algorithm for context-free
+grammars capable of properly handling ambiguous parses. Compared with other
+common parsing algorithms such as Valiant's or Cocke-Younger-Kasami (CYK), which
+have a best-case time complexity of O(n^3), Earley's can parse some grammars,
+such as the LR grammars, in linear time.
+
+In this thesis, we formalize Earley's algorithm and implement an Earley parser
+in the dependently typed programming language Agda.  We also prove that the
+implementation is both correct, in that it correctly accepts all input strings
+conforming to a specified grammar, and correctly reject all those that do not.
+
+We also give a short introduction to writing programs and proofs in Agda, as
+well as an introduction to both parsing in general and a detailed description
+of Earley's algorithm.
 
 % KEYWORDS (MAXIMUM 10 WORDS)
 \vfill
