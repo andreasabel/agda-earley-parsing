@@ -245,6 +245,8 @@ data _* (T : Set) : Set where
 infixr 80 _*
 infixr 20 _∷_
 
+{-# BUILTIN LIST _* #-} 
+
 inj-cons : ∀ {T a} -> Injective {T} (_∷ a)
 inj-cons = record { inj = λ {refl → refl} }
 
