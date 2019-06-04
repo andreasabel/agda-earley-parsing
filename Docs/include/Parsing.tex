@@ -52,7 +52,7 @@ open import base
 	the `topmost' non-terminal symbol in the grammar, and a sequence is said to
 	be `in' the grammar if it conforms to the structure of the starting symbol.
 	A sequence is also sometimes said to be `in' a list of terminals and 
-	non-terminals, meaning it confoms to the structure of said list.
+	non-terminals, meaning it conforms to the structure of said list.
 
 	Here is how we could encode a context-free grammar in Agda:
 
@@ -72,7 +72,7 @@ open import base
 	\codett{ S ⟩ (S , r s ∷ l S ∷ ε) ∷ (S , ε) ∷ ε}, where \codett{S} is
 	a nonterminal symbol, \codett{s} is a terminal symbol, and \codett{l} and
 	\codett{r} are the constructors for the left and right choice of our
-	optional type \codett{∣}. This grammak will have conforming strings that
+	optional type \codett{∣}. This grammar will have conforming strings that
 	either are empty, or start with the token \codett{s} followed by any
 	sequence that conforms to the \codett{S} non-terminal. The set of
 	conforming sequences for this second grammar is the set of (possibly empty)
