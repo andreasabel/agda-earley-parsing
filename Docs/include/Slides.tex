@@ -64,12 +64,35 @@ record CFG : Set where
 	\vspace{2cm}
 \end{frame}
 
-% probably good idea to discuss _⊢_∈_ and friends here
+\begin{frame}
+	\begin{code}
+		infixr 10 _⊢_∈_
+		data _⊢_∈_ (G : CFG) :  T * → (N ∣ T) * → Set where
+		  empty :
+		    G ⊢ ε ∈ ε
+
+		  concat : {u v : T *} {A : N} {α : (N ∣ T) *} →
+		    G ⊢ u ∈ l A ∷ ε → G ⊢ v ∈ α → G ⊢ u ++ v ∈ l A ∷ α
+
+		  term : {u : T *} {a : T} {α : (N ∣ T) *} →
+		    G ⊢ u ∈ α → G ⊢ a ∷ u ∈ r a ∷ α
+
+		  nonterm : {A : N} {α : (N ∣ T) *} {u : T *} →
+		    (A , α) ∈ CFG.rules G → G ⊢ u ∈ α → G ⊢ u ∈ l A ∷ ε
+	\end{code}
+\end{frame}
 
 \begin{frame}
 	\frametitle{Earley's Algorithm}
 	% Walk through parsing a string using Earley's Algorithm. All 
 	% explanation done during parsing
+
+	\begin{itemize}
+		\item Named after inventor, Jay Earley
+		\item Fast for some types of grammars
+		\item Table parser
+		\item Items on the form $\earley{X}{\alpha}{\beta}{i}$
+	\end{itemize}
 \end{frame}
 
 \begin{frame}
@@ -183,44 +206,44 @@ record CFG : Set where
 	\end{tabular}
 \end{frame}
 
-%\begin{frame}
-%	\frametitle{Earley's Algorithm - Formalization}
-%	\AgdaHide{\begin{code}
-%		infixl 10 _∙_⊢_/_⟶*_/_∙_
-%	\end{code}}
-%	\begin{code}
-%	data _∙_⊢_/_⟶*_/_∙_ (G : CFG) (input : T *) :
-%	  (u v : T *) → N → (N ∣ T) * → (N ∣ T) * → Set where
-%	\end{code}
-%\end{frame}
-%
-%\begin{frame}
-%	\frametitle{Earley's Algorithm - Formalization}
-%	\begin{code}
-%	  initial : {α : (N ∣ T) *} →
-%	    (CFG.start G , α) ∈ CFG.rules G →
-%	    G ∙ input ⊢ input / input ⟶* CFG.start G / ε ∙ α
-%	\end{code}
-%\end{frame}
-%
-%\begin{frame}
-%	\frametitle{Earley's Algorithm - Formalization}
-%	\begin{code}
-%	  scanner : {u v : T *} {a : T} {X : N} {α β : (N ∣ T) *} →
-%	    G ∙ input ⊢ u / a ∷ v ⟶* X / α ∙ (r a ∷ β) →
-%	    G ∙ input ⊢ u / v ⟶* X / (α ←∷ r a) ∙ β
-%
-%	  predict : {u v : T *} {X Y : N} {α β δ : (N ∣ T) *} →
-%	    CFG.rules G ∋ (Y , δ) →
-%	    G ∙ input ⊢ u / v ⟶* X / α ∙ (l Y ∷ β) →
-%	    G ∙ input ⊢ v / v ⟶* Y / ε ∙ δ
-%
-%	  complet : {u v w : T *} {X Y : N} {α β γ : (N ∣ T) *} →
-%	    G ∙ input ⊢ u / v ⟶* X / α ∙ (l Y ∷ β) →
-%	    G ∙ input ⊢ v / w ⟶* Y / γ ∙ ε →
-%	    G ∙ input ⊢ u / w ⟶* X / (α ←∷ l Y) ∙ β
-%	\end{code}
-%\end{frame}
+\begin{frame}
+	\frametitle{Earley's Algorithm - Formalization}
+	\AgdaHide{\begin{code}
+		infixl 10 _∙_⊢_/_⟶*_/_∙_
+	\end{code}}
+	\begin{code}
+	data _∙_⊢_/_⟶*_/_∙_ (G : CFG) (input : T *) :
+	  (u v : T *) → N → (N ∣ T) * → (N ∣ T) * → Set where
+	\end{code}
+\end{frame}
+
+\begin{frame}
+	\frametitle{Earley's Algorithm - Formalization}
+	\begin{code}
+	  initial : {α : (N ∣ T) *} →
+	    (CFG.start G , α) ∈ CFG.rules G →
+	    G ∙ input ⊢ input / input ⟶* CFG.start G / ε ∙ α
+	\end{code}
+\end{frame}
+
+\begin{frame}
+	\frametitle{Earley's Algorithm - Formalization}
+	\begin{code}
+	  scanner : {u v : T *} {a : T} {X : N} {α β : (N ∣ T) *} →
+	    G ∙ input ⊢ u / a ∷ v ⟶* X / α ∙ (r a ∷ β) →
+	    G ∙ input ⊢ u / v ⟶* X / (α ←∷ r a) ∙ β
+
+	  predict : {u v : T *} {X Y : N} {α β δ : (N ∣ T) *} →
+	    CFG.rules G ∋ (Y , δ) →
+	    G ∙ input ⊢ u / v ⟶* X / α ∙ (l Y ∷ β) →
+	    G ∙ input ⊢ v / v ⟶* Y / ε ∙ δ
+
+	  complet : {u v w : T *} {X Y : N} {α β γ : (N ∣ T) *} →
+	    G ∙ input ⊢ u / v ⟶* X / α ∙ (l Y ∷ β) →
+	    G ∙ input ⊢ v / w ⟶* Y / γ ∙ ε →
+	    G ∙ input ⊢ u / w ⟶* X / (α ←∷ l Y) ∙ β
+	\end{code}
+\end{frame}
 
 \begin{frame}
 	\frametitle{Earley's Algorithm - Impletentation}
@@ -230,21 +253,24 @@ record CFG : Set where
 \end{frame}
 
 \begin{frame}
-	\frametitle{Soundness proof}
-\end{frame}
-
-\begin{frame}
-	\frametitle{Completeness proof}
-\end{frame}
-
-\begin{frame}
 	\frametitle{Trying it out}
 	% Show the parser parsing some input. Maybe the
+	% The only results are accept or reject
 	% "equal number of a's and b's" grammar.
 \end{frame}
 
 \begin{frame}
+	\frametitle{Soundness proof}
+	% Show definition of soundness
+\end{frame}
+
+\begin{frame}
+	\frametitle{Completeness proof}
+	% Show definition of completeness
+\end{frame}
+
+\begin{frame}
 	\frametitle{Conclusion}
-	% Managed to show soundness and completenes for the parser.
+	% Managed to show soundness and completeness for the parser.
 	% Parser is slow, probably due to poor choice of data structures.
 \end{frame}
