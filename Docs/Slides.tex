@@ -1,0 +1,169 @@
+\documentclass{beamer}
+
+\usepackage[utf8]{inputenc}
+
+\newcommand{\codett}[1]{\textsf{\footnotesize{}#1}}
+\newcommand{\earley}[4]{#1\overset{#4}{\mapsto}#2\cdot#3}
+\newcommand{\St}[1]{\mathbb{S}_{#1}}
+
+\begin{document}
+	\begin{frame}
+		\frametitle{First slide}
+		% Title, names
+	\end{frame}
+
+	\begin{frame}
+		\frametitle{What's Agda?}
+		% Code example (++-assoc from report?) as quick intro to agda
+	\end{frame}
+
+	\begin{frame}
+		\frametitle{What's Parsing?}
+		% Short intro to parsing, what is a cfg, what do are ambiguous things
+	\end{frame}
+	
+	\begin{frame}
+		\frametitle{Earley's Algorithm}
+		% Walk through parsing a string using Earley's Algorithm. All 
+		% explanation done during parsing
+	\end{frame}
+
+	\begin{frame}
+		\frametitle{Earley's Algorithm}
+		\centering
+		\begin{tabular}{rcl}
+			$E$ & $ \mapsto $ & $V$ \\
+			$E$ & $ \mapsto $ & $E$ $O$ $E$ \\
+			$O$ & $ \mapsto $ & `$+$' \\
+			$O$ & $ \mapsto $ & `$-$' \\
+			$V$ & $ \mapsto $ & `$x$' \\
+			$V$ & $ \mapsto $ & `$y$' \\
+			$V$ & $ \mapsto $ & `$z$'
+		\end{tabular}
+		% This table, or parts of it should be part of several (all?) of the 
+		% slides where the earley states are shown.
+	\end{frame}
+
+	\begin{frame}
+		\frametitle{Earley's Algorithm}
+		\centering
+		\begin{tabular}{|c|c|c|c|}
+			\hline
+			$\St{0}$ & $\St{1}$ & $\St{2}$ & $\St{3}$ \\
+			\hline
+			$\earley{S_0}{\varepsilon}{E}{0}$ & & & \\
+			\hline
+		\end{tabular}
+	\end{frame}
+
+	\begin{frame}
+		\frametitle{Earley's Algorithm}
+		\centering
+		\begin{tabular}{|c|c|c|c|}
+			\hline
+			$\St{0}$ & $\St{1}$ & $\St{2}$ & $\St{3}$ \\
+			\hline
+			$\earley{S_0}{\varepsilon}{E}{0}$ & & & \\
+			$\earley{E}{\varepsilon}{V}{0}$   & & & \\
+			$\earley{E}{\varepsilon}{EOE}{0}$ & & & \\
+			\hline
+		\end{tabular}
+	\end{frame}
+
+	\begin{frame}
+		\frametitle{Earley's Algorithm}
+		\centering
+		\begin{tabular}{|c|c|c|c|}
+			\hline
+			$\St{0}$                          & $\St{1}$ & $\St{2}$ & $\St{3}$ \\
+			\hline
+			$\earley{S_0}{\varepsilon}{E}{0}$ & $\earley{V}{x}{\varepsilon}{0}$ & &\\
+			$\earley{E}{\varepsilon}{V}{0}$   & & & \\
+			$\earley{E}{\varepsilon}{EOE}{0}$ & & & \\
+			$\earley{V}{\varepsilon}{x}{0}$   & & & \\
+			$\earley{V}{\varepsilon}{y}{0}$   & & & \\
+			$\earley{V}{\varepsilon}{z}{0}$   & & & \\
+			\hline
+		\end{tabular}
+	\end{frame}
+
+	\begin{frame}
+		\frametitle{Earley's Algorithm}
+		\centering
+		\begin{tabular}{|c|c|c|c|}
+			\hline
+			$\St{0}$                          & $\St{1}$ & $\St{2}$ & $\St{3}$ \\
+			\hline
+			$\earley{S_0}{\varepsilon}{E}{0}$ & $\earley{V}{x}{\varepsilon}{0}$   &  & \\
+			$\earley{E}{\varepsilon}{V}{0}$   & $\earley{E}{V}{\varepsilon}{0}$   &  & \\
+			$\earley{E}{\varepsilon}{EOE}{0}$ & $\earley{S_0}{E}{\varepsilon}{0}$ &  & \\
+			$\earley{V}{\varepsilon}{x}{0}$   & $\earley{E}{E}{OE}{0}$            &  & \\
+			$\earley{V}{\varepsilon}{y}{0}$   &                                   &  & \\
+			$\earley{V}{\varepsilon}{z}{0}$   &                                   &  & \\
+			\hline
+		\end{tabular}
+	\end{frame}
+
+	\begin{frame}
+		\frametitle{Earley's Algorithm}
+		\centering
+		\begin{tabular}{|c|c|c|c|}
+			\hline
+			$\St{0}$                          & $\St{1}$                          &\St{2} & $\St{3}$ \\
+			\hline
+			$\earley{S_0}{\varepsilon}{E}{0}$ & $\earley{V}{x}{\varepsilon}{0}$   & $\earley{O}{+}{\varepsilon}{1}$ & \\
+			$\earley{E}{\varepsilon}{V}{0}$   & $\earley{E}{V}{\varepsilon}{0}$   & & \\
+			$\earley{E}{\varepsilon}{EOE}{0}$ & $\earley{S_0}{E}{\varepsilon}{0}$ & & \\
+			$\earley{V}{\varepsilon}{x}{0}$   & $\earley{E}{E}{OE}{0}$            & & \\
+			$\earley{V}{\varepsilon}{y}{0}$   & $\earley{O}{\varepsilon}{+}{0}$   & & \\
+			$\earley{V}{\varepsilon}{z}{0}$   & $\earley{O}{\varepsilon}{-}{0}$   & & \\
+			\hline
+		\end{tabular}
+	\end{frame}
+
+	\begin{frame}
+		\frametitle{Earley's Algorithm}
+		\centering
+		\begin{tabular}{|c|c|c|c|}
+			\hline
+			$\St{0}$                          & $\St{1}$                          & $\St{2}$                         $ & $\St{3}$ \\
+			\hline
+			$\earley{S_0}{\varepsilon}{E}{0}$ & $\earley{V}{x}{\varepsilon}{0}$   & $\earley{O}{+}{\varepsilon}{1}  $ & $\earley{V}{y}{\varepsilon}{2}  $ \\
+			$\earley{E}{\varepsilon}{V}{0}$   & $\earley{E}{V}{\varepsilon}{0}$   & $\earley{E}{EO}{E}{0}           $ & $\earley{E}{V}{\varepsilon}{2}  $ \\
+			$\earley{E}{\varepsilon}{EOE}{0}$ & $\earley{S_0}{E}{\varepsilon}{0}$ & $\earley{E}{\varepsilon}{V}{2}  $ & $\earley{E}{EOE}{\varepsilon}{0}$ \\
+			$\earley{V}{\varepsilon}{x}{0}$   & $\earley{E}{E}{OE}{0}$            & $\earley{E}{\varepsilon}{EOE}{2}$ & $\earley{E}{E}{OE}{2}           $ \\
+			$\earley{V}{\varepsilon}{y}{0}$   & $\earley{O}{\varepsilon}{+}{1}$   & $\earley{V}{\varepsilon}{x}{2}  $ & $\earley{S_0}{E}{\varepsilon}{0}$ \\
+			$\earley{V}{\varepsilon}{z}{0}$   & $\earley{O}{\varepsilon}{-}{1}$   & $\earley{V}{\varepsilon}{y}{2}  $ & $\earley{O}{\varepsilon}{+}{3}  $ \\
+			$                                 &                                   & $\earley{V}{\varepsilon}{z}{2}  $ & $\earley{O}{\varepsilon}{-}{3}  $ \\
+			\hline
+		\end{tabular}
+	\end{frame}
+	
+	\begin{frame}
+		\frametitle{Earley's Algorithm - Impletentation / Formalization}
+		% I implemented the stuff we just talked about.
+		% Talk about nullable rules and the solution I used?
+		% No need to show any code -- just outline what was done
+	\end{frame}
+
+	\begin{frame}
+		\frametitle{Soundness proof}
+	\end{frame}
+
+	\begin{frame}
+		\frametitle{Completeness proof}
+	\end{frame}
+
+	\begin{frame}
+		\frametitle{Trying it out}
+		% Show the parser parsing some input. Maybe the
+		% "equal number of a's and b's" grammar.
+	\end{frame}
+
+	\begin{frame}
+		\frametitle{Conclusion}
+		% Managed to show soundness and completenes for the parser.
+		% Parser is slow, probably due to poor choice of data structures.
+	\end{frame}
+	
+\end{document}
