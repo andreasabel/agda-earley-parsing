@@ -1,0 +1,250 @@
+\AgdaHide{
+\begin{code}
+open import base
+
+module Slides (N T : Set) where
+
+record CFG : Set where
+  constructor _⟩_
+  field
+    start : N
+    rules : (N × (N ∣ T)* )*
+\end{code} }
+
+\begin{frame}
+	\frametitle{What's Agda?}
+
+	\begin{itemize}
+		\item Functional programming language
+		\item Haskell-like \emph{(ish)} syntax
+		\item Dependently typed
+		\item Dependent types allow expressing constructing proofs as terms 
+			in the language
+	\end{itemize}
+\end{frame}
+
+\begin{frame}
+	\frametitle{What's Agda?}
+	% Code example (++-assoc from report?) as quick intro to agda
+\end{frame}
+
+\begin{frame}
+	\frametitle{What's Parsing?}
+	% Short intro to parsing, what is a cfg, what do are ambiguous things
+
+	\begin{itemize*}
+		\item Analyze the structure of a sequence of symbols
+		\item Structures are called grammars
+		\item We're interested in context-free grammars
+	\end{itemize*}\\
+	\vspace{0.5cm}
+	\centering
+	\begin{tabular}{c}
+		$X \mapsto \alpha$ 
+	\end{tabular}
+	\vspace{2cm}
+
+\end{frame}
+
+\begin{frame}
+	\frametitle{What's Parsing?}
+	% Short intro to parsing, what is a cfg, what do are ambiguous things
+
+	\begin{itemize*}
+		\item Analyze the structure of a sequence of symbols
+		\item Structures are called grammars
+		\item We're interested in context-free grammars
+	\end{itemize*}\\
+	\vspace{0.5cm}
+	\centering
+	\begin{tabular}{c}
+		$Z \mapsto Ya$  \\
+		$Y \mapsto b$ 
+	\end{tabular}
+	\vspace{2cm}
+\end{frame}
+
+% probably good idea to discuss _⊢_∈_ and friends here
+
+\begin{frame}
+	\frametitle{Earley's Algorithm}
+	% Walk through parsing a string using Earley's Algorithm. All 
+	% explanation done during parsing
+\end{frame}
+
+\begin{frame}
+	\frametitle{Earley's Algorithm}
+	\centering
+	\begin{tabular}{rcl}
+		$E$ & $ \mapsto $ & $V$ \\
+		$E$ & $ \mapsto $ & $E$ $O$ $E$ \\
+		$O$ & $ \mapsto $ & `$+$' \\
+		$O$ & $ \mapsto $ & `$-$' \\
+		$V$ & $ \mapsto $ & `$x$' \\
+		$V$ & $ \mapsto $ & `$y$' \\
+		$V$ & $ \mapsto $ & `$z$'
+	\end{tabular}
+	% This table, or parts of it should be part of several (all?) of the 
+	% slides where the earley states are shown.
+\end{frame}
+
+\begin{frame}
+	\frametitle{Earley's Algorithm}
+	\centering
+	\begin{tabular}{|c|c|c|c|}
+		\hline
+		$\St{0}$ & $\St{1}$ & $\St{2}$ & $\St{3}$ \\
+		\hline
+		$\earley{S_0}{\varepsilon}{E}{0}$ & & & \\
+		\hline
+	\end{tabular}
+\end{frame}
+
+\begin{frame}
+	\frametitle{Earley's Algorithm}
+	\centering
+	\begin{tabular}{|c|c|c|c|}
+		\hline
+		$\St{0}$ & $\St{1}$ & $\St{2}$ & $\St{3}$ \\
+		\hline
+		$\earley{S_0}{\varepsilon}{E}{0}$ & & & \\
+		$\earley{E}{\varepsilon}{V}{0}$   & & & \\
+		$\earley{E}{\varepsilon}{EOE}{0}$ & & & \\
+		\hline
+	\end{tabular}
+\end{frame}
+
+\begin{frame}
+	\frametitle{Earley's Algorithm}
+	\centering
+	\begin{tabular}{|c|c|c|c|}
+		\hline
+		$\St{0}$                          & $\St{1}$ & $\St{2}$ & $\St{3}$ \\
+		\hline
+		$\earley{S_0}{\varepsilon}{E}{0}$ & $\earley{V}{x}{\varepsilon}{0}$ & &\\
+		$\earley{E}{\varepsilon}{V}{0}$   & & & \\
+		$\earley{E}{\varepsilon}{EOE}{0}$ & & & \\
+		$\earley{V}{\varepsilon}{x}{0}$   & & & \\
+		$\earley{V}{\varepsilon}{y}{0}$   & & & \\
+		$\earley{V}{\varepsilon}{z}{0}$   & & & \\
+		\hline
+	\end{tabular}
+\end{frame}
+
+\begin{frame}
+	\frametitle{Earley's Algorithm}
+	\centering
+	\begin{tabular}{|c|c|c|c|}
+		\hline
+		$\St{0}$                          & $\St{1}$ & $\St{2}$ & $\St{3}$ \\
+		\hline
+		$\earley{S_0}{\varepsilon}{E}{0}$ & $\earley{V}{x}{\varepsilon}{0}$   &  & \\
+		$\earley{E}{\varepsilon}{V}{0}$   & $\earley{E}{V}{\varepsilon}{0}$   &  & \\
+		$\earley{E}{\varepsilon}{EOE}{0}$ & $\earley{S_0}{E}{\varepsilon}{0}$ &  & \\
+		$\earley{V}{\varepsilon}{x}{0}$   & $\earley{E}{E}{OE}{0}$            &  & \\
+		$\earley{V}{\varepsilon}{y}{0}$   &                                   &  & \\
+		$\earley{V}{\varepsilon}{z}{0}$   &                                   &  & \\
+		\hline
+	\end{tabular}
+\end{frame}
+
+\begin{frame}
+	\frametitle{Earley's Algorithm}
+	\centering
+	\begin{tabular}{|c|c|c|c|}
+		\hline
+		$\St{0}$                          & $\St{1}$                          &\St{2} & $\St{3}$ \\
+		\hline
+		$\earley{S_0}{\varepsilon}{E}{0}$ & $\earley{V}{x}{\varepsilon}{0}$   & $\earley{O}{+}{\varepsilon}{1}$ & \\
+		$\earley{E}{\varepsilon}{V}{0}$   & $\earley{E}{V}{\varepsilon}{0}$   & & \\
+		$\earley{E}{\varepsilon}{EOE}{0}$ & $\earley{S_0}{E}{\varepsilon}{0}$ & & \\
+		$\earley{V}{\varepsilon}{x}{0}$   & $\earley{E}{E}{OE}{0}$            & & \\
+		$\earley{V}{\varepsilon}{y}{0}$   & $\earley{O}{\varepsilon}{+}{0}$   & & \\
+		$\earley{V}{\varepsilon}{z}{0}$   & $\earley{O}{\varepsilon}{-}{0}$   & & \\
+		\hline
+	\end{tabular}
+\end{frame}
+
+\begin{frame}
+	\frametitle{Earley's Algorithm}
+	\centering
+	\begin{tabular}{|c|c|c|c|}
+		\hline
+		$\St{0}$                          & $\St{1}$                          & $\St{2}$                         $ & $\St{3}$ \\
+		\hline
+		$\earley{S_0}{\varepsilon}{E}{0}$ & $\earley{V}{x}{\varepsilon}{0}$   & $\earley{O}{+}{\varepsilon}{1}  $ & $\earley{V}{y}{\varepsilon}{2}  $ \\
+		$\earley{E}{\varepsilon}{V}{0}$   & $\earley{E}{V}{\varepsilon}{0}$   & $\earley{E}{EO}{E}{0}           $ & $\earley{E}{V}{\varepsilon}{2}  $ \\
+		$\earley{E}{\varepsilon}{EOE}{0}$ & $\earley{S_0}{E}{\varepsilon}{0}$ & $\earley{E}{\varepsilon}{V}{2}  $ & $\earley{E}{EOE}{\varepsilon}{0}$ \\
+		$\earley{V}{\varepsilon}{x}{0}$   & $\earley{E}{E}{OE}{0}$            & $\earley{E}{\varepsilon}{EOE}{2}$ & $\earley{E}{E}{OE}{2}           $ \\
+		$\earley{V}{\varepsilon}{y}{0}$   & $\earley{O}{\varepsilon}{+}{1}$   & $\earley{V}{\varepsilon}{x}{2}  $ & $\earley{S_0}{E}{\varepsilon}{0}$ \\
+		$\earley{V}{\varepsilon}{z}{0}$   & $\earley{O}{\varepsilon}{-}{1}$   & $\earley{V}{\varepsilon}{y}{2}  $ & $\earley{O}{\varepsilon}{+}{3}  $ \\
+		$                                 &                                   & $\earley{V}{\varepsilon}{z}{2}  $ & $\earley{O}{\varepsilon}{-}{3}  $ \\
+		\hline
+	\end{tabular}
+\end{frame}
+
+%\begin{frame}
+%	\frametitle{Earley's Algorithm - Formalization}
+%	\AgdaHide{\begin{code}
+%		infixl 10 _∙_⊢_/_⟶*_/_∙_
+%	\end{code}}
+%	\begin{code}
+%	data _∙_⊢_/_⟶*_/_∙_ (G : CFG) (input : T *) :
+%	  (u v : T *) → N → (N ∣ T) * → (N ∣ T) * → Set where
+%	\end{code}
+%\end{frame}
+%
+%\begin{frame}
+%	\frametitle{Earley's Algorithm - Formalization}
+%	\begin{code}
+%	  initial : {α : (N ∣ T) *} →
+%	    (CFG.start G , α) ∈ CFG.rules G →
+%	    G ∙ input ⊢ input / input ⟶* CFG.start G / ε ∙ α
+%	\end{code}
+%\end{frame}
+%
+%\begin{frame}
+%	\frametitle{Earley's Algorithm - Formalization}
+%	\begin{code}
+%	  scanner : {u v : T *} {a : T} {X : N} {α β : (N ∣ T) *} →
+%	    G ∙ input ⊢ u / a ∷ v ⟶* X / α ∙ (r a ∷ β) →
+%	    G ∙ input ⊢ u / v ⟶* X / (α ←∷ r a) ∙ β
+%
+%	  predict : {u v : T *} {X Y : N} {α β δ : (N ∣ T) *} →
+%	    CFG.rules G ∋ (Y , δ) →
+%	    G ∙ input ⊢ u / v ⟶* X / α ∙ (l Y ∷ β) →
+%	    G ∙ input ⊢ v / v ⟶* Y / ε ∙ δ
+%
+%	  complet : {u v w : T *} {X Y : N} {α β γ : (N ∣ T) *} →
+%	    G ∙ input ⊢ u / v ⟶* X / α ∙ (l Y ∷ β) →
+%	    G ∙ input ⊢ v / w ⟶* Y / γ ∙ ε →
+%	    G ∙ input ⊢ u / w ⟶* X / (α ←∷ l Y) ∙ β
+%	\end{code}
+%\end{frame}
+
+\begin{frame}
+	\frametitle{Earley's Algorithm - Impletentation}
+	% I implemented the stuff we just talked about.
+	% Talk about nullable rules and the solution I used?
+	% No need to show any code -- just outline what was done
+\end{frame}
+
+\begin{frame}
+	\frametitle{Soundness proof}
+\end{frame}
+
+\begin{frame}
+	\frametitle{Completeness proof}
+\end{frame}
+
+\begin{frame}
+	\frametitle{Trying it out}
+	% Show the parser parsing some input. Maybe the
+	% "equal number of a's and b's" grammar.
+\end{frame}
+
+\begin{frame}
+	\frametitle{Conclusion}
+	% Managed to show soundness and completenes for the parser.
+	% Parser is slow, probably due to poor choice of data structures.
+\end{frame}
