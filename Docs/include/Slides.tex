@@ -9,7 +9,7 @@ module Slides (N T : Set) where
 		\item Functional programming language
 		\item Haskell-like \emph{(ish)} syntax
 		\item Dependently typed
-		\item Dependent types allow expressing constructing proofs as terms 
+		\item Dependent types allow expressing constructing proofs as terms
 			in the language
 	\end{itemize}
 \end{frame}
@@ -66,7 +66,7 @@ infixr 10 _⊢_∈_
 	\vspace{0.5cm}
 	\centering
 	\begin{tabular}{c}
-		$X \mapsto \alpha$ 
+		$X \mapsto \alpha$
 	\end{tabular}
 	\vspace{2.9cm}
 
@@ -114,7 +114,7 @@ infixr 10 _⊢_∈_
 
 \begin{frame}
 	\frametitle{What's Earley?}
-	% Walk through parsing a string using Earley's Algorithm. All 
+	% Walk through parsing a string using Earley's Algorithm. All
 	% explanation done during parsing
 
 	\begin{itemize}
@@ -138,7 +138,7 @@ infixr 10 _⊢_∈_
 		$V$ & $ \mapsto $ & `$y$' \\
 		$V$ & $ \mapsto $ & `$z$'
 	\end{tabular} \\ \vspace{1cm}
-	% This table, or parts of it should be part of several (all?) of the 
+	% This table, or parts of it should be part of several (all?) of the
 	% slides where the earley states are shown.
 	Parse the string ``\emph{x + y}''
 \end{frame}
@@ -405,7 +405,7 @@ infixr 10 _⊢_∈_
 		\item Generally follows the same sequence of events as we did in the 
 			example.
 		\item Nullable rules require special care.
-		\item Adding more rules to each set while trying to consume it 
+		\item Adding more rules to each set while trying to consume it
 			complicates termination
 	\end{itemize}
 \end{frame}
@@ -427,16 +427,16 @@ module parser (G : CFG) where
       u : T *
       α β : (N ∣ T) *
       .{χ} : CFG.rules G ∋ (Y , α ++ β)
-      .{ψ} : (Σ λ t -> t ++ u ≡ w)        -- u is a suffix of w
-  
-  data EState : T * -> T * -> Set where
-    start : {v : T *} ->
-      (rs : Item v v * ) ->
+      .{ψ} : (Σ λ t → t ++ u ≡ w)        -- u is a suffix of w
+
+  data EState : T * → T * → Set where
+    start : {v : T *} →
+      (rs : Item v v * ) →
       EState v v
 
-    step : {a : T} {w v : T *} ->
-      (ω : EState w (a ∷ v)) ->
-      (rs : Item w v * ) ->
+    step : {a : T} {w v : T *} →
+      (ω : EState w (a ∷ v)) →
+      (rs : Item w v * ) →
       EState w v
 
   _≋_ : T *
@@ -453,13 +453,13 @@ module parser (G : CFG) where
 		
 	\end{itemize}
 	\begin{code}
-		  Valid : ∀ {w v} -> Item w v -> Set
-		  Valid {w} {v} i = 
+		  Valid : ∀ {w v} → Item w v → Set
+		  Valid {w} {v} i =
 		    G ∙ w ⊢ Item.u i / v ⟶* Item.Y i / Item.α i ∙ Item.β i
-		  
-		  Sound : ∀ {w v} -> EState w v -> Set
-		  Sound (start rs) = ∀ {i} -> i ∈ rs -> Valid i
-		  Sound (step ω rs) = Sound ω × (∀ {i} -> i ∈ rs -> Valid i)
+
+		  Sound : ∀ {w v} → EState w v → Set
+		  Sound (start rs) = ∀ {i} → i ∈ rs → Valid i
+		  Sound (step ω rs) = Sound ω × (∀ {i} → i ∈ rs → Valid i)
   	\end{code}
 \end{frame}
 
@@ -467,18 +467,18 @@ module parser (G : CFG) where
 	\frametitle{Completeness proof}
 	% Show definition of completeness
 	\begin{code}
-		  Complete₀ : ∀ {t v} -> Item t v * -> Set
-		  Complete₀ {t} {v} rs = ∀ {u Y α β} ->
-		    (i : Item t v) ->
-		    (g : G ∙ t ⊢ u / v ⟶* Y / α ∙ β) ->
-		    i ≋ g ->
+		  Complete₀ : ∀ {t v} → Item t v * → Set
+		  Complete₀ {t} {v} rs = ∀ {u Y α β} →
+		    (i : Item t v) →
+		    (g : G ∙ t ⊢ u / v ⟶* Y / α ∙ β) →
+		    i ≋ g →
 		    i ∈ rs
-		
+
 		  mutual
-		    Complete : ∀ {v w} -> EState w v -> Set
+		    Complete : ∀ {v w} → EState w v → Set
 		    Complete ω = Complete₀ (Latest ω) × Complete* ω
-		  
-		    Complete* : ∀ {v w} -> EState w v -> Set
+
+		    Complete* : ∀ {v w} → EState w v → Set
 		    Complete* (start rs) = ⊤
 		    Complete* (step ω rs) = Complete ω
 	\end{code}
@@ -510,14 +510,14 @@ module parser (G : CFG) where
 \begin{frame}
 	\frametitle{Conclusion}
 	\begin{itemize}
-		
+
 		\item
 			
 			Managed to implement an Earley parser and show soundness and
 			completeness for it. Implementation and proofs ~3k loc in Agda.
 		
 		\item
-			
+
 			Parser is slow, probably due to poor choice of data structures.
 			Best case is probably $\Omega(n^3)$.
 		
