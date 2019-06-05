@@ -49,6 +49,8 @@ record CFG : Set where
   field
     start : N
     rules : (N × (N ∣ T)* )*
+
+infixr 10 _⊢_∈_
 \end{code} }
 
 
@@ -66,7 +68,7 @@ record CFG : Set where
 	\begin{tabular}{c}
 		$X \mapsto \alpha$ 
 	\end{tabular}
-	\vspace{2cm}
+	\vspace{2.9cm}
 
 \end{frame}
 
@@ -93,17 +95,8 @@ record CFG : Set where
 \end{frame}
 
 \begin{frame}
-	\centering
-	\begin{tabular}{rclcrclcrcl}
-		$E$ & $ \mapsto $ & $V$         && $O$ & $ \mapsto $ & `$+$' && $V$ & $ \mapsto $ & `$x$' \\
-		$E$ & $ \mapsto $ & $E$ $O$ $E$ && $O$ & $ \mapsto $ & `$-$' && $V$ & $ \mapsto $ & `$y$' \\
-		    &             &             &&     &             &       && $V$ & $ \mapsto $ & `$z$'
-	\end{tabular}
-\end{frame}
-
-\begin{frame}
+	\frametitle{Parsing in Agda}
 	\begin{code}
-		infixr 10 _⊢_∈_
 		data _⊢_∈_ (G : CFG) :  T * → (N ∣ T) * → Set where
 		  empty :
 		    G ⊢ ε ∈ ε
@@ -153,6 +146,8 @@ record CFG : Set where
 \begin{frame}
 	\frametitle{Earley's Algorithm}
 	\centering
+	Parse the string ``\emph{x + y}''\\
+	\vspace{0.5cm}
 	\begin{tabular}{|c|c|c|c|}
 		\hline
 		$\St{0}$ & $\St{1}$ & $\St{2}$ & $\St{3}$ \\
@@ -174,6 +169,8 @@ record CFG : Set where
 \begin{frame}
 	\frametitle{Earley's Algorithm}
 	\centering
+	Parse the string ``\emph{x + y}''\\
+	\vspace{0.5cm}
 	\begin{tabular}{|c|c|c|c|}
 		\hline
 		$\St{0}$ & $\St{1}$ & $\St{2}$ & $\St{3}$ \\
@@ -197,6 +194,36 @@ record CFG : Set where
 \begin{frame}
 	\frametitle{Earley's Algorithm}
 	\centering
+	Parse the string ``\emph{x + y}''\\
+	\vspace{0.5cm}
+	\begin{tabular}{|c|c|c|c|}
+		\hline
+		$\St{0}$                          & $\St{1}$ & $\St{2}$ & $\St{3}$ \\
+		\hline
+		$\earley{S_0}{\varepsilon}{E}{0}$ & & &\\
+		$\earley{E}{\varepsilon}{V}{0}$   & & & \\
+		$\earley{E}{\varepsilon}{EOE}{0}$ & & & \\
+		$\earley{V}{\varepsilon}{x}{0}$   & & & \\
+		$\earley{V}{\varepsilon}{y}{0}$   & & & \\
+		$\earley{V}{\varepsilon}{z}{0}$   & & & \\
+		\hline
+	\end{tabular}
+
+	\\~\\
+	\vspace{0.5cm}
+	\scriptsize
+	\begin{tabular}{rclcrclcrcl}
+		$E$ & $ \mapsto $ & $V$         && $O$ & $ \mapsto $ & `$+$' && $V$ & $ \mapsto $ & `$x$' \\
+		$E$ & $ \mapsto $ & $E$ $O$ $E$ && $O$ & $ \mapsto $ & `$-$' && $V$ & $ \mapsto $ & `$y$' \\
+		    &             &             &&     &             &       && $V$ & $ \mapsto $ & `$z$'
+	\end{tabular}
+\end{frame}
+
+\begin{frame}
+	\frametitle{Earley's Algorithm}
+	\centering
+	Parse the string ``\emph{x + y}''\\
+	\vspace{0.5cm}
 	\begin{tabular}{|c|c|c|c|}
 		\hline
 		$\St{0}$                          & $\St{1}$ & $\St{2}$ & $\St{3}$ \\
@@ -223,6 +250,36 @@ record CFG : Set where
 \begin{frame}
 	\frametitle{Earley's Algorithm}
 	\centering
+	Parse the string ``\emph{x + y}''\\
+	\vspace{0.5cm}
+	\begin{tabular}{|c|c|c|c|}
+		\hline
+		$\St{0}$                          & $\St{1}$ & $\St{2}$ & $\St{3}$ \\
+		\hline
+		$\earley{S_0}{\varepsilon}{E}{0}$ & $\earley{V}{x}{\varepsilon}{0}$   &  & \\
+		$\earley{E}{\varepsilon}{V}{0}$   & $\earley{E}{V}{\varepsilon}{0}$   &  & \\
+		$\earley{E}{\varepsilon}{EOE}{0}$ &                                   &  & \\
+		$\earley{V}{\varepsilon}{x}{0}$   &                                   &  & \\
+		$\earley{V}{\varepsilon}{y}{0}$   &                                   &  & \\
+		$\earley{V}{\varepsilon}{z}{0}$   &                                   &  & \\
+		\hline
+	\end{tabular}
+
+	\\~\\
+	\vspace{0.5cm}
+	\scriptsize
+	\begin{tabular}{rclcrclcrcl}
+		$E$ & $ \mapsto $ & $V$         && $O$ & $ \mapsto $ & `$+$' && $V$ & $ \mapsto $ & `$x$' \\
+		$E$ & $ \mapsto $ & $E$ $O$ $E$ && $O$ & $ \mapsto $ & `$-$' && $V$ & $ \mapsto $ & `$y$' \\
+		    &             &             &&     &             &       && $V$ & $ \mapsto $ & `$z$'
+	\end{tabular}
+\end{frame}
+
+\begin{frame}
+	\frametitle{Earley's Algorithm}
+	\centering
+	Parse the string ``\emph{x + y}''\\
+	\vspace{0.5cm}
 	\begin{tabular}{|c|c|c|c|}
 		\hline
 		$\St{0}$                          & $\St{1}$ & $\St{2}$ & $\St{3}$ \\
@@ -249,9 +306,11 @@ record CFG : Set where
 \begin{frame}
 	\frametitle{Earley's Algorithm}
 	\centering
+	Parse the string ``\emph{x + y}''\\
+	\vspace{0.5cm}
 	\begin{tabular}{|c|c|c|c|}
 		\hline
-		$\St{0}$                          & $\St{1}$                          &\St{2} & $\St{3}$ \\
+		$\St{0}$                          & $\St{1}$                          &$\St{2}$ & $\St{3}$ \\
 		\hline
 		$\earley{S_0}{\varepsilon}{E}{0}$ & $\earley{V}{x}{\varepsilon}{0}$   & $\earley{O}{+}{\varepsilon}{1}$ & \\
 		$\earley{E}{\varepsilon}{V}{0}$   & $\earley{E}{V}{\varepsilon}{0}$   & & \\
@@ -275,6 +334,8 @@ record CFG : Set where
 \begin{frame}
 	\frametitle{Earley's Algorithm}
 	\centering
+	Parse the string ``\emph{x + y}''\\
+	\vspace{0.5cm}
 	\begin{tabular}{|c|c|c|c|}
 		\hline
 		$\St{0}$                          & $\St{1}$                          & $\St{2}$                         $ & $\St{3}$ \\
@@ -340,7 +401,9 @@ record CFG : Set where
 \begin{frame}
 	\frametitle{Earley's Algorithm - Implementation}
 	\begin{itemize}
-		\item I implemented the stuff we just talked about.
+		\item Implemented an Earley parser in Agda.
+		\item Generally follows the same sequence of events as we did in the 
+			example.
 		\item Nullable rules require special care.
 		\item Adding more rules to each set while trying to consume it 
 			complicates termination
@@ -386,6 +449,9 @@ module parser (G : CFG) where
 \begin{frame}
 	\frametitle{Soundness proof}
 	% Show definition of soundness
+	\begin{itemize}
+		
+	\end{itemize}
 	\begin{code}
 		  Valid : ∀ {w v} -> Item w v -> Set
 		  Valid {w} {v} i = 
@@ -420,7 +486,25 @@ module parser (G : CFG) where
 
 \begin{frame}
 	\frametitle{Related Work}
+	\begin{itemize}
+		\item
+		
+			\emph{Aditi Barthwal and Michael Norrish. Verified, executable
+			parsing. 2009.} Verify a Simple LR parser in HOL4.
 
+		\item
+
+			\emph{Tom Ridge. Simple, functional, sound and complete parsing for
+			all context- free grammars. 2011.} Verifies a parser generator 
+			based on parser combinators. Sound and mostly complete.
+
+		\item 
+		
+			\emph{Denis Firsov and Tarmo Uustalu. Certified normalization of
+			context-free grammars. 2014.}  Implement and verify a CYK 
+			(Cocke–Younger–Kasami) parser in Agda.
+		
+	\end{itemize}
 \end{frame}
 
 \begin{frame}
@@ -429,17 +513,18 @@ module parser (G : CFG) where
 		
 		\item
 			
-			Managed to implement and show soundness and completeness for the
-			parser. 3kloc Agda.
+			Managed to implement an Earley parser and show soundness and
+			completeness for it. Implementation and proofs ~3k loc in Agda.
 		
 		\item
 			
 			Parser is slow, probably due to poor choice of data structures.
-			Possibly also uneliminated proofs, but probably data structures.
+			Best case is probably $\Omega(n^3)$.
 		
 		\item
 
-			
+			Writing code that the Agda compiler understands will terminate can 
+			be a bit tricky, especially if you're not used to it.
 
 	\end{itemize}
 \end{frame}
