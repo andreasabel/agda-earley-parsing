@@ -9,7 +9,7 @@ module Slides (N T : Set) where
 		\item Functional programming language
 		\item Haskell-like \emph{(ish)} syntax
 		\item Dependently typed
-		\item Dependent types allow expressing constructing proofs as terms 
+		\item Dependent types allow expressing constructing proofs as terms
 			in the language
 	\end{itemize}
 \end{frame}
@@ -64,7 +64,7 @@ record CFG : Set where
 	\vspace{0.5cm}
 	\centering
 	\begin{tabular}{c}
-		$X \mapsto \alpha$ 
+		$X \mapsto \alpha$
 	\end{tabular}
 	\vspace{2cm}
 
@@ -121,7 +121,7 @@ record CFG : Set where
 
 \begin{frame}
 	\frametitle{What's Earley?}
-	% Walk through parsing a string using Earley's Algorithm. All 
+	% Walk through parsing a string using Earley's Algorithm. All
 	% explanation done during parsing
 
 	\begin{itemize}
@@ -145,7 +145,7 @@ record CFG : Set where
 		$V$ & $ \mapsto $ & `$y$' \\
 		$V$ & $ \mapsto $ & `$z$'
 	\end{tabular} \\ \vspace{1cm}
-	% This table, or parts of it should be part of several (all?) of the 
+	% This table, or parts of it should be part of several (all?) of the
 	% slides where the earley states are shown.
 	Parse the string ``\emph{x + y}''
 \end{frame}
@@ -342,7 +342,7 @@ record CFG : Set where
 	\begin{itemize}
 		\item I implemented the stuff we just talked about.
 		\item Nullable rules require special care.
-		\item Adding more rules to each set while trying to consume it 
+		\item Adding more rules to each set while trying to consume it
 			complicates termination
 	\end{itemize}
 \end{frame}
@@ -365,7 +365,7 @@ module parser (G : CFG) where
       α β : (N ∣ T) *
       .{χ} : CFG.rules G ∋ (Y , α ++ β)
       .{ψ} : (Σ λ t -> t ++ u ≡ w)        -- u is a suffix of w
-  
+
   data EState : T * -> T * -> Set where
     start : {v : T *} ->
       (rs : Item v v * ) ->
@@ -388,9 +388,9 @@ module parser (G : CFG) where
 	% Show definition of soundness
 	\begin{code}
 		  Valid : ∀ {w v} -> Item w v -> Set
-		  Valid {w} {v} i = 
+		  Valid {w} {v} i =
 		    G ∙ w ⊢ Item.u i / v ⟶* Item.Y i / Item.α i ∙ Item.β i
-		  
+
 		  Sound : ∀ {w v} -> EState w v -> Set
 		  Sound (start rs) = ∀ {i} -> i ∈ rs -> Valid i
 		  Sound (step ω rs) = Sound ω × (∀ {i} -> i ∈ rs -> Valid i)
@@ -407,11 +407,11 @@ module parser (G : CFG) where
 		    (g : G ∙ t ⊢ u / v ⟶* Y / α ∙ β) ->
 		    i ≋ g ->
 		    i ∈ rs
-		
+
 		  mutual
 		    Complete : ∀ {v w} -> EState w v -> Set
 		    Complete ω = Complete₀ (Latest ω) × Complete* ω
-		  
+
 		    Complete* : ∀ {v w} -> EState w v -> Set
 		    Complete* (start rs) = ⊤
 		    Complete* (step ω rs) = Complete ω
@@ -426,20 +426,20 @@ module parser (G : CFG) where
 \begin{frame}
 	\frametitle{Conclusion}
 	\begin{itemize}
-		
-		\item
-			
-			Managed to implement and show soundness and completeness for the
-			parser. 3kloc Agda.
-		
-		\item
-			
-			Parser is slow, probably due to poor choice of data structures.
-			Possibly also uneliminated proofs, but probably data structures.
-		
+
 		\item
 
-			
+			Managed to implement and show soundness and completeness for the
+			parser. 3kloc Agda.
+
+		\item
+
+			Parser is slow, probably due to poor choice of data structures.
+			Possibly also uneliminated proofs, but probably data structures.
+
+		\item
+
+
 
 	\end{itemize}
 \end{frame}
