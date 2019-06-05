@@ -57,11 +57,24 @@ record CFG : Set where
 	\end{itemize*}\\
 	\vspace{0.5cm}
 	\centering
-	\begin{tabular}{c}
-		$Z \mapsto Ya$  \\
-		$Y \mapsto b$ 
+	\begin{tabular}{rcl}
+		$E$ & $ \mapsto $ & $V$ \\
+		$E$ & $ \mapsto $ & $E$ $O$ $E$ \\
+		$O$ & $ \mapsto $ & `$+$' \\
+		$O$ & $ \mapsto $ & `$-$' \\
+		$V$ & $ \mapsto $ & `$x$' \\
+		$V$ & $ \mapsto $ & `$y$' \\
+		$V$ & $ \mapsto $ & `$z$'
 	\end{tabular}
-	\vspace{2cm}
+\end{frame}
+
+\begin{frame}
+	\centering
+	\begin{tabular}{rclcrclcrcl}
+		$E$ & $ \mapsto $ & $V$         && $O$ & $ \mapsto $ & `$+$' && $V$ & $ \mapsto $ & `$x$' \\
+		$E$ & $ \mapsto $ & $E$ $O$ $E$ && $O$ & $ \mapsto $ & `$-$' && $V$ & $ \mapsto $ & `$y$' \\
+		    &             &             &&     &             &       && $V$ & $ \mapsto $ & `$z$'
+	\end{tabular}
 \end{frame}
 
 \begin{frame}
@@ -90,6 +103,7 @@ record CFG : Set where
 	\begin{itemize}
 		\item Named after inventor, Jay Earley
 		\item Fast for some types of grammars
+		\item Not previously mechanically verified
 		\item Table parser
 		\item Items on the form $\earley{X}{\alpha}{\beta}{i}$
 	\end{itemize}
@@ -106,9 +120,10 @@ record CFG : Set where
 		$V$ & $ \mapsto $ & `$x$' \\
 		$V$ & $ \mapsto $ & `$y$' \\
 		$V$ & $ \mapsto $ & `$z$'
-	\end{tabular}
+	\end{tabular} \\ \vspace{1cm}
 	% This table, or parts of it should be part of several (all?) of the 
 	% slides where the earley states are shown.
+	Parse the string ``\emph{x + y}''
 \end{frame}
 
 \begin{frame}
@@ -120,6 +135,15 @@ record CFG : Set where
 		\hline
 		$\earley{S_0}{\varepsilon}{E}{0}$ & & & \\
 		\hline
+	\end{tabular}
+
+	\\~\\
+	\vspace{0.5cm}
+	\scriptsize
+	\begin{tabular}{rclcrclcrcl}
+		$E$ & $ \mapsto $ & $V$         && $O$ & $ \mapsto $ & `$+$' && $V$ & $ \mapsto $ & `$x$' \\
+		$E$ & $ \mapsto $ & $E$ $O$ $E$ && $O$ & $ \mapsto $ & `$-$' && $V$ & $ \mapsto $ & `$y$' \\
+		    &             &             &&     &             &       && $V$ & $ \mapsto $ & `$z$'
 	\end{tabular}
 \end{frame}
 
@@ -134,6 +158,15 @@ record CFG : Set where
 		$\earley{E}{\varepsilon}{V}{0}$   & & & \\
 		$\earley{E}{\varepsilon}{EOE}{0}$ & & & \\
 		\hline
+	\end{tabular}
+
+	\\~\\
+	\vspace{0.5cm}
+	\scriptsize
+	\begin{tabular}{rclcrclcrcl}
+		$E$ & $ \mapsto $ & $V$         && $O$ & $ \mapsto $ & `$+$' && $V$ & $ \mapsto $ & `$x$' \\
+		$E$ & $ \mapsto $ & $E$ $O$ $E$ && $O$ & $ \mapsto $ & `$-$' && $V$ & $ \mapsto $ & `$y$' \\
+		    &             &             &&     &             &       && $V$ & $ \mapsto $ & `$z$'
 	\end{tabular}
 \end{frame}
 
@@ -152,6 +185,15 @@ record CFG : Set where
 		$\earley{V}{\varepsilon}{z}{0}$   & & & \\
 		\hline
 	\end{tabular}
+
+	\\~\\
+	\vspace{0.5cm}
+	\scriptsize
+	\begin{tabular}{rclcrclcrcl}
+		$E$ & $ \mapsto $ & $V$         && $O$ & $ \mapsto $ & `$+$' && $V$ & $ \mapsto $ & `$x$' \\
+		$E$ & $ \mapsto $ & $E$ $O$ $E$ && $O$ & $ \mapsto $ & `$-$' && $V$ & $ \mapsto $ & `$y$' \\
+		    &             &             &&     &             &       && $V$ & $ \mapsto $ & `$z$'
+	\end{tabular}
 \end{frame}
 
 \begin{frame}
@@ -168,6 +210,15 @@ record CFG : Set where
 		$\earley{V}{\varepsilon}{y}{0}$   &                                   &  & \\
 		$\earley{V}{\varepsilon}{z}{0}$   &                                   &  & \\
 		\hline
+	\end{tabular}
+
+	\\~\\
+	\vspace{0.5cm}
+	\scriptsize
+	\begin{tabular}{rclcrclcrcl}
+		$E$ & $ \mapsto $ & $V$         && $O$ & $ \mapsto $ & `$+$' && $V$ & $ \mapsto $ & `$x$' \\
+		$E$ & $ \mapsto $ & $E$ $O$ $E$ && $O$ & $ \mapsto $ & `$-$' && $V$ & $ \mapsto $ & `$y$' \\
+		    &             &             &&     &             &       && $V$ & $ \mapsto $ & `$z$'
 	\end{tabular}
 \end{frame}
 
@@ -186,6 +237,15 @@ record CFG : Set where
 		$\earley{V}{\varepsilon}{z}{0}$   & $\earley{O}{\varepsilon}{-}{0}$   & & \\
 		\hline
 	\end{tabular}
+
+	\\~\\
+	\vspace{0.5cm}
+	\scriptsize
+	\begin{tabular}{rclcrclcrcl}
+		$E$ & $ \mapsto $ & $V$         && $O$ & $ \mapsto $ & `$+$' && $V$ & $ \mapsto $ & `$x$' \\
+		$E$ & $ \mapsto $ & $E$ $O$ $E$ && $O$ & $ \mapsto $ & `$-$' && $V$ & $ \mapsto $ & `$y$' \\
+		    &             &             &&     &             &       && $V$ & $ \mapsto $ & `$z$'
+	\end{tabular}
 \end{frame}
 
 \begin{frame}
@@ -203,6 +263,14 @@ record CFG : Set where
 		$\earley{V}{\varepsilon}{z}{0}$   & $\earley{O}{\varepsilon}{-}{1}$   & $\earley{V}{\varepsilon}{y}{2}  $ & $\earley{O}{\varepsilon}{+}{3}  $ \\
 		$                                 &                                   & $\earley{V}{\varepsilon}{z}{2}  $ & $\earley{O}{\varepsilon}{-}{3}  $ \\
 		\hline
+	\end{tabular}
+	\\~\\
+	\vspace{0.5cm}
+	\scriptsize
+	\begin{tabular}{rclcrclcrcl}
+		$E$ & $ \mapsto $ & $V$         && $O$ & $ \mapsto $ & `$+$' && $V$ & $ \mapsto $ & `$x$' \\
+		$E$ & $ \mapsto $ & $E$ $O$ $E$ && $O$ & $ \mapsto $ & `$-$' && $V$ & $ \mapsto $ & `$y$' \\
+		    &             &             &&     &             &       && $V$ & $ \mapsto $ & `$z$'
 	\end{tabular}
 \end{frame}
 
@@ -246,7 +314,7 @@ record CFG : Set where
 \end{frame}
 
 \begin{frame}
-	\frametitle{Earley's Algorithm - Impletentation}
+	\frametitle{Earley's Algorithm - Implementation}
 	% I implemented the stuff we just talked about.
 	% Talk about nullable rules and the solution I used?
 	% No need to show any code -- just outline what was done
@@ -259,18 +327,96 @@ record CFG : Set where
 	% "equal number of a's and b's" grammar.
 \end{frame}
 
+\AgdaHide{\begin{code}
+module parser (G : CFG) where
+
+  record Item (w : T *) (v : T *) : Set where
+    constructor _∘_↦_∘_
+    field
+      Y : N
+      u : T *
+      α β : (N ∣ T) *
+      .{χ} : CFG.rules G ∋ (Y , α ++ β)
+      .{ψ} : (Σ λ t -> t ++ u ≡ w)        -- u is a suffix of w
+  
+  data EState : T * -> T * -> Set where
+    start : {v : T *} ->
+      (rs : Item v v * ) ->
+      EState v v
+
+    step : {a : T} {w v : T *} ->
+      (ω : EState w (a ∷ v)) ->
+      (rs : Item w v * ) ->
+      EState w v
+
+  _≋_ : T *
+  _≋_ = ε
+
+  Latest : T *
+  Latest = ε
+\end{code}}
+
 \begin{frame}
 	\frametitle{Soundness proof}
 	% Show definition of soundness
+	\begin{code}
+		  Valid : ∀ {w v} -> Item w v -> Set
+		  Valid {w} {v} i = 
+		    G ∙ w ⊢ Item.u i / v ⟶* Item.Y i / Item.α i ∙ Item.β i
+		  
+		  Sound : ∀ {w v} -> EState w v -> Set
+		  Sound (start rs) = ∀ {i} -> i ∈ rs -> Valid i
+		  Sound (step ω rs) = Sound ω × (∀ {i} -> i ∈ rs -> Valid i)
+  	\end{code}
 \end{frame}
 
 \begin{frame}
 	\frametitle{Completeness proof}
 	% Show definition of completeness
+	\begin{code}
+		  Complete₀ : ∀ {t v} -> Item t v * -> Set
+		  Complete₀ {t} {v} rs = ∀ {u Y α β} ->
+		    (i : Item t v) ->
+		    (g : G ∙ t ⊢ u / v ⟶* Y / α ∙ β) ->
+		    i ≋ g ->
+		    i ∈ rs
+		
+		  mutual
+		    Complete : ∀ {v w} -> EState w v -> Set
+		    Complete ω = Complete₀ (Latest ω) × Complete* ω
+		  
+		    Complete* : ∀ {v w} -> EState w v -> Set
+		    Complete* (start rs) = ⊤
+		    Complete* (step ω rs) = Complete ω
+	\end{code}
+\end{frame}
+
+\begin{frame}
+	\frametitle{Related Work}
+
 \end{frame}
 
 \begin{frame}
 	\frametitle{Conclusion}
-	% Managed to show soundness and completeness for the parser.
-	% Parser is slow, probably due to poor choice of data structures.
+	\begin{itemize}
+		
+		\item
+			
+			Managed to implement and show soundness and completeness for the
+			parser. 3kloc Agda.
+		
+		\item
+			
+			Parser is slow, probably due to poor choice of data structures.
+			Possibly also uneliminated proofs, but probably data structures.
+		
+		\item
+
+			
+
+	\end{itemize}
+\end{frame}
+
+\begin{frame}
+	\frametitle{Questions?}
 \end{frame}
