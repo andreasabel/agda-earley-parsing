@@ -1,15 +1,6 @@
-\AgdaHide{
-\begin{code}
-open import base
-
+\AgdaHide{\begin{code}
 module Slides (N T : Set) where
-
-record CFG : Set where
-  constructor _⟩_
-  field
-    start : N
-    rules : (N × (N ∣ T)* )*
-\end{code} }
+\end{code}}
 
 \begin{frame}
 	\frametitle{What's Agda?}
@@ -26,7 +17,40 @@ record CFG : Set where
 \begin{frame}
 	\frametitle{What's Agda?}
 	% Code example (++-assoc from report?) as quick intro to agda
+	\begin{code}
+		data ℕ : Set where
+		  zero  :  ℕ
+		  suc   :  ℕ → ℕ
+	\end{code}
+	\vspace{0.5cm}
+	\begin{code}
+		_+_ : ℕ → ℕ → ℕ
+		zero   + b = b
+		suc a  + b = suc (a + b)
+	\end{code}
 \end{frame}
+
+\begin{frame}
+	\frametitle{What's Agda?}
+	\begin{code}
+		data _≤_ : ℕ → ℕ → Set where
+		  ≤₀  : {n : ℕ} → zero ≤ n
+		  ≤ₛ  : {m n : ℕ} → m ≤ n → suc m ≤ suc n
+	\end{code}
+\end{frame}
+
+\AgdaHide{
+\begin{code}
+module Slides-2 where
+open import base
+
+record CFG : Set where
+  constructor _⟩_
+  field
+    start : N
+    rules : (N × (N ∣ T)* )*
+\end{code} }
+
 
 \begin{frame}
 	\frametitle{What's Parsing?}
@@ -96,12 +120,12 @@ record CFG : Set where
 \end{frame}
 
 \begin{frame}
-	\frametitle{Earley's Algorithm}
+	\frametitle{What's Earley?}
 	% Walk through parsing a string using Earley's Algorithm. All 
 	% explanation done during parsing
 
 	\begin{itemize}
-		\item Named after inventor, Jay Earley
+		\item The Earley parsing algorithm. Named after inventor, Jay Earley
 		\item Fast for some types of grammars
 		\item Not previously mechanically verified
 		\item Table parser
@@ -315,9 +339,12 @@ record CFG : Set where
 
 \begin{frame}
 	\frametitle{Earley's Algorithm - Implementation}
-	% I implemented the stuff we just talked about.
-	% Talk about nullable rules and the solution I used?
-	% No need to show any code -- just outline what was done
+	\begin{itemize}
+		\item I implemented the stuff we just talked about.
+		\item Nullable rules require special care.
+		\item Adding more rules to each set while trying to consume it 
+			complicates termination
+	\end{itemize}
 \end{frame}
 
 \begin{frame}
