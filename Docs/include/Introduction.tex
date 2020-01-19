@@ -31,7 +31,7 @@
 	Agda is a functional programming language with a strong type system that
 	supports dependent types. Dependent types allow expressing strong
 	invariants and properties of data structures and programs, and even
-	constructive proofs using the type system. These proofs enable programmers
+	constructive proofs, using the type system. These proofs enable programmers
 	to formally verify the correctness of programs and libraries. While the
 	theory underlying Agda's type system has been shown to be
 	sound~\cite{martin84}, neither its parser, nor later stages of its compiler
@@ -42,8 +42,12 @@
 	Verified compilers have received significant attention in the research
 	community. CompCert~\cite{Leroy} is a formally verified compiler for a
 	subset of the C programming language. It is written in Coq, a proof
-	assistant similar to Agda, and is accompanied by Coq-proofs that it
+	assistant similar to Agda, and is accompanied by Coq proofs showing that it
 	preserves the semantics of compiled programs.
+
+%TODO Connect paragraphs
+%   For verified compiler, all of its stages need to be verified, one of these
+%	is the parser.
 
 	Parsing is the problem of analyzing the structure of a sequence of
 	symbols, typically a string of characters, to determine if, and how, the
@@ -56,38 +60,34 @@
 	One class of grammars that are often used for descriptions of programming
 	languages are the \emph{context-free grammars}, for which several different
 	parsing algorithms exist, such as the Cocke-Younger-Kasami (CYK) parsing
-	algorithm, or Valiant's algorithm.
+	algorithm, or Valiant's algorithm.~\cite{kasami66,valiant75}
 
 	Others, such as \emph{LR},\footnote{LR stands for \textbf{l}eft-to-right
 	scanning, \textbf{r}ightmost derivation.} \emph{Simple LR} (SLR), or
 	\emph{Look-ahead LR} (LALR) parsers, are designed to parse the input
-	sequence quickly. They are both asymptotically faster, having a linear time
-	complexity compared to the $O(n^3)$ complexity displayed by many others,
-	and practically being optimized to run efficiently on normal systems.
-	These parsers do, however, restrict the types of grammars that they are
-	able to parse to a subset of the context-free grammars.
+	sequence quickly. They are both asymptotically faster, having a time
+	complexity linear in the length of the input string compared to the
+	$\Omega(n^3)$ complexity displayed by many others, and optimized to run
+	efficiently on normal systems used in practice. These parsers do, however,
+	restrict the types of grammars that they are able to parse to a subset of
+	the context-free grammars.
 
 	Earley's parsing algorithm~\cite{Earley} (henceforth called \emph{Earley})
 	is a parsing algorithm capable of parsing all context-free grammars. Unlike
-	the CYK algorithm, which has a best-case time complexity of $O(n^3)$,
-	Earley has a time complexity of $O(n^3)$ only in the worst case, when
-	parsing highly ambiguous grammars, while having a linear complexity for
-	many grammars, including all grammars that LR, SLR, or LALR parsers accept.
+	the CYK algorithm, which has a best-case time complexity of $\Omega(n^3)$,
+	Earley has a cubic time complexity only in the worst case, when parsing
+	highly ambiguous grammars, while having a linear complexity for many
+	grammars, including all grammars that LR, SLR, or LALR parsers accept.
 	This makes the Earley parsing algorithm interesting to analyze, being able
 	to parse more grammars than the LR family of parsers, while being faster
-	than algorithm such as CYK or Valiant's.
+	than algorithms, such as CYK or Valiant's.
 
 	In this thesis, we formalize and implement an Earley parser in Agda, and
 	verify the correctness of said parser. Additionally, we give readers an
-	introduction of Agda in Chapter~\ref{Agda}, as well as a more thorough
+	introduction to Agda in Chapter~\ref{Agda}, as well as a more thorough
 	explanation of parsing and context-free grammars in Chapter~\ref{Parsing}.
 	In Chapter~\ref{Earleys} the formalization and implementation of the Earley
 	parsing algorithm are described, and their correctness is proven in
 	Chapter~\ref{Correctness}. We discuss related work in
 	Chapter~\ref{Related}, and finally discuss our implementation and proofs in
-	Chapter\ref{Conclusion}.
-
-%%% Local Variables:
-%%% mode: latex
-%%% TeX-master: "../Report"
-%%% End:
+	Chapter~\ref{Conclusion}.

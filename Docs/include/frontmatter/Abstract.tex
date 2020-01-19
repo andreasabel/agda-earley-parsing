@@ -11,24 +11,30 @@ Chalmers University of Technology and University of Gothenburg
 \section*{Abstract}
 
 The Earley parsing algorithm, named after its inventor Jay Earley, was first
-described in 1968~\cite{Earley}, is a parsing algorithm for context-free
+described in 1968~\cite{Earley}. It is a parsing algorithm for context-free
 grammars capable of properly handling ambiguous parses. Compared with other
 common parsing algorithms such as Valiant's or Cocke-Younger-Kasami (CYK),
 which have a cubic best-case time complexity, Earley's can parse some grammars,
-such as the LR grammars, in linear time.
+such as the LR grammars, in linear time. 
 
-In this thesis, we formalize Earley's algorithm and implement an Earley parser
-in the dependently typed programming language Agda.  We also prove that the
-implementation is both correct, in that it correctly accepts all input strings
-conforming to a specified grammar, and correctly reject all those that do not.
+%TODO GLR
 
-We also give a short introduction to writing programs and proofs in Agda, as
-well as an introduction to both parsing in general and a detailed description
-of Earley's algorithm.
+In this thesis, we formalize Earley's algorithm and implement a variant of an
+Earley parser in the dependently typed programming language Agda. We prove that
+this implementation is correct, in that it correctly accepts all input strings
+conforming to a specified grammar, and that it correctly rejects all those that
+do not. Although it is written to correspond to Earley's original algorithm,
+with modifications made by Aycock and Horspool~\cite{aycock02}, a poor choice
+of data structures means that its time complexity is significantly worse than
+that of the original algorithm.
+
+Additionally, we give a short introduction to writing programs and proofs in
+Agda, as well as an introduction to both parsing in general and a detailed
+description of Earley's algorithm.
 
 % KEYWORDS (MAXIMUM 10 WORDS)
 \vfill
-Keywords: Computer, science, computer science, engineering, project, thesis.
+Keywords: Parsing, formal verification, Earley's algorithm, Agda.
 
 \newpage				% Create empty back of side
 \thispagestyle{empty}

@@ -8,28 +8,28 @@ open import base
 
 	Parsing is the process of analyzing the structure of a sequence of symbols,
 	which are often called \emph{tokens}. This may simply consist of
-	determining, or \emph{recognizing}, \emph{whether} a sequence conforms to a
+	determining, or \emph{recognizing}, whether a sequence conforms to a
 	predefined structure, called a \emph{grammar}, or to also create a
-	description of \emph{how} the sequence conforms. This deeper analysis is
-	called \emph{parsing}, and the resulting description is often a \emph{parse
-	tree}.  For our purposes, the context-free grammars describe the
-	structures we are interested in.
+	description of how the sequence conforms. This deeper analysis is called
+	\emph{parsing}, and the resulting description is often a \emph{parse tree}.
+	For our purposes, the context-free grammars describe the structures we are
+	interested in.
 
 	The context-free grammars are a class of grammars that can be described by
-	a set of production, or rewrite, rules on the form $X \mapsto \alpha$,
+	a set of production, or rewrite, rules of the form $X \mapsto \alpha$,
 	where $X$ is a non-terminal symbol, and $\alpha$ is a list where each
 	element may be either a non-terminal or a terminal symbol. Terminal symbols
-	are used to represent instances of concrete tokens whereas non-terminal
-	symbols are used as labels for more complex structures.
-	Non-terminal symbols are often (and always in this thesis) written with
-	capital letters, whereas terminals are written in lowercase (but this does
-	not mean parsers are only able to handle lowercase inputs).
+	are concrete tokens whereas non-terminal symbols are labels for more
+	complex structures.  Non-terminal symbols are often (and always in this
+	thesis) written with capital letters, whereas terminals are written in
+	lowercase (but this does not mean parsers are only able to handle lowercase
+	inputs).
 
 	At this point, an example is in order: consider a grammar with the rules $Z
 	\mapsto Ya$ and $Y \mapsto b$, where $Z$ and $Y$ are non-terminals, and $a$
 	and $b$ are terminals.  The sequence $ba$ conforms to the structure of $Z$
-	in the grammar, because it can be reduced to $aY$ according to the second
-	rule ($Y \mapsto b$), and then reduced to $Z$ according to the first ($Z
+	in the grammar, because it can be expanded to $Ya$ according to the second
+	rule ($Y \mapsto b$), and then expanded to $Z$ according to the first ($Z
 	\mapsto Ya$).  Likewise, the rules can be used to produce all sequences
 	that conform to the grammar by going the other way: $Z$ can produce $Ya$,
 	and the $Y$ in $Ya$ can produce $b$, giving us $ba$.
@@ -50,9 +50,10 @@ open import base
 
 	A grammar is often given a \emph{starting symbol}. This can be considered
 	the `topmost' non-terminal symbol in the grammar, and a sequence is said to
-	be `in' the grammar if it conforms to the structure of the starting symbol.
-	A sequence is also sometimes said to be `in' a list of terminals and 
-	non-terminals, meaning it conforms to the structure of said list.
+	be `in' the language of the grammar if it conforms to the structure
+	of the starting symbol.  A sequence is also sometimes said to be `in' a
+	list of terminals and non-terminals, meaning it conforms to the structure
+	of said list.
 
 	Here is how we could encode a context-free grammar in Agda:
 
@@ -73,16 +74,16 @@ open import base
 	a nonterminal symbol, \codett{s} is a terminal symbol, and \codett{l} and
 	\codett{r} are the constructors for the left and right choice of our
 	optional type \codett{∣}. This grammar will have conforming strings that
-	either are empty, or start with the token \codett{s} followed by any
+	are either empty, or start with the token \emph{'s'} followed by any
 	sequence that conforms to the \codett{S} non-terminal. The set of
-	conforming sequences for this second grammar is the set of (possibly empty)
+	conforming sequences for this third grammar is the set of (possibly empty)
 	sequences only containing the token \emph{'s'}.
 
 	% Quotation is `single' or ``double'' in TeX! Opening quotes are different
 	% than closing ones!
 
 	A formal definition of when a list of tokens conforms to a grammar is also
-	necessary. Here, we suggest for rules for when a sequence conforms to a
+	necessary. Here, we suggest four rules for when a sequence conforms to a
 	list of terminal and non-terminal symbols: 
 
 	%% Simpler way to get this math display
@@ -129,13 +130,12 @@ open import base
 		    (A , α) ∈ CFG.rules G → G ⊢ u ∈ α → G ⊢ u ∈ l A ∷ ε
 	\end{code}
 
-	Here, a proposition of the form \codett{G ⊢ u ∈ α} would mean that, given a
+	Here, a proposition of the form \codett{G ⊢ u ∈ α} means that, given a
 	grammar \codett{G}, the sequence of tokens \codett{u} conforms to the
-	structure \codett{α}. That is, if \codett{A} is a non-terminal with a
+	structure \codett{α}. For instance, if \codett{A} is a non-terminal with a
 	single rule $A \mapsto aa$ and \codett{a} is a terminal symbol, any value
 	with the type \codett{G ⊢ r A ∷ ε ∈ a ∷ a ∷ ε} would constitute a proof
-	that the sequence $aa$ conforms to the structure of $A$ (which is just
-	\emph{"sequences that are equal to $aa$"}).
+	that the sequence $aa$ conforms to the structure of $A$.
 
 	Another possible definition for conformance could be:
 
@@ -160,7 +160,7 @@ open import base
 		    G ⊢ u / v ∈ l X ∷ ε
 	\end{code}
 
-	Here, a proposition of the form \codett{G ⊢ v / w ∈ α} would mean that,
+	Here, a proposition of the form \codett{G ⊢ v / w ∈ α} means that,
 	given a grammar \codett{G}, the sequence \codett{v} up to, but not
 	including \codett{w} conforms to the structure \codett{α}. This means
 	\codett{w} will always be a suffix of \codett{v}. This definition, while
@@ -230,7 +230,7 @@ open import base
 
 	One problem with these data types is that it is possible to construct
 	several different proofs for the same derivation of the same rule using the
-	conc and empt rules:
+	\codett{conc} and \codett{empt} rules:
 
 	\begin{code}
 		same-but-different : ∀ {u v X G} →
@@ -244,7 +244,7 @@ open import base
 	same rule. This will make it harder for us to reason about ambiguous
 	derivations, where the same structure can be derived from a sequence in
 	many different distinct ways. This problem is not present in the following
-	data structure.
+	data structure:
 
 	\begin{code}
 		infixl 10 _⊢_∥_∈_
