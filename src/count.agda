@@ -30,6 +30,7 @@ module count (N T : Set) (decidₙ : Dec N) (decidₜ : Dec T) where
   ∋-comm (in-tail in-head) = in-head
   ∋-comm (in-tail (in-tail p₁)) = in-tail (in-tail p₁)
 
+  {-# TERMINATING #-}
   nullable₀ : (N × (N ∣ T) *) * -> N * -> N *
   nullable₀ ε ns = ns
   nullable₀ ((X , α) ∷ rs)       ns with elem decidₙ X ns

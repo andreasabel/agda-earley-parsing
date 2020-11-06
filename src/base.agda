@@ -1,4 +1,4 @@
-{-# OPTIONS --allow-unsolved-metas #-}
+open import Agda.Builtin.Equality public
 
 _∘_ : {A B C : Set} -> (B -> C) -> (A -> B) -> A -> C
 (f ∘ g) x = f (g x)
@@ -6,12 +6,6 @@ infixl 20 _∘_
 
 id : {T : Set} -> T -> T
 id x = x
-
-infix 4 _≡_
-data _≡_ {T : Set} (t : T) : T -> Set where
-  refl : t ≡ t
-
-{-# BUILTIN EQUALITY _≡_  #-}
 
 app : {T U : Set} {a b : T} (f : T -> U) -> a ≡ b -> f a ≡ f b
 app f refl = refl
@@ -412,7 +406,7 @@ in₀ a (x ∷ as) bs = app (x ∷_) (in₀ a as bs)
 in₁ : ∀ {T xs a} {b : T} -> a ≡ b -> xs ∋ a -> xs ∋ b
 in₁ refl p = p
 
-in₂ : ∀ {T a} {b : T} (P : T -> Set) -> a ≡ b -> P a -> P b
+in₂ : ∀ {T : Set} {a b : T} (P : T -> Set) -> a ≡ b -> P a -> P b
 in₂ P refl p = p
 
 in₃ : ∀ {T} (a b c d : T *) -> a ≡ b ++ c -> b ++ (c ++ d) ≡ a ++ d

@@ -1,6 +1,7 @@
 {-# FOREIGN GHC import qualified Data.Text.IO as Text #-}
 {-# FOREIGN GHC import qualified Helper #-}
 
+open import Agda.Builtin.TrustMe
 open import base
 
 data Unit : Set where
@@ -55,7 +56,6 @@ private
  primitive
   primCharToNat    : Char → ℕ
   primCharEquality : Char → Char → Bool
-  primTrustMe : ∀ {A : Set} {x y : A} → x ≡ y
 
 eqₜ : Dec Char
 eqₜ c d with primCharEquality c d
