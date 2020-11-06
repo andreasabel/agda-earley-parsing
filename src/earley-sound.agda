@@ -27,11 +27,11 @@ module parser-sound (G : CFG) where
     (∀ {i} -> i ∈ scanr₀ {w} {v} a rs -> Valid i)
 
   sound-scanr₀ ε f ()
-  
-  sound-scanr₀ ((X ∘ u ↦ α ∘ ε) ∷ rs) f p = 
+
+  sound-scanr₀ ((X ∘ u ↦ α ∘ ε) ∷ rs) f p =
     sound-scanr₀ rs (f ∘ in-tail) p
 
-  sound-scanr₀ ((X ∘ u ↦ α ∘ l Y ∷ β) ∷ rs) f p = 
+  sound-scanr₀ ((X ∘ u ↦ α ∘ l Y ∷ β) ∷ rs) f p =
     sound-scanr₀ rs (f ∘ in-tail) p
 
   sound-scanr₀ {a} ((X ∘ u ↦ α ∘ r b ∷ β) ∷ rs) f p with eqₜ a b

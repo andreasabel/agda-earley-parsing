@@ -47,7 +47,7 @@ module unique {T : Set} (t : StrictOrder T) where
   as-list' : {a : T} -> Uniq a -> T *
   as-list' (leaf a) = a ∷ ε
   as-list' (node a x u) = a ∷ as-list' u
-  
+
   as-list : Unique -> T *
   as-list empt = ε
   as-list (⟫ x) = as-list' x
@@ -59,7 +59,7 @@ module unique {T : Set} (t : StrictOrder T) where
 
   data _isin_ : T -> Unique -> Set where
     in⟫ : {a b : T} {u : Uniq a} -> b isin' u -> b isin (⟫ u)
-  
+
   in-ins : {a b : T} {bs : Uniq b} -> a isin' ins a bs
   in-ins {a} {b} {leaf b} with tri b a
   in-ins {b} {b} {leaf b} | r (r refl) = inₗ

@@ -10,7 +10,7 @@ module parser-complete (G : CFG) where
   open parser G
   open import count N T eqₙ eqₜ
   open Unique Item eq-item
-  
+
   -- Complete state sets (contain all derivable items).
 
   _≋_ : ∀ {t u v X α β} -> (i : Item t v) -> G ∙ t ⊢ u / v ⟶* X / α ∙ β -> Set
@@ -34,7 +34,7 @@ module parser-complete (G : CFG) where
   test₂ {v = v} ε (x ∷ q) s = void (ε.ε₆ eqₜ _ v (sym s))
   test₂ {v = v} (x ∷ p) ε s = void (ε.ε₆ eqₜ _ v s)
   test₂ (x ∷ p) (x₁ ∷ q) s = test₂ p q (uncons x x₁ s)
-  
+
   test₁ : ∀ {a₀ v t} {a : T} ->
     (Σ λ u -> u ++ (a ∷ v) ≡ t) ∣ v ≡ t ->
     (Σ λ u -> u ++ (a₀ ∷ v) ≡ t) ->
@@ -61,7 +61,7 @@ module parser-complete (G : CFG) where
   mutual
     Complete : ∀ {v w} -> EState w v -> Set
     Complete ω = Complete₀ (Sₙ ω) × Complete* ω
-  
+
     Complete* : ∀ {v w} -> EState w v -> Set
     Complete* (start rs) = ⊤
     Complete* (step ω rs) = Complete ω
@@ -149,7 +149,7 @@ module parser-complete (G : CFG) where
   complete-scanr₀ a ((X ∘ u ↦ α ∘ r b ∷ β) ∷ rs) i j g refl in-head     refl with eqₜ a b
   ... | yes refl = in-head
   ... | no x     = void (x refl)
-  
+
   complete-scanr₀ a ((X ∘ u ↦ α ∘ r b ∷ β) ∷ rs) i j g refl (in-tail p) refl with eqₜ a b
   ... | yes refl = in-tail (complete-scanr₀ a rs i j g refl p refl)
   ... | no x     = complete-scanr₀ a rs i j g refl p refl
@@ -213,7 +213,7 @@ module parser-complete (G : CFG) where
     (x : (Y , δ) ∈ CFG.rules G) ->
     (i j : Item t v) ->
     (g : G ∙ t ⊢ u / v ⟶* X / α ∙ l Y ∷ β) ->
-    i ≋ g -> 
+    i ≋ g ->
     j ≋ predict x g ->
       j ∈ pred-comp₀ i refl ω
   complete₁-pred-comp₀ ω x i@(X ∘ u ↦ α ∘ l Z ∷ β) j g refl refl with elem eqₙ Z (nullable G)
@@ -259,7 +259,7 @@ module parser-complete (G : CFG) where
     (j k : Item t w) ->
     (g : G ∙ t ⊢ u / v ⟶* X / α ∙ l Y ∷ β) ->
     (h : G ∙ t ⊢ v / w ⟶* Y / γ ∙ ε) ->
-    i ≋ g -> 
+    i ≋ g ->
     (p : j ≋ h) ->
     i ∈ rs ->
     k ≋ complet g h ->
@@ -284,7 +284,7 @@ module parser-complete (G : CFG) where
     (v ≡ w -> Void) ->
     (g : G ∙ t ⊢ u / v ⟶* X / α ∙ l Y ∷ β) ->
     (h : G ∙ t ⊢ v / w ⟶* Y / γ ∙ ε) ->
-    (p : i ≋ h) -> 
+    (p : i ≋ h) ->
     j ≋ complet g h ->
       j ∈ compl i (≋-β i h p) ω
   complete-compl ω c i j p g h refl s =
@@ -299,7 +299,7 @@ module parser-complete (G : CFG) where
     (v ≡ w -> Void) ->
     (g : G ∙ t ⊢ u / v ⟶* X / α ∙ l Y ∷ β) ->
     (h : G ∙ t ⊢ v / w ⟶* Y / γ ∙ ε) ->
-    i ≋ h -> 
+    i ≋ h ->
     j ≋ complet g h ->
       j ∈ pred-comp₀ i refl ω
   complete₂-pred-comp₀ ω c i j n g h refl = complete-compl ω c _ _ n g h refl
@@ -309,7 +309,7 @@ module parser-complete (G : CFG) where
     (i j : Item t v) ->
     (g : G ∙ t ⊢ u / v ⟶* X / α ∙ l Y ∷ β) ->
     (h : G ∙ t ⊢ v / v ⟶* Y / γ ∙ ε) ->
-    i ≋ g -> 
+    i ≋ g ->
     j ≋ complet g h ->
       j ∈ pred-comp₀ i refl ω
   complete₃-pred-comp₀ {Y = Y} ω i j g h refl refl
@@ -322,7 +322,7 @@ module parser-complete (G : CFG) where
     (x : (Y , δ) ∈ CFG.rules G) ->
     (i j : Item t v) ->
     (g : G ∙ t ⊢ u / v ⟶* X / α ∙ l Y ∷ β) ->
-    i ≋ g -> 
+    i ≋ g ->
     i ∈ rs ->
     j ≋ predict x g ->
       j ∈ pred-comp₁ ω ss rs
@@ -336,7 +336,7 @@ module parser-complete (G : CFG) where
     (v ≡ w -> Void) ->
     (g : G ∙ t ⊢ u / v ⟶* X / α ∙ l Y ∷ β) ->
     (h : G ∙ t ⊢ v / w ⟶* Y / γ ∙ ε) ->
-    i ≋ h -> 
+    i ≋ h ->
     i ∈ rs ->
     j ≋ complet g h ->
       j ∈ pred-comp₁ ω ss rs
@@ -350,7 +350,7 @@ module parser-complete (G : CFG) where
     (i j : Item t v) ->
     (g : G ∙ t ⊢ u / v ⟶* X / α ∙ l Y ∷ β) ->
     (h : G ∙ t ⊢ v / v ⟶* Y / γ ∙ ε) ->
-    i ≋ g -> 
+    i ≋ g ->
     i ∈ rs ->
     j ≋ complet g h ->
       j ∈ pred-comp₁ ω ss rs
@@ -374,7 +374,7 @@ module parser-complete (G : CFG) where
     let p₁ = wf-pcw₃ (Σ.proj₀ all-items) p q in
     let q₁ = wf-pcw₂ x₁ (rs ++ ss) q in
     i ∈ Sₙ (pred-comp₂ ω (rs ++ ss) x₂ m p₁ q₁)
-  
+
   complete₁₋₁-pred-comp₂ : ∀ {t v} -> ∀ ss rs m p q ->
     (ω : EState t v) ->
     (i : Item t v) ->
@@ -434,7 +434,7 @@ module parser-complete (G : CFG) where
     i ≋ g -> i ∈ ss ->
     j ≋ predict x g ->
       j ∈ (rs ++ ss)
-  
+
   inert' : ∀ {t v rs ss} (ω : EState t v) ->
     Inert ss rs ->
     Inert (rs ++ ss) (pred-comp₁ ω ss rs \\ (rs ++ ss))
@@ -456,7 +456,7 @@ module parser-complete (G : CFG) where
     (x : (Y , δ) ∈ CFG.rules G) ->
     (i j : Item t v) ->
     (g : G ∙ t ⊢ u / v ⟶* X / α ∙ l Y ∷ β) ->
-    i ≋ g -> 
+    i ≋ g ->
     i ∈ Sₙ (pred-comp₂ ω ss rs m p q) ->
     j ≋ predict x g ->
       j ∈ Sₙ (pred-comp₂ ω ss rs m p q)
@@ -478,7 +478,7 @@ module parser-complete (G : CFG) where
     j ≋ h -> j ∈ ss ->
     k ≋ complet g h ->
       k ∈ (rs ++ ss)
-  
+
   inert₂' : ∀ {t v rs ss} (ω : EState t v) ->
     Complete* ω ->
     Inert₂ ss rs ->
@@ -507,8 +507,8 @@ module parser-complete (G : CFG) where
     k ≋ complet g h ->
       k ∈ Sₙ (pred-comp₂ ω ss rs m p q)
   complete₂-pred-comp₂ ss rs            zero    () q ω           c
-  complete₂-pred-comp₂ ss ε             (suc m) p  q (start rs)  c nx = nx 
-  complete₂-pred-comp₂ ss ε             (suc m) p  q (step ω rs) c nx = nx 
+  complete₂-pred-comp₂ ss ε             (suc m) p  q (start rs)  c nx = nx
+  complete₂-pred-comp₂ ss ε             (suc m) p  q (step ω rs) c nx = nx
   complete₂-pred-comp₂ ss rs@(r₁ ∷ rs₀) (suc m) p  q ω           c nx =
     let p₁ = wf-pcw₃ (Σ.proj₀ all-items) p q in
     let q₁ = wf-pcw₂ (pred-comp₁ ω ss rs) (rs ++ ss) q in
@@ -523,7 +523,7 @@ module parser-complete (G : CFG) where
     j ≋ g -> j ∈ ss ->
     k ≋ complet g h ->
       k ∈ (rs ++ ss)
-  
+
   inert₃' : ∀ {t v rs ss} (ω : EState t v) ->
     Complete* ω ->
     Inert₃ ss rs ->
@@ -584,7 +584,7 @@ module parser-complete (G : CFG) where
     complete-ind {P = λ i -> i ∈ Sₙ (pred-comp₂ ω ss rs m p q)}
       h
       s
-      u 
+      u
       (complete₁-pred-comp₂ ss rs m p q ω nx)
       (complete₂-pred-comp₂ ss rs m p q ω c nx₂)
       (complete₄-pred-comp₂ ss rs m p q ω c nx₄)
@@ -632,7 +632,7 @@ module parser-complete (G : CFG) where
     let x₂ = x₁ \\ (rs ++ ss) in
     let p₁ = wf-pcw₃ (Σ.proj₀ all-items) p q in
     let q₁ = wf-pcw₂ x₁ (rs ++ ss) q in
-    complete₃-pred-comp₂ (rs ++ ss) x₂ m p₁ q₁ ω c 
+    complete₃-pred-comp₂ (rs ++ ss) x₂ m p₁ q₁ ω c
 
   complete₁-pred-comp : ∀ {t v} ->
     (ω : EState t v) ->
@@ -642,7 +642,7 @@ module parser-complete (G : CFG) where
     let x₁ = deduplicate (Sₙ ω) in
     let x₂ = (unique-++ (Σ.proj₁ x₁) ε (Σ.proj₀ x₁) u-ε λ ()) in
     complete₃-pred-comp₂ ε _ _ (≤ₛ (≤-self _)) x₂ ω
-    
+
   complete₂-pred-comp : ∀ {t v} ->
     (ω : EState t v) ->
     Complete* ω ->
@@ -787,7 +787,7 @@ module parser-complete (G : CFG) where
       (λ {refl x i x₁ → complete-itemize ε x i x₁})
   complete-parse a₀ (x ∷ w) =
     let
-      x₁ = start (itemize (x ∷ w) (lookup _ _)) 
+      x₁ = start (itemize (x ∷ w) (lookup _ _))
       x₂ = complete-pred-comp {a = a₀} (r refl) x₁ top
         (λ {g i x₂ → void (test₃ (suff-g₂ g))})
         (λ {refl x₂ i refl → complete-itemize (x ∷ w) x₂ i refl})

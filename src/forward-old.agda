@@ -43,7 +43,7 @@ complete-w₀-s G X (step w rs) (suc k) p = ≤-suc (complete-w₀-s G X w k p)
 predict-w₀-s : {N T : Set} (G : Grammar N T) {v : T *} {n : ℕ} ->
   (X : N) ->
   (w : WSet G n v) ->
-  (∀ {Y j α β} -> predict-w₀ G X w ∋ (Y , j , α , β) -> j ≤ n) 
+  (∀ {Y j α β} -> predict-w₀ G X w ∋ (Y , j , α , β) -> j ≤ n)
 predict-w₀-s G X w {j = j} p with lookup X (Grammar.rules G) (Grammar.decidₙ G)
 predict-w₀-s G X w {j = j} p | ls = local₀ ls p
   where

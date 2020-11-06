@@ -72,7 +72,7 @@ complete₀ (conc g g₁) | σ p₁ (x₀ , x₁) , σ q₁ (y₀ , y₁) =
   σ (p₁ ++ q₁) ((concat x₀ y₀) , p₁++q₁++v≡u)
   where
     p₁++q₁++v≡u = trans (trans (assoc-++ p₁ q₁ _) (sym (app (p₁ ++_) y₁))) (sym x₁)
-  
+
 infixl 10 _⊢_∥_∈_
 data _⊢_∥_∈_ (G : CFG) : T * -> T * -> (N ∣ T)* -> Set where
   empt : {w : T *} ->
@@ -100,7 +100,7 @@ data _∙_⊢_/_⟶*_/_∙_ (G : CFG) (input : T *) :
     G ∙ input ⊢ u / a ∷ v ⟶* X / α ∙ r a ∷ β ->
       G ∙ input ⊢ u / v ⟶* X / α ←∷ r a ∙ β
 
-  predict : {u v : T *} {X Y : N} {α β δ : (N ∣ T) *} -> 
+  predict : {u v : T *} {X Y : N} {α β δ : (N ∣ T) *} ->
     CFG.rules G ∋ (Y , δ) ->
     G ∙ input ⊢ u / v ⟶* X / α ∙ l Y ∷ β ->
       G ∙ input ⊢ v / v ⟶* Y / ε ∙ δ
@@ -145,7 +145,7 @@ suff-g₁ (initial x) = σ ε refl
 suff-g₁ (scanner g) = suff-g₁ g
 suff-g₁ (predict x g) = suff-g₂ g
 suff-g₁ (complet g g₁) = suff-g₁ g
- 
+
 sound₁ : ∀ {G t u v w X α β} ->
   G ∙ t ⊢ u / v ⟶* X / α ∙ β ->
     G ⊢ v ∥ w ∈ β ->

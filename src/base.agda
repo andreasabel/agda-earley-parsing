@@ -175,7 +175,7 @@ record Σ₂ {A B : Set} (f : A -> B -> Set) : Set where
     proj₁ : A
     proj₂ : B
     proj₀ : f proj₁ proj₂
-    
+
 record Σ₃ {A B C : Set} (f : A -> B -> C -> Set) : Set where
   constructor σ₃
   field
@@ -245,7 +245,7 @@ data _* (T : Set) : Set where
 infixr 80 _*
 infixr 20 _∷_
 
-{-# BUILTIN LIST _* #-} 
+{-# BUILTIN LIST _* #-}
 
 inj-cons : ∀ {T a} -> Injective {T} (_∷ a)
 inj-cons = record { inj = λ {refl → refl} }
@@ -258,7 +258,7 @@ uncons₂ a b refl = refl
 
 _←∷_ : {T : Set} -> T * -> T -> T *
 ε ←∷ a = a ∷ ε
-(x ∷ as) ←∷ a = x ∷ (as ←∷ a) 
+(x ∷ as) ←∷ a = x ∷ (as ←∷ a)
 
 map : {T U : Set} -> (T -> U) -> T * -> U *
 map f ε = ε
@@ -313,7 +313,7 @@ elem eq t (x ∷ ts) | no x₁ | no x₂ = no (nul x₁ x₂)
 in-tail' : {T : Set} {ts : T *} {x t : T} -> (x ∷ ts) ∋ t -> (t ≡ x -> Void) -> ts ∋ t
 in-tail' in-head f = void (f refl)
 in-tail' (in-tail p) f = p
-    
+
 elem' : {T : Set} -> (eq : (a b : T) -> a ≡ b ??) -> (t : T) -> (ts : T *) -> .(ts ∋ t)-> ts ∋ t
 elem' eq t ε ()
 elem' eq t (x ∷ ts) p with eq t x
@@ -555,7 +555,7 @@ diff-idem-l x (x₁ ∷ xs) ys eq p₁ | no x₂  | no x₃ =
 
 diff-suc : {T : Set} {x : T} {xs ys : T *} ->
   (eq : (x y : T) -> x ≡ y ??) ->
-  xs ∋ x -> 
+  xs ∋ x ->
   (ys ∋ x -> Void) ->
   length (list-diff eq xs ys) ≡ suc (length (list-diff eq xs (x ∷ ys)))
 diff-suc {T} {x} {ε} {ys} eq () p₂
@@ -570,7 +570,7 @@ diff-suc {T} {x} {x  ∷ xs} {ys} eq p₁ p₂           | no x₂  | yes in-hea
 diff-suc {T} {x} {x₁ ∷ xs} {ys} eq p₁ p₂           | no x₂  | yes (in-tail x₃) with x₂ x₃
 diff-suc {T} {x} {x₁ ∷ xs} {ys} eq p₁ p₂           | no x₂  | yes (in-tail x₃) | ()
 diff-suc {T} {x} {x  ∷ xs} {ys} eq in-head p₂      | no x₂  | no x₃ with x₃ in-head
-diff-suc {T} {x} {x  ∷ xs} {ys} eq in-head p₂      | no x₂  | no x₃ | ()             
+diff-suc {T} {x} {x  ∷ xs} {ys} eq in-head p₂      | no x₂  | no x₃ | ()
 diff-suc {T} {x} {x₁ ∷ xs} {ys} eq (in-tail p₁) p₂ | no x₂  | no x₃ =
   let f' = λ { in-head → x₃ in-head ; (in-tail x₄) → p₂ x₄} in
   app suc (trans (diff-suc {T} eq p₁ f') (app suc (app length (diff-flip x₁ x xs ys eq))))
@@ -580,7 +580,7 @@ module Unique {T : Set} (Item : T * -> T * -> Set) (eq-item : ∀ {w v}(a b : It
   data Unique {T : Set} : T * -> Set where
     u-ε : Unique ε
     u-∷ : {a : T} {as : T *} -> Unique as -> (as ∋ a -> Void) -> Unique (a ∷ as)
-  
+
   pred-++ : ∀ {A n} {m : ℕ -> A} (xs ys : A *) ->
     (f : ∀ {j} -> xs ∋ m j -> j ≤ n) ->
     (g : ∀ {j} -> ys ∋ m j -> j ≤ n) ->
@@ -588,10 +588,10 @@ module Unique {T : Set} (Item : T * -> T * -> Set) (eq-item : ∀ {w v}(a b : It
   pred-++ ε ys f g p = g p
   pred-++ (x ∷ xs) ys f g in-head = f in-head
   pred-++ (x ∷ xs) ys f g (in-tail p) = pred-++ xs ys (f ∘ in-tail) g p
-  
+
   _\\_ : ∀ {w n} -> (x x₁ : Item w n *) → Item w n *
   _\\_ = list-diff eq-item
-  
+
   s-pcw₀ : ∀ {w v} {as bs : Item w v *} -> (P : _ -> Set) ->
     (∀ {i} -> i ∈ as -> P i) ->
     (∀ {i} -> i ∈ (as \\ bs) -> P i)
@@ -600,7 +600,7 @@ module Unique {T : Set} (Item : T * -> T * -> Set) (eq-item : ∀ {w v}(a b : It
   s-pcw₀ {as = x ∷ as} {bs} P f p           | yes x₁ = s-pcw₀ P (f ∘ in-tail) p
   s-pcw₀ {as = x ∷ as} {bs} P f in-head     | no x₁ = f in-head
   s-pcw₀ {as = x ∷ as} {bs} P f (in-tail p) | no x₁ = s-pcw₀ P (f ∘ in-tail) p
-  
+
   s-pcw : ∀ {w v} {as bs cs : Item w v *} -> (P : _ -> Set) ->
     (∀ {i} -> i ∈ as -> P i) ->
     (∀ {i} -> i ∈ bs -> P i) ->
@@ -619,12 +619,12 @@ module Unique {T : Set} (Item : T * -> T * -> Set) (eq-item : ∀ {w v}(a b : It
   pred-\\ eq (x ∷ xs) ys f p | yes x₁ = pred-\\ eq xs ys (f ∘ in-tail) p
   pred-\\ eq (x ∷ xs) ys f in-head | no x₁ = f in-head
   pred-\\ eq (x ∷ xs) ys f (in-tail p) | no x₁ = pred-\\ eq xs (x ∷ ys) (f ∘ in-tail) p
-  
+
   eq-not : {T : Set} {rs ss : T *} {i : T} ->
     Unique (rs ++ ss) -> rs ∋ i -> ss ∋ i -> Void
   eq-not (u-∷ urs x) in-head q = x (in-r q)
   eq-not (u-∷ urs x) (in-tail p) q = eq-not urs p q
-  
+
   unique-++ : ∀ {T} (as bs : T *) ->
     Unique as ->
     Unique bs ->
@@ -633,7 +633,7 @@ module Unique {T : Set} (Item : T * -> T * -> Set) (eq-item : ∀ {w v}(a b : It
   unique-++ ε bs ua ub f = ub
   unique-++ (x ∷ as) bs (u-∷ ua x₁) ub f =
     u-∷ (unique-++ as bs ua ub λ z → f z ∘ in-tail) (in-neither x₁ (λ x₂ → f x₂ in-head))
-  
+
   unique-++₂ : {T : Set} (as bs cs : T *) ->
     Unique (as ++ cs) ->
     Unique bs ->
@@ -643,7 +643,7 @@ module Unique {T : Set} (Item : T * -> T * -> Set) (eq-item : ∀ {w v}(a b : It
   unique-++₂ ε bs cs uac ub f g = unique-++ bs cs ub uac g
   unique-++₂ (x ∷ as) bs cs (u-∷ uac x₁) ub f g = u-∷ (unique-++₂ as bs cs uac ub (f ∘ in-tail) g)
     (in-neither {bs = cs} (in-neither (not-in-l x₁) (f in-head)) (not-in-r x₁))
-  
+
   unique-++-∷ : {T : Set} {a : T} -> (as bs : T *) ->
     Unique (as ++ bs) ->
     ((as ++ bs) ∋ a -> Void) ->
@@ -651,7 +651,7 @@ module Unique {T : Set} (Item : T * -> T * -> Set) (eq-item : ∀ {w v}(a b : It
   unique-++-∷ ε bs uab f = u-∷ uab f
   unique-++-∷ (x ∷ as) bs (u-∷ uab x₁) f = u-∷ (unique-++-∷ as bs uab (f ∘ in-tail))
     (in-neither {bs = _ ∷ bs} (not-in-l x₁) λ { in-head → f in-head ; (in-tail x₂) → x₁ (in-r x₂)})
-  
+
   no-include-\\ : ∀ {w n} -> {x : Item w n} (as bs : Item w n *) ->
     (as ∋ x -> Void) ->
     (as \\ bs) ∋ x -> Void
@@ -669,7 +669,7 @@ module Unique {T : Set} (Item : T * -> T * -> Set) (eq-item : ∀ {w v}(a b : It
   idem-\\ (a ∷ as) bs | no x with elem eq-item a bs
   idem-\\ (a ∷ as) bs | no x | yes x₁ = void (x x₁)
   idem-\\ (a ∷ as) bs | no x | no x₁ = app (a ∷_) (idem-\\ as (a ∷ bs))
-  
+
   no-include-\\₂ : ∀ {w n} -> {x : Item w n} (as bs : Item w n *) ->
     bs ∋ x ->
     (as \\ bs) ∋ x -> Void
@@ -693,7 +693,7 @@ module Unique {T : Set} (Item : T * -> T * -> Set) (eq-item : ∀ {w v}(a b : It
         ; (r (in-tail x₂)) → in-r x₂
         ; (l x₂) → in-tail (in-l x₂)
         }
-  
+
   unique-\\ : ∀ {w n} -> (as bs : Item w n *) ->
     Unique as ->
     Unique (as \\ bs)
@@ -708,7 +708,7 @@ module Unique {T : Set} (Item : T * -> T * -> Set) (eq-item : ∀ {w v}(a b : It
   unique-\\₂ (x ∷ as) bs with elem eq-item x bs
   unique-\\₂ (x ∷ as) bs | yes x₁ = unique-\\₂ as bs
   unique-\\₂ (x ∷ as) bs | no x₁ = u-∷ (unique-\\₂ as (x ∷ bs)) (no-include-\\₂ as (x ∷ bs) in-head)
-  
+
   tmp : {T : Set} {a : T} (as bs cs : T *) ->
     Unique ((a ∷ as) ++ cs) ->
     Unique (a ∷ bs) ->
@@ -726,7 +726,7 @@ module Unique {T : Set} (Item : T * -> T * -> Set) (eq-item : ∀ {w v}(a b : It
     m ≡ suc (length (as \\ (r₁ ∷ ss)))
   wf-pcw₀ f p q =
     trans (unsuc p) (sym (diff-suc eq-item f (eq-not q in-head)))
-  
+
   wf-pcw₁ : ∀ {w v} -> ∀ r₁ -> (as rs ss : Item w v *) ->
     Unique as ->
     Unique ((r₁ ∷ rs) ++ ss) ->
@@ -781,13 +781,13 @@ module Unique {T : Set} (Item : T * -> T * -> Set) (eq-item : ∀ {w v}(a b : It
     let x₃ = app length x₂ in
     let x₄ = in₂ (λ t -> t ≤ length (as \\ (x ∷ bs))) x₃ x₁ in
     ≤-suc x₄
-  pcw₁ (x ∷ as) bs cs | no x₁  | yes x₂ | r x₃ = void (x₁ x₃) 
+  pcw₁ (x ∷ as) bs cs | no x₁  | yes x₂ | r x₃ = void (x₁ x₃)
   pcw₁ (x ∷ as) bs cs | no x₁  | no x₂ =
     let x₁ = diff-unord as (x ∷ (cs ++ bs)) (cs ++ (x ∷ bs)) eq-item (in-lr₂ cs bs) (in-lr₃ cs bs) in
     let x₂ = pcw₁ as (x ∷ bs) cs in
     let x₃ = in₂ (_≤ length (as \\ (x ∷ bs))) (app length (sym x₁)) x₂ in
     ≤ₛ x₃
-  
+
   wf-pcw₃ : ∀ {w v r₁ m} {as ss rs : Item w v *}
     (f : ∀ {a} -> a ∈ as)
     (p : (suc ∘ length) (as \\ ss) ≤ suc m)
@@ -804,14 +804,14 @@ module ε {T : Set} (decidₜ : (a b : T) -> a ≡ b ??) where
   .ε₁ : ∀ {a b} {x : T} -> a ++ (x ∷ b) ≡ ε -> Void
   ε₁ {ε} ()
   ε₁ {x ∷ a} ()
-  
+
   .ε-0 : (as bs : T *) -> length (as ++ bs) ≡ length as + length bs
   ε-0 ε bs = refl
   ε-0 (x ∷ as) bs = app suc (ε-0 as bs)
-  
+
   .ε-1 : (as bs : T *) -> as ≡ bs -> length as ≡ length bs
   ε-1 as as refl = refl
-  
+
   .ε₂ : ∀ {a b} {x : T} -> a ++ (x ∷ b) ≡ b -> Void
   ε₂ {as} {bs} {x} p = +-imp (trans (trans (sym (ε-1 _ _ p)) (sym (ε-0 as _))) (+-comm {b = length as}))
 
@@ -821,18 +821,18 @@ module ε {T : Set} (decidₜ : (a b : T) -> a ≡ b ??) where
     let x₂ = trans (sym x₁) (sym (ε-0 as (_ ∷ bs))) in
     let x₃ = trans x₂ (+-comm {suc (length bs)}) in
     +-imp x₃
-  
+
   .ε₃ : ∀ {a b} {x y : T} -> (x ≡ y -> Void) -> a ++ (y ∷ b) ≡ (x ∷ b) -> Void
   ε₃ {ε} p refl = void (p refl)
   ε₃ {a ∷ as} {b} {x} {y} p q with decidₜ a x
   ε₃ {x ∷ as} {b} {x} {y} p q | yes refl = ε₂ (uncons _ _ q)
   ε₃ {a ∷ as} {b} {x} {y} p q | no x₁ = x₁ (uncons₂ a x q)
-  
+
   .ε₄ : ∀ {t u w} {x y : T} -> t ++ (y ∷ u) ≡ x ∷ w -> x ≠ y -> Σ λ v -> v ++ (y ∷ u) ≡ w
   ε₄ {ε} {u} {v} p x₁ = void (x₁ (uncons₂ _ _ (sym p)))
   ε₄ {x ∷ t} {u} {v} p x₁ with uncons _ _ p
   ε₄ {x ∷ t} {u} {.(t ++ (_ ∷ u))} p x₁ | refl = σ t refl
-  
+
   .ε₅ : ∀ {t u w} {x : T} -> t ++ (x ∷ u) ≡ x ∷ w -> w ≠ u -> Σ λ v -> v ++ (x ∷ u) ≡ w
   ε₅ {ε} p x = void (x (uncons _ _ (sym p)))
   ε₅ {t ∷ ts} p x with uncons _ _ p
@@ -854,16 +854,16 @@ suc-+ a (suc b) p =
   suc-+ a b (sym x₃)
 
 constrained-eq : ∀ {T} {as bs : T *} ->
-  (Σ λ cs -> cs ++ as ≡ bs) -> 
+  (Σ λ cs -> cs ++ as ≡ bs) ->
   (Σ λ cs -> cs ++ bs ≡ as) ->
   as ≡ bs
 constrained-eq {as} {bs} (σ ε p₀) (σ q₁ q₀) = p₀
 constrained-eq {as} {bs} (σ (x ∷ p₁) p₀) (σ ε q₀) = sym q₀
 constrained-eq {as} {bs} (σ (x ∷ p₁) p₀) (σ (x₁ ∷ q₁) q₀)=
-  let x₁ = ++-+ (x₁ ∷ q₁) _ in 
+  let x₁ = ++-+ (x₁ ∷ q₁) _ in
   let x₂ = length-≡ _ bs q₀ in
   let x₃ = trans (sym x₂) (sym x₁) in
-  let y₁ = ++-+ (x  ∷ p₁) _ in 
+  let y₁ = ++-+ (x  ∷ p₁) _ in
   let y₂ = length-≡ _ _ p₀ in
   let y₃ = trans (sym y₂) (sym y₁) in
   let z₁ = app (suc (length q₁) +_) y₃ in

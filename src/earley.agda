@@ -1,3 +1,5 @@
+{-# OPTIONS --irrelevant-projections #-}
+
 open import base
 
 module earley (N T : Set) (eqₙ : Dec N) (eqₜ : Dec T) where
@@ -227,7 +229,7 @@ module parser (G : CFG) where
   deduplicate (x ∷ as) | yes x₁ = deduplicate as
   deduplicate (x ∷ as) | no x₁ = σ (x ∷ (Σ.proj₁ (deduplicate as))) (u-∷ (Σ.proj₀ (deduplicate as)) x₁)
 
-  pred-comp₀ : ∀ {v w β} -> 
+  pred-comp₀ : ∀ {v w β} ->
     (i : Item w v) ->
     (β ≡ Item.β i) ->
     (ω : EState w v) ->

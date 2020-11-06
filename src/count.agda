@@ -23,13 +23,13 @@ module count (N T : Set) (decidₙ : Dec N) (decidₜ : Dec T) where
   lookup-sound {Y} {α} {(X , qs) ∷ rs} p | ps with decidₙ Y X
   lookup-sound {Y} {α} {(X , qs) ∷ rs} p | ps | yes x = {!!}
   lookup-sound {Y} {α} {(X , qs) ∷ rs} p | ps | no x = {!!}
-  
+
   ∋-comm : {T : Set} {a b c : T} {bs : T *} ->
     (a ∷ b ∷ bs) ∋ c -> (b ∷ a ∷ bs) ∋ c
   ∋-comm in-head = in-tail in-head
   ∋-comm (in-tail in-head) = in-head
   ∋-comm (in-tail (in-tail p₁)) = in-tail (in-tail p₁)
-  
+
   nullable₀ : (N × (N ∣ T) *) * -> N * -> N *
   nullable₀ ε ns = ns
   nullable₀ ((X , α) ∷ rs)       ns with elem decidₙ X ns
@@ -81,4 +81,3 @@ module count (N T : Set) (decidₙ : Dec N) (decidₜ : Dec T) where
     Σ λ s -> s ++ (a ∷ w) ≡ v
   suffix-with-ω (σ a₁ a₀) (σ b₁ b₀) (σ c₁ c₀) =
     {!!}
-
